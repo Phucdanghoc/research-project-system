@@ -1642,3 +1642,118 @@ Processing by Rails::WelcomeController#index as HTML
 Completed 200 OK in 1229ms (Views: 23.9ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
 
 
+  [1m[35m (1.0ms)[0m  [1m[34mSELECT pg_try_advisory_lock(3310884833980964520) /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (3.3ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (3.9ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (5.6ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2025-06-12 07:29:50.044604', '2025-06-12 07:29:50.044607') RETURNING "key" /*application='ResearchProject'*/[0m
+Migrating to DeviseCreateUsers (20250612070429)
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN /*application='ResearchProject'*/[0m
+  [1m[35m (42.6ms)[0m  [1m[35mCREATE TABLE "users" ("id" bigserial primary key, "email" character varying DEFAULT '' NOT NULL, "encrypted_password" character varying DEFAULT '' NOT NULL, "reset_password_token" character varying, "reset_password_sent_at" timestamp(6), "remember_created_at" timestamp(6), "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='ResearchProject'*/[0m
+  [1m[35m (2.9ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='ResearchProject'*/[0m
+  [1m[35m (2.4ms)[0m  [1m[35mCREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token") /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.1ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20250612070429') RETURNING "version" /*application='ResearchProject'*/[0m
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mCOMMIT /*application='ResearchProject'*/[0m
+  [1m[35m (0.5ms)[0m  [1m[34mSELECT pg_advisory_unlock(3310884833980964520) /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.4ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:01:04 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (6.9ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+  
+NoMethodError (undefined method `allow_browser' for class ApplicationController):
+  
+app/controllers/application_controller.rb:3:in `<class:ApplicationController>'
+app/controllers/application_controller.rb:1:in `<main>'
+app/controllers/users/registrations_controller.rb:3:in `<main>'
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:02:45 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (2.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+Completed 200 OK in 174ms (Views: 0.8ms | ActiveRecord: 64.5ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:06:54 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (2.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+Completed 422 Unprocessable Content in 137ms (Views: 0.4ms | ActiveRecord: 30.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:08:28 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (1.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+Completed 422 Unprocessable Content in 120ms (Views: 0.3ms | ActiveRecord: 26.3ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:09:36 +0700
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+Completed 422 Unprocessable Content in 2ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:09:40 +0700
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+Completed 422 Unprocessable Content in 2ms (Views: 0.2ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:10:32 +0700
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+Completed 422 Unprocessable Content in 2ms (Views: 0.1ms | ActiveRecord: 0.0ms (0 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:18:05 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (3.7ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+  
+NameError (undefined local variable or method `params' for class Users::RegistrationsController):
+  
+app/controllers/users/registrations_controller.rb:7:in `<class:RegistrationsController>'
+app/controllers/users/registrations_controller.rb:3:in `<main>'
+Started POST "/users/signup" for 127.0.0.1 at 2025-06-12 16:19:20 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (2.4ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Processing by Users::RegistrationsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}, "registration"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]", "password_confirmation"=>"[FILTERED]"}}}
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*action='create',application='ResearchProject',controller='registrations'*/[0m
+  [1m[36mUser Exists? (7.0ms)[0m  [1m[34mSELECT 1 AS one FROM "users" WHERE "users"."email" = 'john@example.com' LIMIT 1 /*action='create',application='ResearchProject',controller='registrations'*/[0m
+  [1m[36mUser Create (8.2ms)[0m  [1m[32mINSERT INTO "users" ("email", "encrypted_password", "reset_password_token", "reset_password_sent_at", "remember_created_at", "created_at", "updated_at") VALUES ('john@example.com', '$2a$12$.m4N3AZuMU3Mwc9MpIvIVub.nsBNBReFgPLxLVKb/e2JJHkc4zEGy', NULL, NULL, NULL, '2025-06-12 09:19:21.522574', '2025-06-12 09:19:21.522574') RETURNING "id" /*action='create',application='ResearchProject',controller='registrations'*/[0m
+  [1m[36mTRANSACTION (2.6ms)[0m  [1m[35mCOMMIT /*action='create',application='ResearchProject',controller='registrations'*/[0m
+Completed 200 OK in 825ms (Views: 0.6ms | ActiveRecord: 75.3ms (2 queries, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/login" for 127.0.0.1 at 2025-06-12 16:20:48 +0700
+Processing by Users::SessionsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]"}, "session"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]"}}}
+  [1m[36mUser Load (1.6ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1 /*action='create',application='ResearchProject',controller='sessions'*/[0m
+Completed 200 OK in 173ms (Views: 0.6ms | ActiveRecord: 1.5ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+Started POST "/users/login" for 127.0.0.1 at 2025-06-12 16:22:53 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (3.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Processing by Users::SessionsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]"}, "session"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]"}}}
+  [1m[36mUser Load (2.7ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1 /*action='create',application='ResearchProject',controller='sessions'*/[0m
+Completed 500 Internal Server Error in 163ms (ActiveRecord: 130.2ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+  
+NameError (uninitialized constant Users::SessionsController::JsonWebToken):
+  
+app/controllers/users/sessions_controller.rb:9:in `respond_with'
+Started POST "/users/login" for 127.0.0.1 at 2025-06-12 16:26:23 +0700
+  [1m[36mActiveRecord::SchemaMigration Load (2.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+Processing by Users::SessionsController#create as JSON
+  Parameters: {"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]"}, "session"=>{"user"=>{"email"=>"[FILTERED]", "password"=>"[FILTERED]"}}}
+  [1m[36mUser Load (2.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = 1 ORDER BY "users"."id" ASC LIMIT 1 /*action='create',application='ResearchProject',controller='sessions'*/[0m
+Completed 200 OK in 166ms (Views: 2.6ms | ActiveRecord: 106.0ms (1 query, 0 cached) | GC: 0.0ms)
+
+
+  [1m[35m (1.1ms)[0m  [1m[34mSELECT pg_try_advisory_lock(3310884833980964520) /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (2.0ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (3.7ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='ResearchProject'*/[0m
+Migrating to AddRoleToUsers (20250612092913)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='ResearchProject'*/[0m
+  [1m[35m (16.0ms)[0m  [1m[35mALTER TABLE "users" ADD "role" character varying /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.0ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20250612092913') RETURNING "version" /*application='ResearchProject'*/[0m
+  [1m[36mTRANSACTION (1.9ms)[0m  [1m[35mCOMMIT /*application='ResearchProject'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT pg_advisory_unlock(3310884833980964520) /*application='ResearchProject'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.4ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='ResearchProject'*/[0m
