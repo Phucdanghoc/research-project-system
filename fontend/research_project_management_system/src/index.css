@@ -1,4 +1,6 @@
 @import "tailwindcss";
+
+/* Các style tùy chỉnh nếu cần */
 @layer utilities {
     .no-scrollbar::-webkit-scrollbar {
         display: none;
