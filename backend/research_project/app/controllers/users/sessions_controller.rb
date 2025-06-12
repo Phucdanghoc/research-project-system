@@ -1,43 +1,15 @@
-# frozen_string_literal: true
-
 class Users::SessionsController < Devise::SessionsController
-  respond_to :json
+  skip_before_action :verify_signed_out_user
+  skip_before_action :require_no_authentication, only: :create
 
-  private
+  def create
+    user = User.find_by(email: params[:user][:email])
 
-  def respond_with(resource, _opts = {})
-    token = JsonWebToken.encode(user_id: resource.id)
-    render json: {
-      message: 'Logged in.',
-      user: resource,
-      token: token
-    }, status: :ok
+    if user && user.valid_password?(params[:user][:password])
+      token = JsonWebToken.encode(user_id: user.id, role: user.role)
+      render json: { message: 'Logged in.', user: user, token: token }, status: :ok
+    else
+      render json: { error: 'Invalid email or password' }, status: :unauthorized
+    end
   end
-
-  def respond_to_on_destroy
-    render json: { message: 'Logged out.' }, status: :ok
-  end
-  # before_action :configure_sign_in_params, only: [:create]
-
-  # GET /resource/sign_in
-  # def new
-  #   super
-  # end
-
-  # POST /resource/sign_in
-  # def create
-  #   super
-  # end
-
-  # DELETE /resource/sign_out
-  # def destroy
-  #   super
-  # end
-
-  # protected
-
-  # If you have extra params to permit, append them to the sanitizer.
-  # def configure_sign_in_params
-  #   devise_parameter_sanitizer.permit(:sign_in, keys: [:attribute])
-  # end
 end
