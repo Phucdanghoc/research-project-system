@@ -15,9 +15,11 @@ RUN apt-get update -qq && \
 # Now proceed with your Gem installation
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
-
 # Then copy the rest of your application
 COPY . .
+
+RUN rake db:create
+RUN rake db:migrate
 
 # Set entrypoint script
 ENTRYPOINT ["./entrypoint.sh"]
