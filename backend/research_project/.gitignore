@@ -1,0 +1,46 @@
+# See https://gitignore.io/api/rails
+
+# Bundler
+/.bundle/
+/vendor/bundle/
+Gemfile.lock
+
+# Logs
+/log/*
+!/log/.keep
+
+# Temporary files
+/tmp/*
+!/tmp/.keep
+
+# Storage files
+/storage/*
+!/storage/.keep
+
+# Database files
+/db/**/*.sqlite3
+
+# node modules
+/node_modules/
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Credentials
+/config/credentials.yml.enc
+/config/master.key
+
+# Mac files
+*.DS_Store
+
+# IDE files
+.idea/
+.vscode/
+*.suo
+*.user
+
+# coverage
+/coverage/

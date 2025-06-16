@@ -1,15 +1,24 @@
 Rails.application.routes.draw do
+  get "topics/index"
+  get "topics/show"
+  get "topics/create"
+  get "topics/update"
+  get "topics/destroy"
+  get "users/create"
   devise_for :users,
-             path: 'users',
-           path_names: {
-             sign_in: 'login',
-             sign_out: 'logout',
-             registration: 'signup'
-           },
-           controllers: {
-             sessions: 'users/sessions',
-             registrations: 'users/registrations'
-           }
+              path: 'users',
+              path_names: {
+                sign_in: 'login',
+                sign_out: 'logout',
+                registration: 'signup'
+              },
+              controllers: {
+                sessions: 'users/sessions',
+                registrations: 'users/registrations'
+              }
+  resources :users, only: [:index, :create]
+  resources :groups
+  resources :topics
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
