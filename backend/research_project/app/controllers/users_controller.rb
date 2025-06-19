@@ -1,7 +1,8 @@
 # app/controllers/users_controller.rb
 class UsersController < ApplicationController
-  before_action :authenticate_user!  # Devise + JWT authentication
-  before_action :authorize_admin!, only: [:create, :index]
+  before_action :authenticate_api_user!  # <- Use custom API authentication instead of Devise
+  before_action :set_user, only: [:show, :update]
+  before_action :authorize_admin!, only: [:create, :index, :update]
 
   # API endpoint for creating a new User
   def create
@@ -16,8 +17,26 @@ class UsersController < ApplicationController
 
   # API endpoint for retrieving all users (admin only)
   def index
-    @users = User.all.include(:groups)
-    render json: @users.to_json(include: :groups), status: :ok
+    @users = User.all.includes(:groups, :lecture_groups)
+    render json: @users.to_json(include: [:groups, :lecture_groups]), status: :ok
+  end
+
+  # API endpoint for retrieving a single User
+  def show
+    render json: @user.to_json(include: [:groups, :lecture_groups]), status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found." }, status: :not_found
+  end
+
+  # API endpoint for updating an existing User
+  def update
+    if @user.update(user_params)
+      render json: { message: "User successfully updated.", user: @user }, status: :ok
+    else
+      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found." }, status: :not_found
   end
 
   private
@@ -29,8 +48,17 @@ class UsersController < ApplicationController
     end
   end
 
+  # Set user by id
+  def set_user
+    @user = User.find(params[:id]) 
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "User not found." }, status: :not_found
+  end
+
   # Strong parameters for User
   def user_params
+    # Note: normally we do NOT directly modify groups here
+    # This should be done through GroupUsers controller
     params.require(:user).permit(
       :role,
       :email,

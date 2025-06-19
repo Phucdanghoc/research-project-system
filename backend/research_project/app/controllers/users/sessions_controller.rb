@@ -1,7 +1,6 @@
 class Users::SessionsController < Devise::SessionsController
-  skip_before_action :verify_signed_out_user
-  skip_before_action :require_no_authentication, only: :create
 
+  skip_before_action :authenticate_api_user!, only: :create
   def create
     user = User.find_by(email: params[:user][:email])
 
