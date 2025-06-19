@@ -5,14 +5,21 @@ class DefensesController < ApplicationController
 
   # GET /defenses
   def index
-    @defenses = Defense.all.includes(groups: :lecturer)
-    render json: @defenses.to_json(include: { groups: { include: :lecturer } })
-  end
+  @defenses = Defense.all.includes(groups: [:lecturer, :students])
+  render json: @defenses.to_json(include: {
+    groups: {
+      include: [:lecturer, :students]
+    }
+  })
+end
 
-  # GET /defenses/:id
-  def show
-    render json: @defense.to_json(include: { groups: { include: :lecturer } })
-  end
+def show
+  render json: @defense.to_json(include: {
+    groups: {
+      include: [:lecturer, :students]
+    }
+  })
+end
 
   # POST /defenses
   def create
