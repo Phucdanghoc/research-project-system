@@ -35,7 +35,6 @@ class User < ApplicationRecord
   validate :validate_student_group_count
 
   private
-
   def validate_student_group_count
     if student? && groups.size > 1
       errors.add(:groups, "Student cannot belong to more than 1 group.")

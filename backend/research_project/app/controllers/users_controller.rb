@@ -1,9 +1,28 @@
 # app/controllers/users_controller.rb
 class UsersController < ApplicationController
-  before_action :authenticate_api_user!  # <- Use custom API authentication instead of Devise
-  before_action :set_user, only: [:show, :update]
-  before_action :authorize_admin!, only: [:create, :index, :update]
+  include UsersHelper
 
+  before_action :authenticate_api_user!  # <- Use custom API authentication instead of Devise
+  before_action :authorize_admin!, only: [:create, :index, :update, :import_csv]
+  def import_csv
+    if params[:file].nil?
+      return render json: { error: "CSV file is required" }, status: :bad_request
+    end
+
+    result = import_users_from_csv(params[:file].path)
+
+    if result[:success]
+      render json: {
+        message: "Users imported successfully.",
+        count: result[:created_users].size
+      }, status: :created
+    else
+      render json: {
+        message: "Some users could not be imported.",
+        errors: result[:errors]
+      }, status: :unprocessable_entity
+    end
+  end
   # API endpoint for creating a new User
   def create
     @user = User.new(user_params)
@@ -54,7 +73,7 @@ class UsersController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     render json: { error: "User not found." }, status: :not_found
   end
-
+  
   # Strong parameters for User
   def user_params
     # Note: normally we do NOT directly modify groups here

@@ -21,7 +21,11 @@ Rails.application.routes.draw do
                 sessions: 'users/sessions',
                 registrations: 'users/registrations'
               }
-  resources :users
+  resources :users do
+    collection do
+      post :import_csv
+    end
+  end
   resources :groups
   resources :topics
   resources :defenses
