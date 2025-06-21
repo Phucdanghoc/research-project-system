@@ -36,8 +36,21 @@ class UsersController < ApplicationController
 
   # API endpoint for retrieving all users (admin only)
   def index
-    @users = User.all.includes(:groups, :lecture_groups)
-    render json: @users.to_json(include: [:groups, :lecture_groups]), status: :ok
+    page = params[:page] || 1
+    per_page = params[:per_page] || 10
+
+    @users = User
+              .includes(:groups, :lecture_groups)
+              .order(created_at: :desc)
+              .page(page)
+              .per(per_page)
+
+    render json: {
+      users: @users.as_json(include: [:groups, :lecture_groups]),
+      current_page: @users.current_page,
+      total_pages: @users.total_pages,
+      total_count: @users.total_count
+    }, status: :ok
   end
 
   # API endpoint for retrieving a single User
