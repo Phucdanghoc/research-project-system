@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
+import Papa from 'papaparse';
 import TableAdmin from '../components/Table'; // Adjust the import path as needed
 import AddEditUserModal from '../components/AddEditUserModal'; // Adjust the import path
 import ViewUserModal from '../components/ViewUserModal'; // Adjust the import path
@@ -16,6 +17,68 @@ const initialUsers = [
   { id: 7, username: 'student2', email: 'student2@example.com', role: 'student' },
 ];
 
+const ReviewCsvModal = ({ isOpen, onClose, onConfirm, pendingUsers, invalidRows }) => {
+  if (!isOpen) return null;
+
+  const tableColumns = [
+    {
+      header: 'Tên tài khoản',
+      key: 'username',
+      render: (item) => <span className="font-bold">{item.username}</span>,
+    },
+    { header: 'Email', key: 'email' },
+    {
+      header: 'Vai trò',
+      key: 'role',
+      render: (item) => (
+        <span className="inline-block bg-green-500 text-white hover:bg-green-800 text-sm rounded-full px-4 py-1">
+          {item.role}
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+        <h2 className="text-xl font-bold mb-4">Xem lại dữ liệu CSV</h2>
+        {invalidRows.length > 0 && (
+          <p className="text-red-600 mb-4">
+            Có {invalidRows.length} dòng không hợp lệ đã bị bỏ qua.
+          </p>
+        )}
+        {pendingUsers.length === 0 ? (
+          <p className="text-gray-600 mb-4">Không có dữ liệu hợp lệ để thêm.</p>
+        ) : (
+          <div className="overflow-x-auto mb-4">
+            <TableAdmin
+              columns={tableColumns}
+              data={pendingUsers}
+              emptyMessage="Không có dữ liệu để hiển thị."
+            />
+          </div>
+        )}
+        <div className="flex justify-end space-x-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            Hủy
+          </button>
+          {pendingUsers.length > 0 && (
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Xác nhận
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ManageUsers = () => {
   const { user } = useSelector((state) => state.auth);
   const [users, setUsers] = useState(initialUsers);
@@ -23,11 +86,14 @@ const ManageUsers = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [formData, setFormData] = useState({ username: '', email: '', password: '', role: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [invalidRows, setInvalidRows] = useState([]);
   const usersPerPage = 5;
 
   const roles = ['admin', 'dean', 'lecturer', 'student', 'advisor', 'committee'];
@@ -101,7 +167,10 @@ const ManageUsers = () => {
     setIsEditModalOpen(false);
     setIsViewModalOpen(false);
     setIsDeleteModalOpen(false);
+    setIsReviewModalOpen(false);
     setSelectedUser(null);
+    setPendingUsers([]);
+    setInvalidRows([]);
     setFormData({ username: '', email: '', password: '', role: '' });
   };
 
@@ -112,11 +181,65 @@ const ManageUsers = () => {
 
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleCsvUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result) => {
+        const validUsers = [];
+        const invalidRows = [];
+
+        result.data.forEach((row, index) => {
+          if (
+            row.username &&
+            row.email &&
+            row.role &&
+            roles.includes(row.role)
+          ) {
+            validUsers.push({
+              id: users.length + validUsers.length + 1,
+              username: row.username,
+              email: row.email,
+              role: row.role,
+            });
+          } else {
+            invalidRows.push({ index: index + 2, row });
+          }
+        });
+
+        if (validUsers.length > 0 || invalidRows.length > 0) {
+          setPendingUsers(validUsers);
+          setInvalidRows(invalidRows);
+          setIsReviewModalOpen(true);
+        } else {
+          alert('Không có dữ liệu hợp lệ trong file CSV. Vui lòng kiểm tra định dạng.');
+        }
+      },
+      error: (error) => {
+        console.error('Error parsing CSV:', error);
+        alert('Có lỗi khi đọc file CSV. Vui lòng thử lại.');
+      },
+    });
+
+    e.target.value = null;
+  };
+
+  const handleConfirmCsv = () => {
+    setUsers([...users, ...pendingUsers]);
+    setIsReviewModalOpen(false);
+    setPendingUsers([]);
+    setInvalidRows([]);
+    setCurrentPage(1);
   };
 
   const tableColumns = [
@@ -177,7 +300,7 @@ const ManageUsers = () => {
         <select
           value={selectedRole}
           onChange={handleRoleChange}
-          className="w-full sm:w-40 p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+          className="w-full sm:w-40 p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
         >
           <option value="">Tất cả vai trò</option>
           {roles.map((role) => (
@@ -188,10 +311,19 @@ const ManageUsers = () => {
         </select>
         <button
           onClick={handleAddUser}
-          className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
         >
           Thêm tài khoản
         </button>
+        <label className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center cursor-pointer">
+          Tải lên CSV
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleCsvUpload}
+            className="hidden"
+          />
+        </label>
       </div>
       <div className="overflow-x-auto">
         <TableAdmin
@@ -268,6 +400,14 @@ const ManageUsers = () => {
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
         itemName={selectedUser?.username || ''}
+      />
+
+      <ReviewCsvModal
+        isOpen={isReviewModalOpen}
+        onClose={closeModal}
+        onConfirm={handleConfirmCsv}
+        pendingUsers={pendingUsers}
+        invalidRows={invalidRows}
       />
     </div>
   );

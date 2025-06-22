@@ -3,7 +3,7 @@ import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
-import   AppRouter from './routers/index.tsx';
+import   AppRouter from './routers/index.js';
 import store from './store/index.ts';
 
 createRoot(document.getElementById('root')!).render(

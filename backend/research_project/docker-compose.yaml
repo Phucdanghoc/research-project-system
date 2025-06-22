@@ -1,5 +1,4 @@
 version: "3.9"
-
 services:
   db:
     image: postgres:latest
@@ -13,7 +12,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+    networks:
+      - my-network
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -26,12 +26,13 @@ services:
       - "8080:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin_config/servers.json:/pgadmin4/servers.json
     depends_on:
-      - db 
-
+      - db
+    networks:
+      - my-network
   web:
     build: .
-    command: bash -c "bundle exec rails db:migrate && bundle exec rails server -b 0.0.0.0 -p 3000"
     volumes:
       - .:/rails
     ports:
@@ -43,7 +44,9 @@ services:
       DATABASE_NAME: research_project_development
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: password
-
 volumes:
   postgres_data:
   pgadmin_data:
+networks:
+  my-network:
+    driver: bridge
