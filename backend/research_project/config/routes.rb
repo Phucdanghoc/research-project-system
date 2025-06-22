@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  get "defenses/index"
+  get "defenses/show"
+  get "defenses/create"
+  get "defenses/update"
+  get "defenses/destroy"
   get "topics/index"
   get "topics/show"
   get "topics/create"
@@ -16,9 +21,14 @@ Rails.application.routes.draw do
                 sessions: 'users/sessions',
                 registrations: 'users/registrations'
               }
-  resources :users, only: [:index, :create]
+  resources :users do
+    collection do
+      post :import_csv
+    end
+  end
   resources :groups
   resources :topics
+  resources :defenses
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

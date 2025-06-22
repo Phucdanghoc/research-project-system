@@ -3,15 +3,20 @@ default: &default
   encoding: unicode
   pool: 5
   ##Dung's local
-  # username: postgres  # -> "postgres"
-  # password: password  # -> "password"
-  # host: db  
+  username: postgres  # -> "postgres"
+  password: password  # -> "password"
+  host: localhost  
 
 
-  username: <%= ENV['DATABASE_USERNAME'] %>  # -> "postgres"
-  password: <%= ENV['DATABASE_PASSWORD'] %>  # -> "password"
-  host: <%= ENV['DATABASE_HOST'] %>          # -> "db"
+  # username: <%= ENV['DATABASE_USERNAME'] %>  # -> "postgres"
+  # password: <%= ENV['DATABASE_PASSWORD'] %>  # -> "password"
+  # host: <%= ENV['DATABASE_HOST'] %>          # -> "db"
 
 development:
   <<: *default
-  database: <%= ENV['DATABASE_NAME'] %>      # -> "research_project_development"
+  ##Dung's local
+  database: research_project_development
+  host: localhost
+  port: 5432
+  # database: <%= ENV['DATABASE_NAME'] %>      # -> "research_project_development"
+  

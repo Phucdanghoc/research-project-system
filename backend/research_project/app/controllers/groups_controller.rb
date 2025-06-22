@@ -1,17 +1,17 @@
 class GroupsController < ApplicationController
-  before_action :authenticate_user!  # Devise + JWT authentication
+  before_action :authenticate_api_user!  # <- Use custom API authentication instead of Devise
   before_action :set_group, only: [:show, :update, :destroy]
   before_action :authorize_admin!, only: [:create, :update, :destroy]
 
   # GET /groups
   def index
     @groups = Group.all
-    render json: @groups, include: [:lecturer, :students]
+    render json: @groups.to_json(include: [:lecturer, :defense, :students]), status: :ok
   end
 
   # GET /groups/:id
   def show
-    render json: @group, include: [:lecturer, :students]
+    render json: @group.to_json(include: [:lecturer, :defense, :students]), status: :ok
   end
 
   # POST /groups
@@ -58,6 +58,6 @@ class GroupsController < ApplicationController
 
   # Strong parameters for Group
   def group_params
-    params.require(:group).permit(:name, :lecturer_id, student_ids: [])
+    params.require(:group).permit(:name, :lecturer_id, :defense_id, student_ids: [])
   end
 end
