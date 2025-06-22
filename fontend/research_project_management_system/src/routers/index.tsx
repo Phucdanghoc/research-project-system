@@ -8,7 +8,9 @@ import UnauthorizedPage from '../components/UnauthorizedPage';
 import LoginPage from '../pages/auth/LoginPage';
 import AdminLayout from '../pages/admin/layout';
 import ManagerUser from '../pages/admin/account/Manager';
+import ManageTopics from '../pages/admin/topics/TopicManager';
 
+// Define the router with TypeScript types
 const router = createBrowserRouter([
   {
     path: '/login',
@@ -28,7 +30,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'manage-topics',
-        element: <ManagerUser />,
+        element: <ManageTopics />,
       },
       {
         path: 'setup-committee',
@@ -38,6 +40,8 @@ const router = createBrowserRouter([
   },
 ]);
 
-export default function AppRouter() {
+const AppRouter = () => {
   return <RouterProvider router={router} />;
-}
+};
+
+export default AppRouter;

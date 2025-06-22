@@ -55,7 +55,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     };
 
     return (
-        <div className={`h-screen fixed text-white flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'} bg-gradient-to-b to-blue-500 from-indigo-700`}>
+        <div className={`h-screen fixed text-white flex flex-col transition-all duration-300 ${isOpen ? 'w-64' : 'w-16'} bg-gradient-to-b to-blue-400 from-indigo-500`}>
             <div className="p-4 flex items-center justify-between">
                 {isOpen && (
                     <Link to={user?.role === 'admin' ? '/admin' : '/'} className="text-xl font-bold">
