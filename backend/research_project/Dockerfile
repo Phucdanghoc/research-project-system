@@ -1,8 +1,5 @@
 FROM ruby:3.3.5-slim
 
-WORKDIR /rails
-
-# Install build tools and libraries
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
       build-essential \
@@ -12,15 +9,13 @@ RUN apt-get update -qq && \
       yarn \
     && rm -rf /var/lib/apt/lists/*
 
-# Now proceed with your Gem installation
+WORKDIR /rails
+
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
-# Then copy the rest of your application
+
 COPY . .
 
-# RUN rake db:create
-# RUN rake db:migrate
+EXPOSE 3000
 
-# Set entrypoint script
-# ENTRYPOINT ["./entrypoint.sh"]
-CMD ["bundle", "exec", "rails", "server","-b", "0.0.0.0","-p","3000"]
+CMD ["bash", "-c", "bundle exec rails db:create db:migrate && bundle exec rails server -b 0.0.0.0 -p 3000"]
