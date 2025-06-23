@@ -17,8 +17,6 @@ class User < ApplicationRecord
 
   # Validations for Lecturer
   validates :lecturer_code, presence: true, if: -> { lecturer? }
-  validates :level, presence: true, if: -> { lecturer? }
-
   # Associations
   # A User can be a lecturer for many groups
   has_many :lecture_groups, class_name: "Group", foreign_key: "lecturer_id", dependent: :destroy

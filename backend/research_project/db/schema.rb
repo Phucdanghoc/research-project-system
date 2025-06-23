@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_16_191121) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_23_172335) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,8 +22,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_16_191121) do
     t.datetime "updated_at", null: false
   end
 
-
-
+  create_table "group_topics", force: :cascade do |t|
+    t.bigint "group_id", null: false
+    t.bigint "topic_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["group_id"], name: "index_group_topics_on_group_id"
+    t.index ["topic_id"], name: "index_group_topics_on_topic_id"
+  end
 
   create_table "group_users", force: :cascade do |t|
     t.bigint "group_id", null: false
@@ -33,7 +39,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_16_191121) do
     t.index ["group_id"], name: "index_group_users_on_group_id"
     t.index ["user_id"], name: "index_group_users_on_user_id"
   end
-
 
   create_table "groups", force: :cascade do |t|
     t.string "name", null: false
@@ -67,7 +72,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_16_191121) do
     t.index ["lecturer_id"], name: "index_lecturer_defenses_on_lecturer_id"
   end
 
-
+  create_table "topics", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "topic_code", null: false
+    t.text "description"
+    t.text "requirement"
+    t.integer "topic_quantity", default: 0
+    t.integer "student_quantity", default: 0
+    t.integer "status", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
@@ -87,7 +102,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_16_191121) do
     t.string "faculty"
     t.string "major"
     t.string "lecturer_code"
-    t.integer "level"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["phone"], name: "index_users_on_phone", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -98,7 +112,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_16_191121) do
   add_foreign_key "group_users", "groups"
   add_foreign_key "group_users", "users"
   add_foreign_key "groups", "defenses"
-
   add_foreign_key "groups", "users", column: "lecturer_id"
   add_foreign_key "groups_users", "groups"
   add_foreign_key "groups_users", "users"

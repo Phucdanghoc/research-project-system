@@ -41,8 +41,7 @@ namespace :db do
         lecturer_code: "LC#{100+i+1}",
         phone: "012345#{i+1}",
         birth: Date.new(1990+i, 1, 1),
-        major: "Major#{i+1}",
-        level: "Level#{i+1}" # or whatever your application expects
+        major: "Major#{i+1}"
       )
     end
 
