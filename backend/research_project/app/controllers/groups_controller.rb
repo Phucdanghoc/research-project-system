@@ -1,12 +1,25 @@
 class GroupsController < ApplicationController
-  before_action :authenticate_api_user!  # <- Use custom API authentication instead of Devise
+  before_action :authenticate_api_user!
   before_action :set_group, only: [:show, :update, :destroy]
   before_action :authorize_admin!, only: [:create, :update, :destroy]
 
   # GET /groups
   def index
-    @groups = Group.all
-    render json: @groups.to_json(include: [:lecturer, :defense, :students]), status: :ok
+    page = params[:page] || 1
+    per_page = params[:per_page] || 10
+
+    @groups = Group
+                .includes(:lecturer, :defense, :students)
+                .order(created_at: :desc)
+                .page(page)
+                .per(per_page)
+
+    render json: {
+      groups: @groups.as_json(include: [:lecturer, :defense, :students]),
+      current_page: @groups.current_page,
+      total_pages: @groups.total_pages,
+      total_count: @groups.total_count
+    }, status: :ok
   end
 
   # GET /groups/:id
@@ -42,21 +55,18 @@ class GroupsController < ApplicationController
 
   private
 
-  # Check if the current user is an admin
-  def authorize_admin! 
+  def authorize_admin!
     unless current_user.admin?
       render json: { error: "Not authorized to perform this action." }, status: :forbidden
     end
   end
 
-  # Set group by id
   def set_group
-    @group = Group.find(params[:id])  
+    @group = Group.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Group not found." }, status: :not_found
   end
 
-  # Strong parameters for Group
   def group_params
     params.require(:group).permit(:name, :lecturer_id, :defense_id, student_ids: [])
   end
