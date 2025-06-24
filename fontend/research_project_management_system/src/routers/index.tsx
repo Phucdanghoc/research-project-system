@@ -10,7 +10,6 @@ import AdminLayout from '../pages/admin/layout';
 import ManagerUser from '../pages/admin/account/Manager';
 import ManageTopics from '../pages/admin/topics/TopicManager';
 
-// Define the router with TypeScript types
 const router = createBrowserRouter([
   {
     path: '/login',
