@@ -4,9 +4,9 @@ module Api
     class UsersController < ApplicationController
       include UsersHelper
 
-      before_action :authenticate_api_user!  # <- Use custom API authentication instead of Devise
+      before_action :authenticate_api_user! 
       before_action :authorize_admin!, only: [:create, :index, :update, :import_csv]
-      
+
       def import_csv
         if params[:file].nil?
           return render json: { error: "CSV file is required" }, status: :bad_request
@@ -74,7 +74,51 @@ module Api
         render json: { error: "User not found." }, status: :not_found
       end
 
+      def verify_token
+        if current_user
+          render json: {
+            valid: true,
+            user: current_user.as_json(only: [:id, :email, :role, :name])
+          }, status: :ok
+        else
+          render json: { valid: false }, status: :unauthorized
+        end
+      end
+      # GET /api/v1/users/search?keyword=somevalue
+      def search
+        keyword = params[:keyword]
+
+        if keyword.blank?
+          return render json: { error: "Keyword is required." }, status: :bad_request
+        end
+
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+
+        @users = User
+                  .includes(:groups, :lecture_groups)
+                  .where("name ILIKE ?", "%#{keyword}%")
+
+        if is_numeric?(keyword)
+          @users = @users.or(User.where(id: keyword))
+        end
+
+        @users = @users.order(created_at: :desc).page(page).per(per_page)
+
+        render json: {
+          users: @users.as_json(include: [:groups, :lecture_groups]),
+          current_page: @users.current_page,
+          total_pages: @users.total_pages,
+          total_count: @users.total_count
+        }, status: :ok
+      end
+
       private
+
+      # Helper to check if string is numeric
+      def is_numeric?(string)
+        true if Integer(string) rescue false
+      end
 
       # Check if the current user is an admin
       def authorize_admin! 

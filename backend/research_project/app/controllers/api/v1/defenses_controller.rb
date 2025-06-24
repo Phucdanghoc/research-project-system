@@ -27,7 +27,34 @@ module Api
           total_count: @defenses.total_count
         }, status: :ok
       end
+      def search
+        keyword = params[:keyword]
 
+        if keyword.blank?
+          return render json: { error: "Keyword is required." }, status: :bad_request
+        end
+
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+
+        @defenses = Defense
+                      .includes(groups: [:lecturer, :students])
+                      .where("defenses.name ILIKE ?", "%#{keyword}%")
+                      .order(created_at: :desc)
+                      .page(page)
+                      .per(per_page)
+
+        render json: {
+          defenses: @defenses.as_json(include: {
+            groups: {
+              include: [:lecturer, :students]
+            }
+          }),
+          current_page: @defenses.current_page,
+          total_pages: @defenses.total_pages,
+          total_count: @defenses.total_count
+        }, status: :ok
+      end
       def show
         render json: @defense.to_json(include: {
           groups: {

@@ -2,7 +2,7 @@ class Group < ApplicationRecord
   belongs_to :lecturer, class_name: "User"
 
   belongs_to :defense, optional: true
-
+  
   validates :name, presence: true
   validates :lecturer, presence: true
 

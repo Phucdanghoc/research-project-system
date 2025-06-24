@@ -14,19 +14,22 @@ Rails.application.routes.draw do
                     sessions: 'api/v1/users/sessions',
                     registrations: 'api/v1/users/registrations'
                   }
-
-      # Custom verify_token under /api/v1/users/verify_token
-      get 'users/verify_token', to: 'users/sessions#verify_token'
-
       # Other resources
       resources :users do
         collection do
           post :import_csv
+          get :search
+          get :verify_token
         end
       end
 
       resources :groups
-      resources :topics
+      resources :topics do
+        collection do
+          get :search
+          get :filter_by_status
+        end
+      end
       resources :defenses
 
     end
