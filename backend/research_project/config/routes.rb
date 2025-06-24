@@ -19,10 +19,9 @@ Rails.application.routes.draw do
         collection do
           post :import_csv
           get :search
-          get :verify_token
         end
       end
-
+      post 'users/verify_token', to: 'users#verify_token'
       resources :groups
       resources :topics do
         collection do
