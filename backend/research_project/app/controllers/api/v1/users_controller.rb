@@ -74,7 +74,16 @@ module Api
         render json: { error: "User not found." }, status: :not_found
       end
 
-
+      def verify_token
+        if current_user
+          render json: {
+            valid: true,
+            user: current_user.as_json(only: [:id, :email, :role, :name])
+          }, status: :ok
+        else
+          render json: { valid: false }, status: :unauthorized
+        end
+      end
       # GET /api/v1/users/search?keyword=somevalue
       def search
         keyword = params[:keyword]

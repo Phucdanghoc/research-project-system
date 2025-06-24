@@ -19,6 +19,7 @@ Rails.application.routes.draw do
         collection do
           post :import_csv
           get :search
+          get :verify_token
         end
       end
 
