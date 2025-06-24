@@ -61,7 +61,6 @@ namespace :db do
         faculty: "Faculty#{i+1}"
       )
     end
-
     # Create defenses
     defenses = 3.times.map do |i|
       Defense.create!(
