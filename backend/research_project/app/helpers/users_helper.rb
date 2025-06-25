@@ -2,27 +2,38 @@ require 'csv'
 
 module UsersHelper
   def import_users_from_csv(file_path)
-    errors = []
+    require 'csv'
     created_users = []
-
-    expected_headers = %w[
-      email password name phone gender birth role student_code class_name faculty major lecturer_code level
-    ]
+    errors = []
 
     CSV.foreach(file_path, headers: true) do |row|
-      user_attrs = row.to_h.slice(*expected_headers)
-      user_attrs["birth"] = parse_birth_date(user_attrs["birth"])
+      user_data = row.to_hash.symbolize_keys
 
-      user = User.new(user_attrs)
+      # Check for duplicate fields before insert
+      duplicates = []
+      duplicates << "email" if User.exists?(email: user_data[:email])
+      duplicates << "phone" if user_data[:phone].present? && User.exists?(phone: user_data[:phone])
+      duplicates << "student_code" if user_data[:student_code].present? && User.exists?(student_code: user_data[:student_code])
+      duplicates << "lecturer_code" if user_data[:lecturer_code].present? && User.exists?(lecturer_code: user_data[:lecturer_code])
+
+      if duplicates.any?
+        errors << { row: row.to_hash, error: "Duplicate #{duplicates.join(', ')}" }
+        next
+      end
+
+      user = User.new(user_data)
+      user.password = SecureRandom.hex(8) if user_data[:password].blank?
 
       if user.save
         created_users << user
       else
-        errors << { row: row.to_h, messages: user.errors.full_messages }
+        errors << { row: row.to_hash, error: user.errors.full_messages }
       end
+    rescue => e
+      errors << { row: row.to_hash, error: e.message }
     end
 
-    return { success: errors.empty?, errors:, created_users: }
+    { created_users: created_users, errors: errors }
   end
 
   private
