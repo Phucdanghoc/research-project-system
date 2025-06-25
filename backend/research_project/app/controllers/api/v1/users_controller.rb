@@ -1,10 +1,10 @@
-# app/controllers/users_controller.rb
 module Api
   module V1
     class UsersController < ApplicationController
       include UsersHelper
 
-      before_action :authenticate_api_user! 
+      before_action :authenticate_api_user!
+      skip_before_action :authenticate_api_user!, only: [:verify_token]
       before_action :authorize_admin!, only: [:create, :index, :update, :import_csv]
 
       def import_csv
@@ -26,7 +26,7 @@ module Api
           }, status: :unprocessable_entity
         end
       end
-      # API endpoint for creating a new User
+
       def create
         @user = User.new(user_params)
 
@@ -37,7 +37,6 @@ module Api
         end
       end
 
-      # API endpoint for retrieving all users (admin only)
       def index
         page = params[:page] || 1
         per_page = params[:per_page] || 10
@@ -56,14 +55,12 @@ module Api
         }, status: :ok
       end
 
-      # API endpoint for retrieving a single User
       def show
         render json: @user.to_json(include: [:groups, :lecture_groups]), status: :ok
       rescue ActiveRecord::RecordNotFound
         render json: { error: "User not found." }, status: :not_found
       end
 
-      # API endpoint for updating an existing User
       def update
         if @user.update(user_params)
           render json: { message: "User successfully updated.", user: @user }, status: :ok
@@ -75,16 +72,39 @@ module Api
       end
 
       def verify_token
-        if current_user
-          render json: {
-            valid: true,
-            user: current_user.as_json(only: [:id, :email, :role, :name])
-          }, status: :ok
+        token = params[:token]
+
+        if token.present?
+          begin
+            decoded = JsonWebToken.decode(token)
+
+            if decoded.present? && decoded[:user_id]
+              user = User.find_by(id: decoded[:user_id])
+
+              if user
+                render json: { valid: true, user: user.as_json(only: [:id, :email, :role, :name]) }, status: :ok
+              else
+                render json: { valid: false }, status: :ok
+              end
+            else
+              render json: { valid: false, error: "Invalid token" }, status: :ok
+            end
+
+          rescue JWT::ExpiredSignature
+            Rails.logger.warn "Token expired!"
+            render json: { valid: false, error: "Token expired" }, status: :ok
+          rescue JWT::DecodeError => e
+            Rails.logger.error "Decode error: #{e.message}"
+            render json: { valid: false, error: "Invalid token" }, status: :ok
+          end
         else
-          render json: { valid: false }, status: :unauthorized
+          Rails.logger.warn "Token missing!"
+          render json: { valid: false, error: "Token missing" }, status: :ok
         end
       end
-      # GET /api/v1/users/search?keyword=somevalue
+
+
+
       def search
         keyword = params[:keyword]
 
@@ -115,29 +135,23 @@ module Api
 
       private
 
-      # Helper to check if string is numeric
       def is_numeric?(string)
         true if Integer(string) rescue false
       end
 
-      # Check if the current user is an admin
-      def authorize_admin! 
+      def authorize_admin!
         unless current_user.admin?
           render json: { error: "Not authorized." }, status: :forbidden
         end
       end
 
-      # Set user by id
       def set_user
-        @user = User.find(params[:id]) 
+        @user = User.find(params[:id])
       rescue ActiveRecord::RecordNotFound
         render json: { error: "User not found." }, status: :not_found
       end
-      
-      # Strong parameters for User
+
       def user_params
-        # Note: normally we do NOT directly modify groups here
-        # This should be done through GroupUsers controller
         params.require(:user).permit(
           :role,
           :email,
