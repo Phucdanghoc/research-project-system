@@ -3,11 +3,15 @@ import authReducer from './auth/authSlice';
 import { useDispatch } from 'react-redux';
 import planReducer from './planSlice';
 import studentReducer from './auth/studentSlice';
+import topicReducer from './auth/topicSlice';
+import lectureReducer from './auth/lecturerSlice';
 const store = configureStore({
     reducer: {
         auth: authReducer,
         plans : planReducer,
-        students : studentReducer
+        topics : topicReducer,
+        students : studentReducer,
+        lecturers : lectureReducer
     },
 });
 

@@ -9,9 +9,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     const navLinks = {
         admin: [
             { link: '/admin', name: 'Dashboard', icon: FaHome },
+            { link: '/admin/manage-students', name: 'Danh sách sinh viên', icon: FaUsers },
+            { link: '/admin/manage-lecturers', name: 'Danh sách giảng viên', icon: FaUsers },
             { link: '/admin/manage-plan', name: 'Kế hoạch khung', icon: FaClipboardList },
             { link: '/admin/manage-topics', name: 'Danh sách đề tài', icon: FaBook },
-            { link: '/admin/manage-students', name: 'Danh sách sinh viên', icon: FaUsers },
             { link: '/admin/setup-committee', name: 'Hội đồng', icon: FaUsers },
         ],
         dean: [

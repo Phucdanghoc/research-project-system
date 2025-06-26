@@ -23,6 +23,7 @@ const AddEditUserModal = ({
               </label>
               {field.type === 'select' ? (
                 <select
+                  id={field.name}
                   name={field.name}
                   value={formData[field.name] || ''}
                   onChange={onInputChange}

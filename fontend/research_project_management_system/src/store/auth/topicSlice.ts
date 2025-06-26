@@ -1,10 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import type { Topic } from '../../types/topic';
+import type { Topic, TopicGeneral } from '../../types/topic';
+import { TokenService } from '../../services/token';
 
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: 'http://localhost:3000/api/v1',
 });
+
+api.defaults.headers.common['Authorization'] = 'Bearer ' + TokenService.getToken();
 
 export const fetchTopicsAsync = createAsyncThunk(
   'topics/fetchTopicsAsync',
@@ -23,7 +26,7 @@ export const addTopicAsync = createAsyncThunk(
   'topics/addTopicAsync',
   async (topic: Omit<Topic, 'id' | 'createdAt' | 'updateAt'>, { rejectWithValue }) => {
     try {
-      const response = await api.post('/topics', topic);
+      const response = await api.post('/topics', {topic : topic});
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Thêm đề tài thất bại';
@@ -32,11 +35,24 @@ export const addTopicAsync = createAsyncThunk(
   }
 );
 
+export const generateTopicAsync = createAsyncThunk(
+  'topics/generateTopicAsync',
+  async (topic: TopicGeneral, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/topics/generate', topic);
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Tạo đề tài thất bại';
+      return rejectWithValue(errorMessage);
+    }
+  }
+)
+
 export const updateTopicAsync = createAsyncThunk(
   'topics/updateTopicAsync',
   async (topic: Topic, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/topics/${topic.id}`, topic);
+      const response = await api.put(`/topics/${topic.id}`, {topic : topic});
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Cập nhật đề tài thất bại';
@@ -86,7 +102,7 @@ const topicSlice = createSlice({
       })
       .addCase(fetchTopicsAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.topics = action.payload.data || [];
+        state.topics = action.payload.topics || [];
         state.error = null;
       })
       .addCase(fetchTopicsAsync.rejected, (state, action) => {
@@ -116,7 +132,7 @@ const topicSlice = createSlice({
       })
       .addCase(updateTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
-        const updatedTopic = action.payload.data;
+        const updatedTopic = action.payload.topic;
         state.topics = state.topics.map((topic) =>
           topic.id === updatedTopic.id ? updatedTopic : topic
         );
@@ -137,6 +153,20 @@ const topicSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteTopicAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+    builder
+      .addCase(generateTopicAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(generateTopicAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.topics.push(...action.payload.topic);
+        state.error = null;
+      })
+      .addCase(generateTopicAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

@@ -6,46 +6,47 @@ import TableAdmin from './components/Table';
 import AddEditUserModal from './components/AddEditUserModal';
 import ViewUserModal from './components/ViewUserModal';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import { FacultyMajors } from '../../../types/enum';
 import {
-  fetchStudentsAsync,
-  searchStudentsAsync,
-  addStudentAsync,
-  updateStudentAsync,
-  deleteStudentAsync,
-  importStudentsFromExcel,
+  fetchLecturersAsync,
+  searchLecturersAsync,
+  addLecturerAsync,
+  updateLecturerAsync,
+  deleteLecturerAsync,
+  importLecturersFromExcel,
   clearError,
-} from '../../../store/auth/studentSlice';
+} from '../../../store/auth/lecturerSlice';
+import { toast } from 'react-toastify';
 
-const ManageStudents = () => {
+const ManageLecturers = () => {
   const dispatch = useAppDispatch();
-  const { students, loading, error, current_page, total_pages } = useSelector((state) => state.students);
+  const { lecturers, loading, error, current_page, total_pages } = useSelector((state) => state.lecturers);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedLecturer, setSelectedLecturer] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    student_code: '',
-    class_name: '',
+    role: 'lecturer',
+    lecturer_code: '',
     faculty: '',
-    major: '',
+   
     phone: '',
     gender: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const studentsPerPage = 10;
+  const lecturersPerPage = 10;
+  const [availableMajors, setAvailableMajors] = useState([]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
-      console.log('searchQuery', searchQuery);
-      
-      dispatch(searchStudentsAsync({ keyword: searchQuery, page: currentPage, per_page: studentsPerPage }));
+      dispatch(searchLecturersAsync({ keyword: searchQuery, page: currentPage, per_page: lecturersPerPage }));
     } else {
-      dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+      dispatch(fetchLecturersAsync({ page: currentPage, per_page: lecturersPerPage }));
     }
   }, [dispatch, currentPage, searchQuery]);
 
@@ -56,110 +57,127 @@ const ManageStudents = () => {
     }
   }, [error, dispatch]);
 
-  const handleAddStudent = () => {
+  useEffect(() => {
+    if (formData.faculty) {
+      const majors = FacultyMajors[formData.faculty]?.majors || [];
+      setAvailableMajors(majors);
+      if (!majors.find((m) => m.code === formData.major)) {
+        setFormData((prev) => ({ ...prev, major: '' }));
+      }
+    } else {
+      setAvailableMajors([]);
+      setFormData((prev) => ({ ...prev, major: '' }));
+    }
+  }, [formData.faculty]);
+
+  const handleAddLecturer = () => {
     setFormData({
       name: '',
       email: '',
       password: '',
-      student_code: '',
-      class_name: '',
+      role: 'lecturer',
+      lecturer_code: '',
       faculty: '',
-      major: '',
+     
       phone: '',
       gender: '',
     });
     setIsAddModalOpen(true);
   };
 
-  const handleEditStudent = (student) => {
-    setSelectedStudent(student);
+  const handleEditLecturer = (lecturer) => {
+    setSelectedLecturer(lecturer);
     setFormData({
-      name: student.name || '',
-      email: student.email || '',
+      name: lecturer.name || '',
+      email: lecturer.email || '',
       password: '',
-      student_code: student.student_code || '',
-      class_name: student.class_name || '',
-      faculty: student.faculty || '',
-      major: student.major || '',
-      phone: student.phone || '',
-      gender: student.gender || '',
+      role: 'lecturer',
+      lecturer_code: lecturer.lecturer_code || '',
+      department: lecturer.department || '',
+      faculty: lecturer.faculty || '',
+      phone: lecturer.phone || '',
+      gender: lecturer.gender || '',
     });
     setIsEditModalOpen(true);
   };
 
-  const handleViewStudent = (student) => {
-    setSelectedStudent(student);
+  const handleViewLecturer = (lecturer) => {
+    setSelectedLecturer(lecturer);
     setIsViewModalOpen(true);
   };
 
-  const handleDeleteStudent = (student) => {
-    setSelectedStudent(student);
+  const handleDeleteLecturer = (lecturer) => {
+    setSelectedLecturer(lecturer);
     setIsDeleteModalOpen(true);
   };
 
   const handleSubmitAdd = async (e) => {
     e.preventDefault();
-    const newStudent = { ...formData, role: 'student' };
+    const newLecturer = { ...formData };
     try {
-      await dispatch(addStudentAsync(newStudent)).unwrap();
+      await dispatch(addLecturerAsync(newLecturer)).unwrap();
       setIsAddModalOpen(false);
       setFormData({
         name: '',
         email: '',
         password: '',
-        student_code: '',
-        class_name: '',
+        role: 'lecturer',
+        lecturer_code: '',
         faculty: '',
-        major: '',
         phone: '',
         gender: '',
       });
-      dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+      dispatch(fetchLecturersAsync({ page: currentPage, per_page: lecturersPerPage }));
+      toast.success('Thêm giảng viên mới thành công!');
     } catch (error) {
-      console.error('Add student failed:', error);
+      console.error('Add lecturer failed:', error);
+      toast.error('Thêm giảng viên mới thất bại!');
     }
   };
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
-    const updatedStudent = { id: selectedStudent.id, ...formData, role: 'student' };
+    const updatedLecturer = { id: selectedLecturer.id, ...formData };
     try {
-      await dispatch(updateStudentAsync(updatedStudent)).unwrap();
+      await dispatch(updateLecturerAsync(updatedLecturer)).unwrap();
       setIsEditModalOpen(false);
-      setSelectedStudent(null);
+      setSelectedLecturer(null);
       setFormData({
         name: '',
         email: '',
         password: '',
-        student_code: '',
-        class_name: '',
+        role: 'lecturer',
+        lecturer_code: '',
         faculty: '',
-        major: '',
         phone: '',
         gender: '',
       });
-      dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+      dispatch(fetchLecturersAsync({ page: currentPage, per_page: lecturersPerPage }));
+      toast.success('Cập nhật thông tin giảng viên thành công!');
     } catch (error) {
-      console.error('Update student failed:', error);
+      toast.error('Cập nhật thông tin giảng viên thất bại!');
+      console.error('Update lecturer failed:', error);
     }
   };
 
   const handleConfirmDelete = async () => {
     try {
-      await dispatch(deleteStudentAsync(selectedStudent.id)).unwrap();
+      await dispatch(deleteLecturerAsync(selectedLecturer.id)).unwrap();
       setIsDeleteModalOpen(false);
-      setSelectedStudent(null);
-      if (students.length === 1 && currentPage > 1) {
+      setSelectedLecturer(null);
+      if (lecturers.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       } else {
         if (searchQuery.trim()) {
-          dispatch(searchStudentsAsync({ keyword: searchQuery, page: currentPage, per_page: studentsPerPage }));
+          dispatch(searchLecturersAsync({ keyword: searchQuery, page: currentPage, per_page: lecturersPerPage }));
         } else {
-          dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+          dispatch(fetchLecturersAsync({ page: currentPage, per_page: lecturersPerPage }));
         }
       }
+      toast.success('Xóa giảng viên thành công!');
     } catch (error) {
-      console.error('Delete student failed:', error);
+      toast.error('Xóa giảng viên thất bại!');
+      console.error('Delete lecturer failed:', error);
     }
   };
 
@@ -173,15 +191,15 @@ const ManageStudents = () => {
     setIsEditModalOpen(false);
     setIsViewModalOpen(false);
     setIsDeleteModalOpen(false);
-    setSelectedStudent(null);
+    setSelectedLecturer(null);
     setFormData({
       name: '',
       email: '',
       password: '',
-      student_code: '',
-      class_name: '',
+      role: 'lecturer',
+      lecturer_code: '',
       faculty: '',
-      major: '',
+     
       phone: '',
       gender: '',
     });
@@ -202,12 +220,13 @@ const ManageStudents = () => {
     if (!file) return;
 
     try {
-      await dispatch(importStudentsFromExcel(file)).unwrap();
-      dispatch(fetchStudentsAsync({ page: 1, per_page: studentsPerPage }));
+      await dispatch(importLecturersFromExcel(file)).unwrap();
+      dispatch(fetchLecturersAsync({ page: 1, per_page: lecturersPerPage }));
       setCurrentPage(1);
+      toast.success('Nhập danh sách giảng viên từ CSV thành công!');
     } catch (error) {
       console.error('CSV import failed:', error);
-      alert('Có lỗi khi nhập sinh viên từ CSV. Vui lòng thử lại.');
+      toast.error('Có lỗi khi nhập giảng viên từ CSV. Vui lòng thử lại.');
     }
 
     e.target.value = null;
@@ -220,32 +239,40 @@ const ManageStudents = () => {
       render: (item) => <span className="font-bold">{item.name}</span>,
     },
     { header: 'Email', key: 'email' },
-    { header: 'Mã sinh viên', key: 'student_code' },
-    { header: 'Lớp', key: 'class_name' },
-    { header: 'Khoa', key: 'faculty' },
-    { header: 'Chuyên ngành', key: 'major' },
-    { header: 'Sđt', key: 'phone' },
-    { header: 'Giới tính', key: 'gender' },
+    { header: 'Mã giảng viên', key: 'lecturer_code' },
+    {
+      header: 'Khoa',
+      key: 'faculty',
+      render: (item) => FacultyMajors[item.faculty]?.name || item.faculty,
+    },
+    // {
+    //   header: 'Chuyên ngành',
+    //   key: 'major',
+    //   render: (item) =>
+    //     FacultyMajors[item.faculty]?.majors.find((m) => m.code === item.major)?.name || item.major,
+    // },
+    { header: 'SĐT', key: 'phone' },
+    { header: 'Giới tính', key: 'gender', render: (item) => (item.gender === 'Male' ? 'Nam' : item.gender === 'Female' ? 'Nữ' : item.gender) },
   ];
 
   const tableActions = (item) => (
     <>
       <button
-        onClick={() => handleViewStudent(item)}
+        onClick={() => handleViewLecturer(item)}
         className="text-blue-600 hover:text-blue-800"
         title="Xem chi tiết"
       >
         <FaEye />
       </button>
       <button
-        onClick={() => handleEditStudent(item)}
+        onClick={() => handleEditLecturer(item)}
         className="text-blue-600 hover:text-blue-800"
         title="Sửa"
       >
         <FaEdit />
       </button>
       <button
-        onClick={() => handleDeleteStudent(item)}
+        onClick={() => handleDeleteLecturer(item)}
         className="text-red-600 hover:text-red-800"
         title="Xóa"
       >
@@ -256,20 +283,20 @@ const ManageStudents = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý sinh viên</h1>
+      <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý giảng viên</h1>
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
         <input
           type="text"
-          placeholder="Tìm kiếm theo tên, email hoặc mã sinh viên..."
+          placeholder="Tìm kiếm theo tên, email hoặc mã giảng viên..."
           value={searchQuery}
           onChange={handleSearchChange}
           className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
         />
         <button
-          onClick={handleAddStudent}
+          onClick={handleAddLecturer}
           className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
         >
-          Thêm sinh viên
+          Thêm giảng viên
         </button>
         <label className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center cursor-pointer">
           Tải lên CSV
@@ -284,9 +311,9 @@ const ManageStudents = () => {
       <div className="overflow-x-auto">
         <TableAdmin
           columns={tableColumns}
-          data={students}
+          data={lecturers}
           actions={tableActions}
-          emptyMessage={loading ? 'Đang tải...' : 'Không tìm thấy sinh viên nào.'}
+          emptyMessage={loading ? 'Đang tải...' : 'Không tìm thấy giảng viên nào.'}
         />
       </div>
       {total_pages > 1 && (
@@ -294,11 +321,10 @@ const ManageStudents = () => {
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || loading}
-            className={`px-3 py-1 rounded ${
-              currentPage === 1 || loading
-                ? 'bg-gray-200 text-gray-500'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            className={`px-3 py-1 rounded ${currentPage === 1 || loading
+              ? 'bg-gray-200 text-gray-500'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
           >
             Trước
           </button>
@@ -307,11 +333,10 @@ const ManageStudents = () => {
               key={index + 1}
               onClick={() => handlePageChange(index + 1)}
               disabled={loading}
-              className={`px-3 py-1 rounded ${
-                currentPage === index + 1
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              className={`px-3 py-1 rounded ${currentPage === index + 1
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               {index + 1}
             </button>
@@ -319,11 +344,10 @@ const ManageStudents = () => {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === total_pages || loading}
-            className={`px-3 py-1 rounded ${
-              currentPage === total_pages || loading
-                ? 'bg-gray-200 text-gray-500'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+            className={`px-3 py-1 rounded ${currentPage === total_pages || loading
+              ? 'bg-gray-200 text-gray-500'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
           >
             Sau
           </button>
@@ -341,10 +365,21 @@ const ManageStudents = () => {
           { name: 'name', label: 'Tên', type: 'text', required: true },
           { name: 'email', label: 'Email', type: 'email', required: true },
           { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
-          { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
-          { name: 'class_name', label: 'Lớp', type: 'text', required: true },
-          { name: 'faculty', label: 'Khoa', type: 'text', required: true },
-          { name: 'major', label: 'Chuyên ngành', type: 'text', required: true },
+          { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
+          {
+            name: 'faculty',
+            label: 'Khoa',
+            type: 'select',
+            required: true,
+            options: [
+              { value: '', label: 'Chọn khoa' },
+              ...Object.keys(FacultyMajors).map((key) => ({
+                value: key,
+                label: FacultyMajors[key].name,
+              })),
+            ],
+          },
+        
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
           {
             name: 'gender',
@@ -369,11 +404,21 @@ const ManageStudents = () => {
         fields={[
           { name: 'name', label: 'Tên', type: 'text', required: true },
           { name: 'email', label: 'Email', type: 'email', required: true },
-          { name: 'password', label: 'Mật khẩu (để trống nếu không đổi)', type: 'password' },
-          { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
-          { name: 'class_name', label: 'Lớp', type: 'text', required: true },
-          { name: 'faculty', label: 'Khoa', type: 'text', required: true },
-          { name: 'major', label: 'Chuyên ngành', type: 'text', required: true },
+          { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
+          {
+            name: 'faculty',
+            label: 'Khoa',
+            type: 'select',
+            required: true,
+            options: [
+              { value: '', label: 'Chọn khoa' },
+              ...Object.keys(FacultyMajors).map((key) => ({
+                value: key,
+                label: FacultyMajors[key].name,
+              })),
+            ],
+          },
+        
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
           {
             name: 'gender',
@@ -391,16 +436,19 @@ const ManageStudents = () => {
       <ViewUserModal
         isOpen={isViewModalOpen}
         onClose={closeModal}
-        user={selectedStudent}
+        user={selectedLecturer}
         fields={[
           { label: 'Tên', key: 'name' },
           { label: 'Email', key: 'email' },
-          { label: 'Mã sinh viên', key: 'student_code' },
-          { label: 'Lớp', key: 'class_name' },
-          { label: 'Khoa', key: 'faculty' },
-          { label: 'Chuyên ngành', key: 'major' },
+          { label: 'Mã giảng viên', key: 'lecturer_code' },
+          { label: 'Bộ môn', key: 'department' },
+          {
+            label: 'Khoa',
+            key: 'faculty',
+            render: (value) => FacultyMajors[value]?.name || value,
+          },
           { label: 'Số điện thoại', key: 'phone' },
-          { label: 'Giới tính', key: 'gender' },
+          { label: 'Giới tính', key: 'gender', render: (value) => (value === 'Male' ? 'Nam' : value === 'Female' ? 'Nữ' : value) },
         ]}
       />
 
@@ -408,10 +456,10 @@ const ManageStudents = () => {
         isOpen={isDeleteModalOpen}
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
-        itemName={selectedStudent?.name || ''}
+        itemName={selectedLecturer?.name || ''}
       />
     </div>
   );
 };
 
-export default ManageStudents;
+export default ManageLecturers;

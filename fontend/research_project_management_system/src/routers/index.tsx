@@ -3,7 +3,8 @@ import ProtectedRoute from './ProtectedRoute';
 import UnauthorizedPage from '../components/UnauthorizedPage';
 import LoginPage from '../pages/auth/LoginPage';
 import AdminLayout from '../pages/admin/layout';
-import ManagerUser from '../pages/admin/account/Manager';
+import ManagerStudents from '../pages/admin/account/StudentManager';
+import ManagerLectures from '../pages/admin/account/LecturerManager';
 import ManageTopics from '../pages/admin/topics/TopicManager';
 import NotFoundPage from '../pages/404/index';
 import ManagerDashboard from '../pages/admin/dashboard/index';
@@ -34,9 +35,10 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard', element: <ManagerDashboard /> },
-      { path: 'manage-students', element: <ManagerUser /> },
+      { path: 'manage-students', element: <ManagerStudents /> },
+      { path: 'manage-lecturers', element: <ManagerLectures /> },
       { path: 'manage-topics', element: <ManageTopics /> },
-      { path: 'setup-areas', element: <ManagerUser /> },
+      { path: 'setup-areas', element: <ManagerStudents /> },
     ],
   },
   {
