@@ -10,21 +10,17 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        @topics = Topic
-                    .includes(:groups)
-                    .order(created_at: :desc)
-                    .page(page)
-                    .per(per_page)
+        @topics = Topic.includes(:groups, :lecturer).order(created_at: :desc).page(page).per(per_page)
 
         render json: {
-          topics: @topics.as_json(include: :groups),
+          topics: @topics.map { |t| topic_response(t) },
           current_page: @topics.current_page,
           total_pages: @topics.total_pages,
           total_count: @topics.total_count
         }, status: :ok
       end
 
-      # GET /api/v1/topics/filter_by_status?status=active&page=1&per_page=10
+      # GET /api/v1/topics/filter_by_status
       def filter_by_status
         status = params[:status]
 
@@ -35,15 +31,14 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        @topics = Topic
-                    .includes(:groups)
-                    .where(status: Topic.statuses[status])
-                    .order(created_at: :desc)
-                    .page(page)
-                    .per(per_page)
+        @topics = Topic.includes(:groups, :lecturer)
+                       .where(status: Topic.statuses[status])
+                       .order(created_at: :desc)
+                       .page(page)
+                       .per(per_page)
 
         render json: {
-          topics: @topics.as_json(include: :groups),
+          topics: @topics.map { |t| topic_response(t) },
           current_page: @topics.current_page,
           total_pages: @topics.total_pages,
           total_count: @topics.total_count
@@ -56,7 +51,7 @@ module Api
           return render json: { error: "Only admins can generate topics." }, status: :forbidden
         end
 
-        lecturer_id = params[:user_id]
+        lecturer_id = params[:lecturer_id]
         quantity = params[:quantity].to_i
 
         if lecturer_id.blank? || !User.exists?(id: lecturer_id, role: User.roles[:lecturer])
@@ -78,7 +73,7 @@ module Api
           )
 
           if topic.save
-            generated_topics << topic
+            generated_topics << topic_response(topic)
           else
             return render json: { error: "Failed to generate topic: #{topic.errors.full_messages}" }, status: :unprocessable_entity
           end
@@ -92,19 +87,17 @@ module Api
 
       # GET /topics/:id
       def show
-        render json: @topic.to_json(include: :groups), status: :ok
+        render json: topic_response(@topic), status: :ok
       end
 
       # POST /topics
       def create
         @topic = Topic.new(topic_params.except(:topic_code))
         @topic.lecturer_id = current_user.id if current_user.lecturer?
-
-        # Always auto-generate topic_code
         @topic.topic_code = generate_unique_topic_code
 
         if @topic.save
-          render json: { message: "Topic successfully created.", topic: @topic }, status: :created
+          render json: { message: "Topic successfully created.", topic: topic_response(@topic) }, status: :created
         else
           render json: { errors: @topic.errors.full_messages }, status: :unprocessable_entity
         end
@@ -120,15 +113,14 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        @topics = Topic
-                    .includes(:groups)
-                    .where(category: category)
-                    .order(created_at: :desc)
-                    .page(page)
-                    .per(per_page)
+        @topics = Topic.includes(:groups, :lecturer)
+                       .where(category: category)
+                       .order(created_at: :desc)
+                       .page(page)
+                       .per(per_page)
 
         render json: {
-          topics: @topics.as_json(include: :groups),
+          topics: @topics.map { |t| topic_response(t) },
           current_page: @topics.current_page,
           total_pages: @topics.total_pages,
           total_count: @topics.total_count
@@ -138,7 +130,7 @@ module Api
       # PATCH/PUT /topics/:id
       def update
         if @topic.update(topic_params)
-          render json: { message: "Topic successfully updated.", topic: @topic }, status: :ok
+          render json: { message: "Topic successfully updated.", topic: topic_response(@topic) }, status: :ok
         else
           render json: { errors: @topic.errors.full_messages }, status: :unprocessable_entity
         end
@@ -150,7 +142,6 @@ module Api
         render json: { message: "Topic successfully destroyed." }, status: :ok
       end
 
-
       def search
         keyword = params[:keyword]
 
@@ -161,15 +152,14 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        @topics = Topic
-                    .includes(:groups)
-                    .where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
-                    .order(created_at: :desc)
-                    .page(page)
-                    .per(per_page)
+        @topics = Topic.includes(:groups, :lecturer)
+                       .where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
+                       .order(created_at: :desc)
+                       .page(page)
+                       .per(per_page)
 
         render json: {
-          topics: @topics.as_json(include: :groups),
+          topics: @topics.map { |t| topic_response(t) },
           current_page: @topics.current_page,
           total_pages: @topics.total_pages,
           total_count: @topics.total_count
@@ -188,7 +178,7 @@ module Api
           return render json: { error: "Lecturer not found." }, status: :not_found
         end
 
-        @topics = Topic.includes(:groups).where(lecturer_id: lecturer_id)
+        @topics = Topic.includes(:groups, :lecturer).where(lecturer_id: lecturer_id)
 
         if keyword.present?
           @topics = @topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
@@ -208,13 +198,24 @@ module Api
         @topics = @topics.order(created_at: :desc).page(page).per(per_page)
 
         render json: {
-          topics: @topics.as_json(include: :groups),
+          topics: @topics.map { |t| topic_response(t) },
           current_page: @topics.current_page,
           total_pages: @topics.total_pages,
           total_count: @topics.total_count
         }, status: :ok
       end
+
       private
+
+      def topic_response(topic)
+        lecturer = topic.lecturer
+
+        topic.as_json(include: :groups).merge({
+          lecturer_name: lecturer&.name,
+          faculty: lecturer&.faculty
+        })
+      end
+
       def generate_unique_topic_code
         year = Time.current.year
         random_part = SecureRandom.alphanumeric(3).upcase
@@ -222,19 +223,16 @@ module Api
         loop do
           index = Topic.maximum(:id).to_i + 1
           code = "CTN.#{year}.#{random_part}.#{index}"
-
           break code unless Topic.exists?(topic_code: code)
         end
       end
-      
+
       def authorize_lecturer_or_admin!
         if current_user.admin?
           return true
         elsif current_user.lecturer?
-          if action_name.in?(%w[update destroy])
-            unless @topic.lecturer_id == current_user.id
-              return render json: { error: "You can only modify your own topics." }, status: :forbidden
-            end
+          if action_name.in?(%w[update destroy]) && @topic.lecturer_id != current_user.id
+            return render json: { error: "You can only modify your own topics." }, status: :forbidden
           end
         else
           render json: { error: "Not authorized." }, status: :forbidden
@@ -248,7 +246,7 @@ module Api
       end
 
       def topic_params
-        params.require(:topic).permit(
+        permitted = [
           :title,
           :description,
           :requirement,
@@ -256,7 +254,11 @@ module Api
           :student_quantity,
           :status,
           :category
-        )
+        ]
+
+        permitted << :lecturer_id if current_user.admin?
+
+        params.require(:topic).permit(permitted)
       end
     end
   end
