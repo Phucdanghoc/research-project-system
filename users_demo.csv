@@ -1,10 +1,3 @@
-username,email,role
-newadmin1,newadmin1@example.com,admin
-newdean1,newdean1@example.com,dean
-newlecturer1,newlecturer1@example.com,lecturer
-newstudent1,newstudent1@example.com,student
-newadvisor1,newadvisor1@example.com,advisor
-newcommittee1,newcommittee1@example.com,committee
-invaliduser1,invalid1@example.com,invalidrole
-invaliduser2,,student
-invaliduser3,invalid3@example.com,
+name,email,password,student_code,class_name,faculty,major,phone,gender
+Charlie Le,charlie@student.edu,pass123,S004,Class D,Information Technology,Computer Science,934544890,Male
+Diana Pham,diana@student.edu,pass123,S005,Class E,Arts,Graphic Design,94567448901,Female

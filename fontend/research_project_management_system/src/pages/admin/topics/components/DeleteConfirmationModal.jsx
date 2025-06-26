@@ -7,7 +7,7 @@
      if (!isOpen) return null;
 
      return (
-       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+       <div className="fixed inset-0 bg-gray-600/50 flex justify-center items-center">
          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
            <h2 className="text-xl font-bold mb-4">Xác nhận xóa</h2>
            <p className="mb-4">Bạn có chắc chắn muốn xóa đề tài "{itemName}"?</p>

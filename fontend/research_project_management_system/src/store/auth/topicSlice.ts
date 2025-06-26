@@ -3,7 +3,7 @@ import axios from 'axios';
 import type { Topic } from '../../types/topic';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
 });
 
 export const fetchTopicsAsync = createAsyncThunk(

@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { FaEye, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaChevronDown } from 'react-icons/fa';
-import CardTopic from '../../../components/cards/Card';
+import CardView from './components/CardView';
+import TableView from './components/TableView';
 import AddEditTopicModal from './components/AddEditTopicModal';
 import ViewTopicModal from './components/ViewTopicModal';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
-
+import { FaCheckCircle, FaHandMiddleFinger, FaTimesCircle } from 'react-icons/fa';
 const initialTopics = [
   {
     id: 1,
@@ -52,7 +52,7 @@ const initialTopics = [
 const statusConfig = {
   active: { icon: <FaCheckCircle className="text-green-600" />, label: 'Active', border: 'border-green-600' },
   inactive: { icon: <FaTimesCircle className="text-red-600" />, label: 'Inactive', border: 'border-red-600' },
-  pending: { icon: <FaHourglassHalf className="text-yellow-600" />, label: 'Pending', border: 'border-yellow-600' },
+  pending: { icon: <FaHandMiddleFinger className="text-yellow-600" />, label: 'Pending', border: 'border-yellow-600' },
 };
 
 const ManageTopics = () => {
@@ -73,10 +73,10 @@ const ManageTopics = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState('card'); // New state for view mode
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const topicsPerPage = 4;
   const dropdownRefs = useRef({});
-
   const statuses = ['active', 'inactive', 'pending'];
 
   // Close dropdown when clicking outside
@@ -232,68 +232,44 @@ const ManageTopics = () => {
         >
           Thêm đề tài
         </button>
+        <select
+          value={viewMode}
+          onChange={(e) => setViewMode(e.target.value)}
+          className="w-full sm:w-40 p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="card">Card View</option>
+          <option value="table">Table View</option>
+        </select>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {currentTopics.length > 0 ? (
-          currentTopics.map((topic) => (
-            <div
-              key={topic.id}
-              className={`relative p-4 border-2  border ${statusConfig[topic.status].border} rounded hover:scale-[1.02] transition duration-300`}
-            >
-              <CardTopic topic={topic} />
-              <div className="absolute top-2 right-2 flex space-x-2">
-                <button
-                  onClick={() => handleViewTopic(topic)}
-                  className="text-blue-600 hover:text-blue-800"
-                  title="Xem chi tiết"
-                >
-                  <FaEye />
-                </button>
-                <button
-                  onClick={() => handleEditTopic(topic)}
-                  className="text-blue-600 hover:text-blue-800"
-                  title="Sửa"
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={() => handleDeleteTopic(topic)}
-                  className="text-red-600 hover:text-red-800"
-                  title="Xóa"
-                >
-                  <FaTrash />
-                </button>
-                <div className="relative" ref={(el) => (dropdownRefs.current[topic.id] = el)}>
-                  <button
-                    onClick={() => setOpenDropdownId(openDropdownId === topic.id ? null : topic.id)}
-                    className="flex items-center text-gray-600 hover:text-gray-800"
-                    title="Thay đổi trạng thái"
-                  >
-                    {statusConfig[topic.status].icon}
-                    <FaChevronDown className={`ml-1 transition-transform ${openDropdownId === topic.id ? 'rotate-180' : ''}`} />
-                  </button>
-                  {openDropdownId === topic.id && (
-                    <div className="absolute z-10 right-0 mt-2 w-40 bg-white border border-gray-300 rounded shadow-lg">
-                      {statuses.map((status) => (
-                        <button
-                          key={status}
-                          onClick={() => handleStatusChange(topic.id, status)}
-                          className="w-full p-2 text-left hover:bg-blue-100 flex items-center"
-                        >
-                          {statusConfig[status].icon}
-                          <span className="ml-2">{statusConfig[status].label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-600 col-span-2">Không tìm thấy đề tài nào.</p>
-        )}
-      </div>
+
+      {viewMode === 'card' ? (
+        <CardView
+          currentTopics={currentTopics}
+          statusConfig={statusConfig}
+          dropdownRefs={dropdownRefs}
+          openDropdownId={openDropdownId}
+          setOpenDropdownId={setOpenDropdownId}
+          handleViewTopic={handleViewTopic}
+          handleEditTopic={handleEditTopic}
+          handleDeleteTopic={handleDeleteTopic}
+          handleStatusChange={handleStatusChange}
+          statuses={statuses}
+        />
+      ) : (
+        <TableView
+          currentTopics={currentTopics}
+          statusConfig={statusConfig}
+          dropdownRefs={dropdownRefs}
+          openDropdownId={openDropdownId}
+          setOpenDropdownId={setOpenDropdownId}
+          handleViewTopic={handleViewTopic}
+          handleEditTopic={handleEditTopic}
+          handleDeleteTopic={handleDeleteTopic}
+          handleStatusChange={handleStatusChange}
+          statuses={statuses}
+        />
+      )}
+
       {totalPages > 1 && (
         <div className="flex justify-center mt-4 space-x-2">
           <button

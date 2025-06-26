@@ -1,159 +1,165 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
-import Papa from 'papaparse';
-import TableAdmin from '../components/Table'; // Adjust the import path as needed
-import AddEditUserModal from '../components/AddEditUserModal'; // Adjust the import path
-import ViewUserModal from '../components/ViewUserModal'; // Adjust the import path
-import DeleteConfirmationModal from '../components/DeleteConfirmationModal'; // Adjust the import path
+import { useAppDispatch } from '../../../store/index';
+import TableAdmin from './components/Table';
+import AddEditUserModal from './components/AddEditUserModal';
+import ViewUserModal from './components/ViewUserModal';
+import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import {
+  fetchStudentsAsync,
+  searchStudentsAsync,
+  addStudentAsync,
+  updateStudentAsync,
+  deleteStudentAsync,
+  importStudentsFromExcel,
+  clearError,
+} from '../../../store/auth/studentSlice';
 
-const initialUsers = [
-  { id: 1, username: 'admin1', email: 'admin1@example.com', role: 'admin' },
-  { id: 2, username: 'dean1', email: 'dean1@example.com', role: 'dean' },
-  { id: 3, username: 'lecturer1', email: 'lecturer1@example.com', role: 'lecturer' },
-  { id: 4, username: 'student1', email: 'student1@example.com', role: 'student' },
-  { id: 5, username: 'advisor1', email: 'advisor1@example.com', role: 'advisor' },
-  { id: 6, username: 'committee1', email: 'committee1@example.com', role: 'committee' },
-  { id: 7, username: 'student2', email: 'student2@example.com', role: 'student' },
-];
-
-const ReviewCsvModal = ({ isOpen, onClose, onConfirm, pendingUsers, invalidRows }) => {
-  if (!isOpen) return null;
-
-  const tableColumns = [
-    {
-      header: 'Tên tài khoản',
-      key: 'username',
-      render: (item) => <span className="font-bold">{item.username}</span>,
-    },
-    { header: 'Email', key: 'email' },
-    {
-      header: 'Vai trò',
-      key: 'role',
-      render: (item) => (
-        <span className="inline-block bg-green-500 text-white hover:bg-green-800 text-sm rounded-full px-4 py-1">
-          {item.role}
-        </span>
-      ),
-    },
-  ];
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-        <h2 className="text-xl font-bold mb-4">Xem lại dữ liệu CSV</h2>
-        {invalidRows.length > 0 && (
-          <p className="text-red-600 mb-4">
-            Có {invalidRows.length} dòng không hợp lệ đã bị bỏ qua.
-          </p>
-        )}
-        {pendingUsers.length === 0 ? (
-          <p className="text-gray-600 mb-4">Không có dữ liệu hợp lệ để thêm.</p>
-        ) : (
-          <div className="overflow-x-auto mb-4">
-            <TableAdmin
-              columns={tableColumns}
-              data={pendingUsers}
-              emptyMessage="Không có dữ liệu để hiển thị."
-            />
-          </div>
-        )}
-        <div className="flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-          >
-            Hủy
-          </button>
-          {pendingUsers.length > 0 && (
-            <button
-              onClick={onConfirm}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Xác nhận
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ManageUsers = () => {
-  const { user } = useSelector((state) => state.auth);
-  const [users, setUsers] = useState(initialUsers);
+const ManageStudents = () => {
+  const dispatch = useAppDispatch();
+  const { students, loading, error, current_page, total_pages } = useSelector((state) => state.students);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({ username: '', email: '', password: '', role: '' });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pendingUsers, setPendingUsers] = useState([]);
-  const [invalidRows, setInvalidRows] = useState([]);
-  const usersPerPage = 5;
-
-  const roles = ['admin', 'dean', 'lecturer', 'student', 'advisor', 'committee'];
-
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = selectedRole ? u.role === selectedRole : true;
-    return matchesSearch && matchesRole;
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    student_code: '',
+    class_name: '',
+    faculty: '',
+    major: '',
+    phone: '',
+    gender: '',
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const studentsPerPage = 10;
 
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      console.log('searchQuery', searchQuery);
+      
+      dispatch(searchStudentsAsync({ keyword: searchQuery, page: currentPage, per_page: studentsPerPage }));
+    } else {
+      dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+    }
+  }, [dispatch, currentPage, searchQuery]);
 
-  const handleAddUser = () => {
-    setFormData({ username: '', email: '', password: '', role: '' });
+  useEffect(() => {
+    if (error) {
+      alert(error);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  const handleAddStudent = () => {
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      student_code: '',
+      class_name: '',
+      faculty: '',
+      major: '',
+      phone: '',
+      gender: '',
+    });
     setIsAddModalOpen(true);
   };
 
-  const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setFormData({ username: user.username, email: user.email, password: '', role: user.role });
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setFormData({
+      name: student.name || '',
+      email: student.email || '',
+      password: '',
+      student_code: student.student_code || '',
+      class_name: student.class_name || '',
+      faculty: student.faculty || '',
+      major: student.major || '',
+      phone: student.phone || '',
+      gender: student.gender || '',
+    });
     setIsEditModalOpen(true);
   };
 
-  const handleViewUser = (user) => {
-    setSelectedUser(user);
+  const handleViewStudent = (student) => {
+    setSelectedStudent(student);
     setIsViewModalOpen(true);
   };
 
-  const handleDeleteUser = (user) => {
-    setSelectedUser(user);
+  const handleDeleteStudent = (student) => {
+    setSelectedStudent(student);
     setIsDeleteModalOpen(true);
   };
 
-  const handleSubmitAdd = (e) => {
+  const handleSubmitAdd = async (e) => {
     e.preventDefault();
-    const newUser = { id: users.length + 1, ...formData };
-    setUsers([...users, newUser]);
-    setIsAddModalOpen(false);
-    setFormData({ username: '', email: '', password: '', role: '' });
+    const newStudent = { ...formData, role: 'student' };
+    try {
+      await dispatch(addStudentAsync(newStudent)).unwrap();
+      setIsAddModalOpen(false);
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        student_code: '',
+        class_name: '',
+        faculty: '',
+        major: '',
+        phone: '',
+        gender: '',
+      });
+      dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+    } catch (error) {
+      console.error('Add student failed:', error);
+    }
   };
 
-  const handleSubmitEdit = (e) => {
+  const handleSubmitEdit = async (e) => {
     e.preventDefault();
-    setUsers(users.map((u) => (u.id === selectedUser.id ? { ...u, ...formData } : u)));
-    setIsEditModalOpen(false);
-    setSelectedUser(null);
-    setFormData({ username: '', email: '', password: '', role: '' });
+    const updatedStudent = { id: selectedStudent.id, ...formData, role: 'student' };
+    try {
+      await dispatch(updateStudentAsync(updatedStudent)).unwrap();
+      setIsEditModalOpen(false);
+      setSelectedStudent(null);
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        student_code: '',
+        class_name: '',
+        faculty: '',
+        major: '',
+        phone: '',
+        gender: '',
+      });
+      dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+    } catch (error) {
+      console.error('Update student failed:', error);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    setUsers(users.filter((u) => u.id !== selectedUser.id));
-    setIsDeleteModalOpen(false);
-    setSelectedUser(null);
-    if (currentUsers.length === 1 && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+  const handleConfirmDelete = async () => {
+    try {
+      await dispatch(deleteStudentAsync(selectedStudent.id)).unwrap();
+      setIsDeleteModalOpen(false);
+      setSelectedStudent(null);
+      if (students.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        if (searchQuery.trim()) {
+          dispatch(searchStudentsAsync({ keyword: searchQuery, page: currentPage, per_page: studentsPerPage }));
+        } else {
+          dispatch(fetchStudentsAsync({ page: currentPage, per_page: studentsPerPage }));
+        }
+      }
+    } catch (error) {
+      console.error('Delete student failed:', error);
     }
   };
 
@@ -167,11 +173,19 @@ const ManageUsers = () => {
     setIsEditModalOpen(false);
     setIsViewModalOpen(false);
     setIsDeleteModalOpen(false);
-    setIsReviewModalOpen(false);
-    setSelectedUser(null);
-    setPendingUsers([]);
-    setInvalidRows([]);
-    setFormData({ username: '', email: '', password: '', role: '' });
+    setSelectedStudent(null);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      student_code: '',
+      class_name: '',
+      faculty: '',
+      major: '',
+      phone: '',
+      gender: '',
+    });
+    dispatch(clearError());
   };
 
   const handleSearchChange = (e) => {
@@ -179,105 +193,59 @@ const ManageUsers = () => {
     setCurrentPage(1);
   };
 
-  const handleRoleChange = (e) => {
-    setSelectedRole(e.target.value);
-    setCurrentPage(1);
-  };
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  const handleCsvUpload = (e) => {
+  const handleCsvUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result) => {
-        const validUsers = [];
-        const invalidRows = [];
-
-        result.data.forEach((row, index) => {
-          if (
-            row.username &&
-            row.email &&
-            row.role &&
-            roles.includes(row.role)
-          ) {
-            validUsers.push({
-              id: users.length + validUsers.length + 1,
-              username: row.username,
-              email: row.email,
-              role: row.role,
-            });
-          } else {
-            invalidRows.push({ index: index + 2, row });
-          }
-        });
-
-        if (validUsers.length > 0 || invalidRows.length > 0) {
-          setPendingUsers(validUsers);
-          setInvalidRows(invalidRows);
-          setIsReviewModalOpen(true);
-        } else {
-          alert('Không có dữ liệu hợp lệ trong file CSV. Vui lòng kiểm tra định dạng.');
-        }
-      },
-      error: (error) => {
-        console.error('Error parsing CSV:', error);
-        alert('Có lỗi khi đọc file CSV. Vui lòng thử lại.');
-      },
-    });
+    try {
+      await dispatch(importStudentsFromExcel(file)).unwrap();
+      dispatch(fetchStudentsAsync({ page: 1, per_page: studentsPerPage }));
+      setCurrentPage(1);
+    } catch (error) {
+      console.error('CSV import failed:', error);
+      alert('Có lỗi khi nhập sinh viên từ CSV. Vui lòng thử lại.');
+    }
 
     e.target.value = null;
   };
 
-  const handleConfirmCsv = () => {
-    setUsers([...users, ...pendingUsers]);
-    setIsReviewModalOpen(false);
-    setPendingUsers([]);
-    setInvalidRows([]);
-    setCurrentPage(1);
-  };
-
   const tableColumns = [
     {
-      header: 'Tên tài khoản',
-      key: 'username',
-      render: (item) => <span className="font-bold">{item.username}</span>,
+      header: 'Tên',
+      key: 'name',
+      render: (item) => <span className="font-bold">{item.name}</span>,
     },
     { header: 'Email', key: 'email' },
-    {
-      header: 'Vai trò',
-      key: 'role',
-      render: (item) => (
-        <span className="inline-block bg-green-500 text-white hover:bg-green-800 text-sm rounded-full px-4 py-1">
-          {item.role}
-        </span>
-      ),
-    },
+    { header: 'Mã sinh viên', key: 'student_code' },
+    { header: 'Lớp', key: 'class_name' },
+    { header: 'Khoa', key: 'faculty' },
+    { header: 'Chuyên ngành', key: 'major' },
+    { header: 'Sđt', key: 'phone' },
+    { header: 'Giới tính', key: 'gender' },
   ];
 
   const tableActions = (item) => (
     <>
       <button
-        onClick={() => handleViewUser(item)}
+        onClick={() => handleViewStudent(item)}
         className="text-blue-600 hover:text-blue-800"
         title="Xem chi tiết"
       >
         <FaEye />
       </button>
       <button
-        onClick={() => handleEditUser(item)}
+        onClick={() => handleEditStudent(item)}
         className="text-blue-600 hover:text-blue-800"
         title="Sửa"
       >
         <FaEdit />
       </button>
       <button
-        onClick={() => handleDeleteUser(item)}
+        onClick={() => handleDeleteStudent(item)}
         className="text-red-600 hover:text-red-800"
         title="Xóa"
       >
@@ -288,32 +256,20 @@ const ManageUsers = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý tài khoản</h1>
+      <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý sinh viên</h1>
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
         <input
           type="text"
-          placeholder="Tìm kiếm theo tên hoặc email..."
+          placeholder="Tìm kiếm theo tên, email hoặc mã sinh viên..."
           value={searchQuery}
           onChange={handleSearchChange}
           className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
         />
-        <select
-          value={selectedRole}
-          onChange={handleRoleChange}
-          className="w-full sm:w-40 p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
-        >
-          <option value="">Tất cả vai trò</option>
-          {roles.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
         <button
-          onClick={handleAddUser}
+          onClick={handleAddStudent}
           className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
         >
-          Thêm tài khoản
+          Thêm sinh viên
         </button>
         <label className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center cursor-pointer">
           Tải lên CSV
@@ -328,26 +284,29 @@ const ManageUsers = () => {
       <div className="overflow-x-auto">
         <TableAdmin
           columns={tableColumns}
-          data={currentUsers}
+          data={students}
           actions={tableActions}
-          emptyMessage="Không tìm thấy tài khoản nào."
+          emptyMessage={loading ? 'Đang tải...' : 'Không tìm thấy sinh viên nào.'}
         />
       </div>
-      {totalPages > 1 && (
+      {total_pages > 1 && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || loading}
             className={`px-3 py-1 rounded ${
-              currentPage === 1 ? 'bg-gray-200 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+              currentPage === 1 || loading
+                ? 'bg-gray-200 text-gray-500'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             Trước
           </button>
-          {[...Array(totalPages)].map((_, index) => (
+          {[...Array(total_pages)].map((_, index) => (
             <button
               key={index + 1}
               onClick={() => handlePageChange(index + 1)}
+              disabled={loading}
               className={`px-3 py-1 rounded ${
                 currentPage === index + 1
                   ? 'bg-blue-600 text-white'
@@ -359,9 +318,11 @@ const ManageUsers = () => {
           ))}
           <button
             onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === total_pages || loading}
             className={`px-3 py-1 rounded ${
-              currentPage === totalPages ? 'bg-gray-200 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+              currentPage === total_pages || loading
+                ? 'bg-gray-200 text-gray-500'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             Sau
@@ -375,8 +336,27 @@ const ManageUsers = () => {
         onSubmit={handleSubmitAdd}
         formData={formData}
         onInputChange={handleInputChange}
-        roles={roles}
         isEdit={false}
+        fields={[
+          { name: 'name', label: 'Tên', type: 'text', required: true },
+          { name: 'email', label: 'Email', type: 'email', required: true },
+          { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
+          { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
+          { name: 'class_name', label: 'Lớp', type: 'text', required: true },
+          { name: 'faculty', label: 'Khoa', type: 'text', required: true },
+          { name: 'major', label: 'Chuyên ngành', type: 'text', required: true },
+          { name: 'phone', label: 'Số điện thoại', type: 'text' },
+          {
+            name: 'gender',
+            label: 'Giới tính',
+            type: 'select',
+            options: [
+              { value: '', label: 'Chọn giới tính' },
+              { value: 'Male', label: 'Nam' },
+              { value: 'Female', label: 'Nữ' },
+            ],
+          },
+        ]}
       />
 
       <AddEditUserModal
@@ -385,32 +365,53 @@ const ManageUsers = () => {
         onSubmit={handleSubmitEdit}
         formData={formData}
         onInputChange={handleInputChange}
-        roles={roles}
         isEdit={true}
+        fields={[
+          { name: 'name', label: 'Tên', type: 'text', required: true },
+          { name: 'email', label: 'Email', type: 'email', required: true },
+          { name: 'password', label: 'Mật khẩu (để trống nếu không đổi)', type: 'password' },
+          { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
+          { name: 'class_name', label: 'Lớp', type: 'text', required: true },
+          { name: 'faculty', label: 'Khoa', type: 'text', required: true },
+          { name: 'major', label: 'Chuyên ngành', type: 'text', required: true },
+          { name: 'phone', label: 'Số điện thoại', type: 'text' },
+          {
+            name: 'gender',
+            label: 'Giới tính',
+            type: 'select',
+            options: [
+              { value: '', label: 'Chọn giới tính' },
+              { value: 'Male', label: 'Nam' },
+              { value: 'Female', label: 'Nữ' },
+            ],
+          },
+        ]}
       />
 
       <ViewUserModal
         isOpen={isViewModalOpen}
         onClose={closeModal}
-        user={selectedUser}
+        user={selectedStudent}
+        fields={[
+          { label: 'Tên', key: 'name' },
+          { label: 'Email', key: 'email' },
+          { label: 'Mã sinh viên', key: 'student_code' },
+          { label: 'Lớp', key: 'class_name' },
+          { label: 'Khoa', key: 'faculty' },
+          { label: 'Chuyên ngành', key: 'major' },
+          { label: 'Số điện thoại', key: 'phone' },
+          { label: 'Giới tính', key: 'gender' },
+        ]}
       />
 
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
-        itemName={selectedUser?.username || ''}
-      />
-
-      <ReviewCsvModal
-        isOpen={isReviewModalOpen}
-        onClose={closeModal}
-        onConfirm={handleConfirmCsv}
-        pendingUsers={pendingUsers}
-        invalidRows={invalidRows}
+        itemName={selectedStudent?.name || ''}
       />
     </div>
   );
 };
 
-export default ManageUsers;
+export default ManageStudents;
