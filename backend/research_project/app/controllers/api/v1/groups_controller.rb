@@ -55,33 +55,30 @@ module Api
       end
 
       # POST /groups
-    # POST /groups
-    def create
-      @group = Group.new(group_params.except(:topic_id))
-      if current_user.lecturer?
-        topic = Topic.find_by(id: params[:group][:topic_id])
+      def create
+        topic = Topic.find_by(id: params[:topic_id])
 
         if topic.nil?
           return render json: { error: "Topic not found." }, status: :not_found
         end
 
-        if topic.lecturer_id != current_user.id
+        if current_user.lecturer? && topic.lecturer_id != current_user.id
           return render json: { error: "You can only create groups for your own topics." }, status: :forbidden
         end
 
-        @group.lecturer_id = current_user.id
-      end
+        @group = Group.new(name: params[:name], lecturer_id: topic.lecturer_id)
+        @group.topics << topic
 
-      if @group.save
-        if params[:group][:topic_id].present?
-          @group.topics << Topic.find(params[:group][:topic_id])
+        if params[:student_ids].present?
+          @group.student_ids = params[:student_ids].map(&:to_i)
         end
 
-        render json: { message: "Group successfully created.", group: @group.as_json(include: [:lecturer, :defense, :students, :topics]) }, status: :created
-      else
-        render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
+        if @group.save
+          render json: { message: "Group successfully created.", group: @group.as_json(include: [:lecturer, :defense, :students, :topics]) }, status: :created
+        else
+          render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
+        end
       end
-    end
 
       # PATCH/PUT /groups/:id
       def update
@@ -112,7 +109,7 @@ module Api
 
       # POST /groups/:id/add_students
       def add_students
-        if current_user.lecturer? && @group.topic.lecturer_id != current_user.id
+        if current_user.lecturer? && @group.topics.first.lecturer_id != current_user.id
           return render json: { error: "You can only add students to your own groups." }, status: :forbidden
         end
 
@@ -121,9 +118,15 @@ module Api
         if student_ids.blank?
           return render json: { error: "Student IDs are required." }, status: :bad_request
         end
-
-        @group.student_ids |= student_ids.map(&:to_i)
-
+        valid_student_ids = User.where(id: student_ids, role: :student).pluck(:id)
+        if valid_student_ids.empty?
+          return render json: { error: "No valid student IDs provided." }, status: :bad_request
+        end
+        invalid_ids = student_ids.map(&:to_i) - valid_student_ids
+        if invalid_ids.any?
+          return render json: { error: "The following IDs are invalid or not students: #{invalid_ids.join(', ')}" }, status: :unprocessable_entity
+        end
+        @group.student_ids |= valid_student_ids
         if @group.save
           render json: { message: "Students successfully added.", group: @group.as_json(include: [:students]) }, status: :ok
         else
