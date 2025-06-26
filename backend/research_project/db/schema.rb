@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_24_131600) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_25_203523) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,7 +73,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_131600) do
   end
 
   create_table "topics", force: :cascade do |t|
-    t.string "title", null: false
+    t.string "title"
     t.string "topic_code", null: false
     t.text "description"
     t.text "requirement"
@@ -83,6 +83,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_24_131600) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "lecturer_id"
+    t.string "category"
     t.index ["lecturer_id"], name: "index_topics_on_lecturer_id"
   end
 

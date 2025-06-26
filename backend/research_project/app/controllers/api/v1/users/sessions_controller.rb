@@ -2,8 +2,8 @@ module Api
   module V1
     module Users
       class SessionsController < Devise::SessionsController
-        skip_before_action :authenticate_api_user!, only: [:create, :verify_token]
-
+        skip_before_action :authenticate_api_user!, only: [:create]
+        
         # POST /api/v1/users/login
         def create
           user = User.find_by(email: params[:user][:email])
@@ -25,26 +25,6 @@ module Api
           end
         end
 
-        def verify_token
-          header = request.headers['Authorization']
-          token = header&.split(' ')&.last
-
-          begin
-            decoded = JsonWebToken.decode(token)
-            user = User.find(decoded[:user_id])
-
-            render json: {
-              valid: true,
-              user: {
-                id: user.id,
-                email: user.email,
-                role: user.role
-              }
-            }, status: :ok
-          rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-            render json: { valid: false, error: 'Invalid or expired token' }, status: :unauthorized
-          end
-        end
       end
     end
   end

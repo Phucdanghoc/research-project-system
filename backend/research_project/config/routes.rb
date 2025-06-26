@@ -14,23 +14,46 @@ Rails.application.routes.draw do
                     sessions: 'api/v1/users/sessions',
                     registrations: 'api/v1/users/registrations'
                   }
-      # Other resources
+
+      # User routes
       resources :users do
         collection do
           post :import_csv
           get :search
+          
+          # New role-based routes
+          get :students
+          get 'students/search', action: :search_students
+          
+          get :lecturers
+          get 'lecturers/search', action: :search_lecturers
         end
       end
+      get "topics/filter_by_category", to: "topics#filter_by_category"
       post 'users/verify_token', to: 'users#verify_token'
-      resources :groups
+      post "topics/generate", to: "topics#generate_topics"
+      get "topics/lecturer/:id", to: "topics#search_by_lecturer"
+
+      # Other resources
+      resources :groups do
+        member do
+          post :add_students
+        end
+        collection do
+          get :search
+        end
+      end
       resources :topics do
         collection do
           get :search
           get :filter_by_status
         end
       end
-      resources :defenses
-
+      resources :defenses do
+        collection do
+          get :search
+        end
+      end
     end
   end
 

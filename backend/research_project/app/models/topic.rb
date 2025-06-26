@@ -1,5 +1,4 @@
 class Topic < ApplicationRecord
-  validates :title, presence: true
   validates :topic_code, presence: true, uniqueness: true
   belongs_to :lecturer, class_name: "User", optional: true
   enum :status, { inactive: 0, active: 1, closed: 2 }
