@@ -2,14 +2,16 @@ require 'csv'
 
 module UsersHelper
   def import_users_from_csv(file_path)
-    require 'csv'
     created_users = []
     errors = []
 
     CSV.foreach(file_path, headers: true) do |row|
       user_data = row.to_hash.symbolize_keys
 
-      # Check for duplicate fields before insert
+      # Clean/transform incoming data
+      user_data[:birth] = parse_birth_date(user_data[:birth])
+
+      # Check for duplicate fields
       duplicates = []
       duplicates << "email" if User.exists?(email: user_data[:email])
       duplicates << "phone" if user_data[:phone].present? && User.exists?(phone: user_data[:phone])
@@ -17,12 +19,14 @@ module UsersHelper
       duplicates << "lecturer_code" if user_data[:lecturer_code].present? && User.exists?(lecturer_code: user_data[:lecturer_code])
 
       if duplicates.any?
-        errors << { row: row.to_hash, error: "Duplicate #{duplicates.join(', ')}" }
+        errors << { row: row.to_hash, error: "Duplicate fields: #{duplicates.join(', ')}" }
         next
       end
 
+      # Ensure password is present, generate if missing
+      user_data[:password] = user_data[:password].presence || SecureRandom.hex(8)
+
       user = User.new(user_data)
-      user.password = SecureRandom.hex(8) if user_data[:password].blank?
 
       if user.save
         created_users << user
@@ -30,7 +34,7 @@ module UsersHelper
         errors << { row: row.to_hash, error: user.errors.full_messages }
       end
     rescue => e
-      errors << { row: row.to_hash, error: e.message }
+      errors << { row: row.to_hash, error: "Unexpected error: #{e.message}" }
     end
 
     { created_users: created_users, errors: errors }
