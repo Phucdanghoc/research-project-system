@@ -50,9 +50,20 @@ module Api
           return render json: { error: "Duplicate fields detected.", duplicates: duplicate_fields }, status: :conflict
         end
 
+        unless user_params[:password].present?
+          return render json: { error: "Password is required." }, status: :unprocessable_entity
+        end
+
         @user = User.new(user_params)
+
         if @user.save
-          render json: { message: "User successfully created.", user: @user }, status: :created
+          token = JsonWebToken.encode(user_id: @user.id, role: @user.role)
+
+          render json: {
+            message: "User successfully created.",
+            user: @user.as_json(only: [:id, :email, :role, :name, :student_code, :lecturer_code]),
+            token: token
+          }, status: :created
         else
           render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
         end
