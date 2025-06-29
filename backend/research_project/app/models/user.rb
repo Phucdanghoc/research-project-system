@@ -17,7 +17,8 @@ class User < ApplicationRecord
 
   # Validations for Lecturer
   validates :lecturer_code, presence: true, if: -> { lecturer? }
-
+  has_many :topics, foreign_key: :lecturer_id, dependent: :destroy
+  
   # Associations
   has_many :lecture_groups, class_name: "Group", foreign_key: "lecturer_id", dependent: :destroy
 

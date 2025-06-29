@@ -11,6 +11,18 @@ module Api
         :search_students, :search_lecturers
       ]
       before_action :set_user, only: [:show, :update]
+      def me
+        render json: current_user.as_json(include: [:groups, :lecture_groups]), status: :ok
+      end
+
+      def topic_me
+        topics = current_user.topics.order(created_at: :desc)
+
+        render json: {
+          topics: topics.as_json,
+          total_count: topics.size
+        }, status: :ok
+      end
       def students_by_faculty
         faculty = params[:faculty]
         search = params[:search]
