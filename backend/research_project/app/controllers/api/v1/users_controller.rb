@@ -11,6 +11,38 @@ module Api
         :search_students, :search_lecturers
       ]
       before_action :set_user, only: [:show, :update]
+      def students_by_faculty
+        faculty = params[:faculty]
+        search = params[:search]
+
+        if faculty.blank?
+          return render json: { error: "Faculty parameter is required." }, status: :bad_request
+        end
+
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+
+        students = User.student.where("LOWER(faculty) = ?", faculty.downcase)
+
+        if search.present?
+          students = students.where(
+            "student_code = :search OR name = :search OR email = :search",
+            search: search
+          )
+        end
+
+        students = students.includes(:groups, :lecture_groups)
+                          .order(created_at: :desc)
+                          .page(page).per(per_page)
+
+        render json: {
+          users: students.as_json(include: [:groups, :lecture_groups]),
+          current_page: students.current_page,
+          total_pages: students.total_pages,
+          total_count: students.total_count
+        }, status: :ok
+      end
+
 
       def import_csv
         if params[:file].nil?

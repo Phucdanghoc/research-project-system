@@ -27,6 +27,7 @@ Rails.application.routes.draw do
           
           get :lecturers
           get 'lecturers/search', action: :search_lecturers
+          get 'students/faculty', to: 'users#students_by_faculty'
         end
       end
       get "topics/filter_by_category", to: "topics#filter_by_category"
