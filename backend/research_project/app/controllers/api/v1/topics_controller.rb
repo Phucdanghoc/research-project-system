@@ -20,6 +20,49 @@ module Api
         }, status: :ok
       end
 
+      def me
+        topics = Topic.none
+
+        if current_user.lecturer?
+          topics = current_user.topics.includes(:groups)
+
+        elsif current_user.student?
+          group = current_user.groups.first
+          topics = group.present? ? group.topics.includes(:groups, :lecturer) : Topic.none
+
+        else
+          return render json: { error: "Only students or lecturers can view their topics." }, status: :forbidden
+        end
+
+        # Keyword Search (title or topic_code)
+        if params[:keyword].present?
+          keyword = params[:keyword]
+          topics = topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
+        end
+
+        # Status Filter
+        if params[:status].present?
+          if Topic.statuses.keys.include?(params[:status])
+            topics = topics.where(status: Topic.statuses[params[:status]])
+          else
+            return render json: { error: "Invalid status. Allowed: #{Topic.statuses.keys.join(', ')}" }, status: :bad_request
+          end
+        end
+
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+
+        paginated_topics = topics.order(created_at: :desc).page(page).per(per_page)
+
+        render json: {
+          topics: paginated_topics.map { |t| topic_response(t) },
+          current_page: paginated_topics.current_page,
+          total_pages: paginated_topics.total_pages,
+          total_count: paginated_topics.total_count
+        }, status: :ok
+      end
+
+
       # GET /api/v1/topics/filter_by_status
       def filter_by_status
         status = params[:status]

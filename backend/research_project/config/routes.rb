@@ -28,6 +28,8 @@ Rails.application.routes.draw do
           get :lecturers
           get 'lecturers/search', action: :search_lecturers
           get 'students/faculty', to: 'users#students_by_faculty'
+          get 'me'
+          get 'topic/me', action: :topic_me
         end
       end
       get "topics/filter_by_category", to: "topics#filter_by_category"
@@ -48,6 +50,7 @@ Rails.application.routes.draw do
         collection do
           get :search
           get :filter_by_status
+          get :me
         end
       end
       resources :defenses do
