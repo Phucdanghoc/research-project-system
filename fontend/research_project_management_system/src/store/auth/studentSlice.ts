@@ -70,7 +70,7 @@ export const addStudentAsync = createAsyncThunk(
     'students/addStudentAsync',
     async (student: Omit<User, 'id'> & { password?: string }, { rejectWithValue }) => {
         try {
-            const response = await api.post('', student);
+            const response = await api.post('', {user : student});
             return response.data;
         } catch (error: any) {
             const errorMessage = error.response?.data?.message || 'Thêm sinh viên thất bại';

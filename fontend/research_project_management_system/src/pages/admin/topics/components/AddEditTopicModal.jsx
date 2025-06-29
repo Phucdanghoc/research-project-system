@@ -1,30 +1,43 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import { useAppDispatch } from '../../../../store';
 import { searchLecturersAsync } from '../../../../store/auth/lecturerSlice';
 import { TopicCategory } from '../../../../types/enum';
 import { useSelector } from 'react-redux';
+
 
 const AddEditTopicModal = ({ isOpen, onClose, onSubmit, formData, onInputChange, statuses, isEdit }) => {
   const dispatch = useAppDispatch();
   const { lecturers, loading, error } = useSelector((state) => state.lecturers);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const [firstSearch, setFirstSearch] = useState(false);
+  useEffect(() => {
+    console.log('AddEditTopicModal formData:', formData);
+    if (!firstSearch) {
+      setSearchTerm(formData.lecturer_name || '');
+    }
+  }, [formData]);
   const statusConfig = {
-    active: { label: 'Hoạt động' },
-    inactive: { label: 'Không hoạt động' },
+    open: { label: 'Hoạt động' },
+    closed: { label: 'Không hoạt động' },
     pending: { label: 'Chờ duyệt' },
   };
-
   const handleSearchLecturers = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
+    setFirstSearch(true);
     if (term.length >= 2) {
       dispatch(searchLecturersAsync({ keyword: term }));
       setIsDropdownOpen(true);
     } else {
       setIsDropdownOpen(false);
     }
+  };
+  const handleClose = () => {
+    setSearchTerm('');
+    setIsDropdownOpen(false);
+    setFirstSearch(false);
+    onClose();
   };
 
   const handleSelectLecturer = (lecturer) => {
@@ -56,6 +69,7 @@ const AddEditTopicModal = ({ isOpen, onClose, onSubmit, formData, onInputChange,
               <label className="block text-sm font-medium text-gray-700">Mã đề tài</label>
               <input
                 type="text"
+                disabled
                 name="topic_code"
                 value={formData.topic_code}
                 onChange={onInputChange}
@@ -180,7 +194,7 @@ const AddEditTopicModal = ({ isOpen, onClose, onSubmit, formData, onInputChange,
           <div className="flex justify-end space-x-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors"
             >
               Hủy

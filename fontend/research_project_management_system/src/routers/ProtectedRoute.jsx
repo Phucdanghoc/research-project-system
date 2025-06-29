@@ -13,8 +13,8 @@ const roleBasedRedirect = (role) => {
       return '/admin/';
     case 'student':
       return '/student';
-    case 'teacher':
-      return '/teacher';
+    case 'lecturer':
+      return '/lecturer';
     default:
       return '/unauthorized';
   }

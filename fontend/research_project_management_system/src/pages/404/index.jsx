@@ -4,7 +4,7 @@ import { FaExclamationTriangle } from 'react-icons/fa';
 const NotFound = () => {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
+      <div className="bg-white p-8  text-center">
         <FaExclamationTriangle className="text-6xl text-yellow-500 mx-auto mb-4" />
         <h1 className="text-4xl font-bold text-gray-800 mb-2">404 - Trang Không Tìm Thấy</h1>
         <p className="text-gray-600 mb-6">Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.</p>

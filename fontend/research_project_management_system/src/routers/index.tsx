@@ -3,12 +3,15 @@ import ProtectedRoute from './ProtectedRoute';
 import UnauthorizedPage from '../components/UnauthorizedPage';
 import LoginPage from '../pages/auth/LoginPage';
 import AdminLayout from '../pages/admin/layout';
+import LecturerLayout from '../pages/lecturer/layout';
 import ManagerStudents from '../pages/admin/account/StudentManager';
 import ManagerLectures from '../pages/admin/account/LecturerManager';
 import ManageTopics from '../pages/admin/topics/TopicManager';
 import NotFoundPage from '../pages/404/index';
 import ManagerDashboard from '../pages/admin/dashboard/index';
 import ProtectedAdmin from './ProtectedAdmin';
+// import ProtectedStudent from './ProtectedStudent';
+import ProtectedLecturer from './ProtectedLecturer';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -41,20 +44,19 @@ const router = createBrowserRouter([
       { path: 'setup-areas', element: <ManagerStudents /> },
     ],
   },
+  // {
+  //   path: '/student',
+  //   element: (
+  //    <ProtectedAdmin>
+  //     </ProtectedAdmin>
+  //   ),
+  // },
   {
-    path: '/student',
+    path: '/lecturer',
     element: (
-      <ProtectedRoute allowedRoles={['student']}>
-        <div>Trang Học Sinh (Chưa triển khai)</div>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/teacher',
-    element: (
-      <ProtectedRoute allowedRoles={['teacher']}>
-        <div>Trang Giáo Viên (Chưa triển khai)</div>
-      </ProtectedRoute>
+      <ProtectedLecturer>
+        <LecturerLayout />
+      </ProtectedLecturer>
     ),
   },
   {

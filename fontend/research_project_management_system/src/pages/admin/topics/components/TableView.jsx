@@ -1,5 +1,5 @@
 import { FaEye, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
-import { FacultyMajors } from '../../../../types/enum';
+import { FacultyMajors, TopicCategory } from '../../../../types/enum';
 import { TimeService } from '../../../../utils/time';
 const TableView = ({
   currentTopics,
@@ -64,8 +64,8 @@ const TableView = ({
                     )}
                   </div>
                 </td>
-                <td className="py-2 px-4 border-b">{topic.lecturer_id || '-'}</td>
-                <td className="py-2 px-4 border-b">{topic.category || '-'}</td>
+                <td className="py-2 px-4 border-b">{topic.lecturer_name || '-'}</td>
+                <td className="py-2 px-4 border-b">{TopicCategory[topic.category] || '-'}</td>
                 <td className="py-2 px-4 border-b">{TimeService.convertDateStringToDDMMYYYY(topic.created_at)}</td>
                 <td className="py-2 px-4 border-b">
                   <div className="flex space-x-2 justify-center">

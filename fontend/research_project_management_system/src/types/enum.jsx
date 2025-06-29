@@ -48,11 +48,15 @@ export const FacultyMajors = {
     majors: [
       { code: 'QTDL', name: 'Quản trị Du lịch và Lữ hành' },
       { code: 'QLKS', name: 'Quản lý Khách sạn' },
-    //   { code: 'DLDT', name: 'Du lịch Điện tử' },
+      //   { code: 'DLDT', name: 'Du lịch Điện tử' },
     ],
   },
 };
-
+export const StatusConfig = {
+  open: { label: 'Hoạt động' },
+  closed: { label: 'Không hoạt động' },
+  pending: { label: 'Chờ duyệt' },
+};
 
 export const TopicCategory = {
   RESEARCH: 'Nghiên cứu',

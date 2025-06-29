@@ -69,7 +69,7 @@ export const addLecturerAsync = createAsyncThunk(
     'lecturers/addLecturerAsync',
     async (lecturer: Omit<User, 'id'> & { password?: string }, { rejectWithValue }) => {
         try {
-            const response = await api.post('/', lecturer);
+            const response = await api.post('/', {user : lecturer});
             return response.data;
         } catch (error: any) {
             const errorMessage = error.response?.data?.message || 'Thêm giảng viên thất bại';

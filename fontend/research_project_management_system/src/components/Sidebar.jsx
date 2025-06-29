@@ -77,7 +77,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     {getNavLinks(user?.role)}
                     <li key={getNavLinks(user?.role).length + 1}>
                         <Link
-                            to={`/logout`}
+                            onClick={
+                                () => {
+                                    localStorage.removeItem('token');
+                                    window.location.replace('/login');
+                                }
+                            }
                             className="flex items-center p-2 hover:bg-red-400/50 rounded transition-colors duration-200 hover:scale-105"
                         >
                             <IoMdLogOut className={isOpen ? 'mr-3' : ''} />

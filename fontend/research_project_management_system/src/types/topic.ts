@@ -13,6 +13,7 @@ export interface Topic {
     created_at: string;
     updated_at: string;
     lecturer_id: number | null;
+    lecturer_name: string;
     category: any | null;
     groups: Group[];
 }
