@@ -44,6 +44,18 @@ export const filterByCategoryAsync = createAsyncThunk(
   }
 );
 
+const getTopicByLecturerAsync = createAsyncThunk(
+  'topics/getTopicByLecturerAsync',
+  async ({ lecturer, page = 1, per_page = 10 }: { lecturer: number; page: number; per_page: number }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/topics/lecturer/:id', { params: { lecturer, page, per_page } });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Lọc theo giảng viên thất bại');
+    }
+  }
+)
+
 export const filterByStatusAsync = createAsyncThunk(
   'topics/filterByStatusAsync',
   async ({ status, page = 1, per_page = 10 }: { status: string; page: number; per_page: number }, { rejectWithValue }) => {
@@ -161,6 +173,9 @@ const topicSlice = createSlice({
       .addCase(filterByStatusAsync.fulfilled, handleFulfilledFetch)
       .addCase(filterByStatusAsync.rejected, handleRejected)
       .addCase(addTopicAsync.pending, handlePending)
+      .addCase(getTopicByLecturerAsync.fulfilled, handleFulfilledFetch)
+      .addCase(getTopicByLecturerAsync.rejected, handleRejected)
+      .addCase(getTopicByLecturerAsync.pending, handlePending)
       .addCase(addTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.topics.push(action.payload.data);

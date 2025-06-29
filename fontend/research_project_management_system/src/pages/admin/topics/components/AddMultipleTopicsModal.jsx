@@ -65,8 +65,7 @@ const AddMultipleTopicsModal = ({ isOpen, onClose, onSubmit }) => {
         handleClose();
     };
 
-    // Tìm giảng viên được chọn để hiển thị thông tin trong card
-    const selectedLecturer = lecturers.find((lecturer) => lecturer.id === formData.lecturer_id);
+    const selectedLecturer = lecturers ?? lecturers.find((lecturer) => lecturer.id === formData.lecturer_id);
 
     if (!isOpen) return null;
 

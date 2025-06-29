@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
-import { useAppDispatch } from '../../../store/index';
+import { useAppDispatch } from '../../../store';
 import TableView from './components/TableView';
 import AddEditTopicModal from './components/AddEditTopicModal';
 import ViewTopicModal from './components/ViewTopicModal';
@@ -41,6 +41,9 @@ const initialFormData = {
   major: '',
 };
 
+const TOPICS_PER_PAGE = 10;
+const STATUSES = ['open', 'closed', 'pending'];
+
 const ManageTopics = () => {
   const dispatch = useAppDispatch();
   const { topics, loading, error, current_page, total_pages } = useSelector((state) => state.topics);
@@ -52,22 +55,24 @@ const ManageTopics = () => {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [formData, setFormData] = useState(initialFormData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [availableMajors, setAvailableMajors] = useState([]);
   const dropdownRefs = useRef({});
-  const statuses = ['open', 'closed', 'pending'];
-  const topicsPerPage = 10;
 
   useEffect(() => {
+    const params = { page: currentPage, per_page: TOPICS_PER_PAGE };
     if (searchQuery.trim()) {
-      dispatch(searchTopicAsync({ keyword: searchQuery, page: currentPage, per_page: topicsPerPage }));
+      dispatch(searchTopicAsync({ keyword: searchQuery, ...params }));
+    } else if (selectedStatus !== 'all') {
+      dispatch(filterByStatusAsync({ status: selectedStatus, ...params }));
     } else {
-      dispatch(fetchTopicsAsync({ page: currentPage, per_page: topicsPerPage }));
+      dispatch(fetchTopicsAsync(params));
     }
-  }, [dispatch, currentPage, searchQuery]);
+  }, [dispatch, currentPage, searchQuery, selectedStatus]);
 
+  // Handle error toast
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -75,22 +80,18 @@ const ManageTopics = () => {
     }
   }, [error, dispatch]);
 
+  // Update available majors based on selected faculty
   useEffect(() => {
-    if (formData.faculty) {
-      const majors = FacultyMajors[formData.faculty]?.majors || [];
-      setAvailableMajors(majors);
-      if (!majors.find((m) => m.code === formData.major)) {
-        setFormData((prev) => ({ ...prev, major: '' }));
-      }
-    } else {
-      setAvailableMajors([]);
+    const majors = FacultyMajors[formData.faculty]?.majors.map((m) => m.code) || [];
+    setAvailableMajors(majors);
+    if (!majors.includes(formData.major)) {
       setFormData((prev) => ({ ...prev, major: '' }));
     }
   }, [formData.faculty]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!Object.values(dropdownRefs.current).some((ref) => ref && ref.contains(event.target))) {
+      if (!Object.values(dropdownRefs.current).some((ref) => ref?.contains(event.target))) {
         setOpenDropdownId(null);
       }
     };
@@ -98,7 +99,7 @@ const ManageTopics = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const resetFormAndClose = () => {
+  const resetFormAndClose = useCallback(() => {
     setFormData(initialFormData);
     setSelectedTopic(null);
     setIsAddModalOpen(false);
@@ -106,14 +107,14 @@ const ManageTopics = () => {
     setIsViewModalOpen(false);
     setIsDeleteModalOpen(false);
     dispatch(clearError());
-  };
+  }, [dispatch]);
 
-  const handleAddTopic = () => {
+  const handleAddTopic = useCallback(() => {
     setFormData(initialFormData);
     setIsAddModalOpen(true);
-  };
+  }, []);
 
-  const handleEditTopic = (topic) => {
+  const handleEditTopic = useCallback((topic) => {
     setSelectedTopic(topic);
     setFormData({
       title: topic.title || '',
@@ -130,136 +131,144 @@ const ManageTopics = () => {
       major: topic.major || '',
     });
     setIsEditModalOpen(true);
-  };
+  }, []);
 
-  const handleViewTopic = (topic) => {
+  const handleViewTopic = useCallback((topic) => {
     setSelectedTopic(topic);
     setIsViewModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteTopic = (topic) => {
+  const handleDeleteTopic = useCallback((topic) => {
     setSelectedTopic(topic);
     setIsDeleteModalOpen(true);
-  };
+  }, []);
 
-  const handleAddMultipleTopics = () => {
+  const handleAddMultipleTopics = useCallback(() => {
     setIsAddMultipleModalOpen(true);
-  };
+  }, []);
 
-  const handleSubmitTopic = async (e, isEdit = false) => {
-    e.preventDefault();
-    if (!isEdit && (!formData.lecturer_name || !formData.lecturer_id)) {
-      toast.error('Vui lòng chọn giảng viên!');
-      return;
-    }
-    const topicData = {
-      ...(isEdit ? { id: selectedTopic.id } : {}),
-      ...formData,
-      topic_quantity: parseInt(formData.topic_quantity) || 0,
-      student_quantity: parseInt(formData.student_quantity) || 0,
-      lecturer_id: parseInt(formData.lecturer_id) || null,
-    };
-    try {
-      await dispatch(isEdit ? updateTopicAsync(topicData) : addTopicAsync(topicData)).unwrap();
-      resetFormAndClose();
-      dispatch(fetchTopicsAsync({ page: currentPage, per_page: topicsPerPage }));
-      toast.success(isEdit ? 'Cập nhật đề tài thành công!' : 'Thêm đề tài thành công!');
-    } catch (error) {
-      toast.error(isEdit ? 'Cập nhật đề tài thất bại!' : 'Thêm đề tài thất bại!');
-    }
-  };
-
-  const handleSubmitMultipleTopics = async (topics) => {
-    try {
-      await dispatch(generateTopicAsync(topics)).unwrap();
-      setIsAddMultipleModalOpen(false);
-      dispatch(fetchTopicsAsync({ page: currentPage, per_page: topicsPerPage }));
-      toast.success('Thêm các đề tài thành công!');
-    } catch (error) {
-      toast.error('Thêm các đề tài thất bại!');
-    }
-  };
-
-  const handleStatusChange = async (topicId, newStatus) => {
-    const topic = topics.find((t) => t.id === topicId);
-    if (topic) {
-      try {
-        await dispatch(updateTopicAsync({ ...topic, status: newStatus })).unwrap();
-        toast.success('Cập nhật trạng thái thành công!');
-      } catch (error) {
-        toast.error('Cập nhật trạng thái thất bại!');
+  // Form submission
+  const handleSubmitTopic = useCallback(
+    async (e, isEdit) => {
+      e.preventDefault();
+      if (!isEdit && (!formData.lecturer_name || !formData.lecturer_id)) {
+        toast.error('Vui lòng chọn giảng viên!');
+        return;
       }
-    }
-    setOpenDropdownId(null);
-  };
+      const topicData = {
+        ...(isEdit && selectedTopic ? { id: selectedTopic.id } : {}),
+        ...formData,
+        topic_quantity: parseInt(formData.topic_quantity) || 0,
+        student_quantity: parseInt(formData.student_quantity) || 0,
+        lecturer_id: parseInt(formData.lecturer_id) || null,
+      };
+      try {
+        await dispatch(isEdit ? updateTopicAsync(topicData) : addTopicAsync(topicData)).unwrap();
+        resetFormAndClose();
+        dispatch(fetchTopicsAsync({ page: currentPage, per_page: TOPICS_PER_PAGE }));
+        toast.success(isEdit ? 'Cập nhật đề tài thành công!' : 'Thêm đề tài thành công!');
+      } catch (error) {
+        toast.error(isEdit ? 'Cập nhật đề tài thất bại!' : 'Thêm đề tài thất bại!');
+      }
+    },
+    [dispatch, formData, selectedTopic, resetFormAndClose, currentPage]
+  );
 
-  const handleConfirmDelete = async () => {
+  const handleSubmitMultipleTopics = useCallback(
+    async (topics) => {
+      try {
+        await dispatch(generateTopicAsync(topics)).unwrap();
+        setIsAddMultipleModalOpen(false);
+        dispatch(fetchTopicsAsync({ page: currentPage, per_page: TOPICS_PER_PAGE }));
+        toast.success('Thêm các đề tài thành công!');
+      } catch (error) {
+        toast.error('Thêm các đề tài thất bại!');
+      }
+    },
+    [dispatch, currentPage]
+  );
+
+  const handleStatusChange = useCallback(
+    async (topicId, newStatus) => {
+      const topic = topics.find((t) => t.id === topicId);
+      if (topic) {
+        try {
+          await dispatch(updateTopicAsync({ ...topic, status: newStatus })).unwrap();
+          toast.success('Cập nhật trạng thái thành công!');
+        } catch (error) {
+          toast.error('Cập nhật trạng thái thất bại!');
+        }
+      }
+      setOpenDropdownId(null);
+    },
+    [dispatch, topics]
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedTopic) return;
     try {
       await dispatch(deleteTopicAsync(selectedTopic.id)).unwrap();
       setIsDeleteModalOpen(false);
       setSelectedTopic(null);
       if (topics.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
+        setCurrentPage((prev) => prev - 1);
       } else {
-        dispatch(fetchTopicsAsync({ page: currentPage, per_page: topicsPerPage }));
+        dispatch(fetchTopicsAsync({ page: currentPage, per_page: TOPICS_PER_PAGE }));
       }
       toast.success('Xóa đề tài thành công!');
     } catch (error) {
       toast.error('Xóa đề tài thất bại!');
     }
-  };
+  }, [dispatch, selectedTopic, topics.length, currentPage]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleStatusFilterChange = (e) => {
-    const value = e.target.value;
-    setSelectedStatus(value);
-    dispatch(value === 'all' ? fetchTopicsAsync({ page: 1, per_page: topicsPerPage }) : filterByStatusAsync({ page: 1, per_page: topicsPerPage, status: value }));
+  const handleStatusFilterChange = useCallback((e) => {
+    setSelectedStatus(e.target.value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handlePageChange = (page) => {
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   return (
     <div className="p-6 bg-white rounded-lg shadow">
       <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý đề tài</h1>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4 mb-4">
         <input
           type="text"
           placeholder="Tìm kiếm đề tài..."
           value={searchQuery}
           onChange={handleSearchChange}
-          className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
+          className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+          aria-label="Tìm kiếm đề tài"
         />
         <select
           value={selectedStatus}
           onChange={handleStatusFilterChange}
           className="w-full sm:w-40 p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+          aria-label="Lọc theo trạng thái"
         >
           <option value="all">Tất cả trạng thái</option>
-          {statuses.map((status) => (
-            <option key={status} value={status}>{statusConfig[status].label}</option>
+          {STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {statusConfig[status].label}
+            </option>
           ))}
         </select>
-        {/* <button
-          onClick={handleAddTopic}
-          className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Thêm đề tài
-        </button> */}
         <button
           onClick={handleAddMultipleTopics}
-          className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+          aria-label="Thêm đề tài"
         >
           Thêm đề tài
         </button>
@@ -275,24 +284,34 @@ const ManageTopics = () => {
         handleEditTopic={handleEditTopic}
         handleDeleteTopic={handleDeleteTopic}
         handleStatusChange={handleStatusChange}
-        statuses={statuses}
+        statuses={STATUSES}
       />
 
       {total_pages > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
+        <nav className="flex justify-center mt-4 gap-2" aria-label="Phân trang">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || loading}
-            className={`px-3 py-1 rounded ${currentPage === 1 || loading ? 'bg-gray-200 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            className={`px-3 py-1 rounded ${
+              currentPage === 1 || loading
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+            aria-label="Trang trước"
           >
             Trước
           </button>
-          {[...Array(total_pages)].map((_, index) => (
+          {Array.from({ length: total_pages }, (_, index) => (
             <button
               key={index + 1}
               onClick={() => handlePageChange(index + 1)}
               disabled={loading}
-              className={`px-3 py-1 rounded ${currentPage === index + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              className={`px-3 py-1 rounded ${
+                currentPage === index + 1
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              } ${loading ? 'cursor-not-allowed' : ''}`}
+              aria-label={`Trang ${index + 1}`}
             >
               {index + 1}
             </button>
@@ -300,11 +319,16 @@ const ManageTopics = () => {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === total_pages || loading}
-            className={`px-3 py-1 rounded ${currentPage === total_pages || loading ? 'bg-gray-200 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+            className={`px-3 py-1 rounded ${
+              currentPage === total_pages || loading
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+            aria-label="Trang sau"
           >
             Sau
           </button>
-        </div>
+        </nav>
       )}
 
       <AddEditTopicModal
@@ -313,7 +337,7 @@ const ManageTopics = () => {
         onSubmit={(e) => handleSubmitTopic(e, false)}
         formData={formData}
         onInputChange={handleInputChange}
-        statuses={statuses}
+        statuses={STATUSES}
         isEdit={false}
         facultyMajors={FacultyMajors}
         availableMajors={availableMajors}
@@ -324,7 +348,7 @@ const ManageTopics = () => {
         onSubmit={(e) => handleSubmitTopic(e, true)}
         formData={formData}
         onInputChange={handleInputChange}
-        statuses={statuses}
+        statuses={STATUSES}
         isEdit={true}
         facultyMajors={FacultyMajors}
         availableMajors={availableMajors}
