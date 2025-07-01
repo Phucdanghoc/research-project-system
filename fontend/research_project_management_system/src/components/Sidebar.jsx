@@ -20,9 +20,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { link: '/approve-defense', name: 'Phê duyệt bảo vệ', icon: FaBook },
         ],
         lecturer: [
-            { link: '/manage-topic', name: 'Lập kế hoạch chi tiết', icon: FaClipboardList },
-            { link: '/register-defense', name: 'Đăng ký bảo vệ', icon: FaBook },
-            { link: '/view-students', name: 'Xem sinh viên', icon: FaUsers },
+            { link: '/lecturer/manage-topics', name: 'Danh sách đề tài', icon: FaClipboardList },
+            { link: '/lecturer/register-defense', name: 'Đăng ký bảo vệ', icon: FaBook },
+            { link: '/lecturer/view-students', name: 'Xem sinh viên', icon: FaUsers },
         ],
         student: [
             { link: '/register-topic', name: 'Đăng ký đề tài', icon: FaBook },

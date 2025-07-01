@@ -1,6 +1,6 @@
 import { FaEye, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
-import { FacultyMajors, TopicCategory } from '../../../../types/enum';
-import { TimeService } from '../../../../utils/time';
+import { FacultyMajors, TopicCategory } from '../../../types/enum';
+import { TimeService } from '../../../utils/time';
 const TableView = ({
   currentTopics,
   statusConfig,

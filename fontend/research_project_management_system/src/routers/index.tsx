@@ -7,11 +7,13 @@ import LecturerLayout from '../pages/lecturer/layout';
 import ManagerStudents from '../pages/admin/account/StudentManager';
 import ManagerLectures from '../pages/admin/account/LecturerManager';
 import ManageTopics from '../pages/admin/topics/TopicManager';
+import LecturerTopics from '../pages/lecturer/topics/LecturerTopic';
 import NotFoundPage from '../pages/404/index';
 import ManagerDashboard from '../pages/admin/dashboard/index';
 import ProtectedAdmin from './ProtectedAdmin';
 // import ProtectedStudent from './ProtectedStudent';
 import ProtectedLecturer from './ProtectedLecturer';
+import Test from '../pages/lecturer/topics/Test';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -58,6 +60,12 @@ const router = createBrowserRouter([
         <LecturerLayout />
       </ProtectedLecturer>
     ),
+    children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: 'dashboard', element: <ManagerDashboard /> },
+      { path: 'manage-topics', element: <LecturerTopics /> },
+      { path: 'test', element: <Test /> },
+    ]
   },
   {
     path: '*',

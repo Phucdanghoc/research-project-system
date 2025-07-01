@@ -6,7 +6,6 @@ import { verifyTokenAsync } from '../store/auth/authSlice';
 import { TokenService } from '../services/token';
 import Loading from '../components/Loading';
 
-// Hàm ánh xạ vai trò với đường dẫn
 const roleBasedRedirect = (role) => {
   switch (role) {
     case 'admin':
@@ -52,7 +51,6 @@ const ProtectedRoute = ({ allowedRoles }) => {
   if (!user.role || !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
-  console.log(`Outlet: ${user.role}`);
   
   return <Outlet />;
 };

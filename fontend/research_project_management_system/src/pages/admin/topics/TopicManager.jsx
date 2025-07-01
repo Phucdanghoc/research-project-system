@@ -2,11 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
 import { useAppDispatch } from '../../../store';
-import TableView from './components/TableView';
-import AddEditTopicModal from './components/AddEditTopicModal';
-import ViewTopicModal from './components/ViewTopicModal';
-import DeleteConfirmationModal from './components/DeleteConfirmationModal';
-import AddMultipleTopicsModal from './components/AddMultipleTopicsModal';
+import TableView from '../../components/topic/TableView';
+import AddEditTopicModal from '../../components/topic/AddEditTopicModal';
+import ViewTopicModal from '../../components/topic/ViewTopicModal';
+import DeleteConfirmationModal from '../../components/topic/DeleteConfirmationModal';
+import AddMultipleTopicsModal from '../../components/topic/AddMultipleTopicsModal';
 import { FacultyMajors } from '../../../types/enum';
 import {
   fetchTopicsAsync,

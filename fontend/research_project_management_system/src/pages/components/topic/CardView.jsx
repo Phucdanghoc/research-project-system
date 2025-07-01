@@ -1,5 +1,5 @@
 import { FaEye, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
-import CardTopic from '../../../../components/cards/Card';
+import CardTopic from '../../components/cards/Card';
 
 const CardView = ({
   currentTopics,

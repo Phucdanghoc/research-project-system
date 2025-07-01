@@ -20,6 +20,18 @@ export const fetchTopicsAsync = createAsyncThunk(
   }
 );
 
+export const getTopicByMeAsync = createAsyncThunk(
+  'topics/getTopicByMeAsync',
+  async ({ keyword, status, page = 1, per_page = 10 }: { keyword: string; status: string; page: number; per_page: number }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/topics/me', { params: { page, per_page, keyword, status } });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Lấy danh sách đề tài thất bại');
+    }
+  }
+)
+
 export const searchTopicAsync = createAsyncThunk(
   'topics/searchTopicAsync',
   async ({ keyword, page = 1, per_page = 10 }: { keyword: string; page: number; per_page: number }, { rejectWithValue }) => {
@@ -173,9 +185,9 @@ const topicSlice = createSlice({
       .addCase(filterByStatusAsync.fulfilled, handleFulfilledFetch)
       .addCase(filterByStatusAsync.rejected, handleRejected)
       .addCase(addTopicAsync.pending, handlePending)
-      .addCase(getTopicByLecturerAsync.fulfilled, handleFulfilledFetch)
-      .addCase(getTopicByLecturerAsync.rejected, handleRejected)
-      .addCase(getTopicByLecturerAsync.pending, handlePending)
+      .addCase(getTopicByMeAsync.fulfilled, handleFulfilledFetch)
+      .addCase(getTopicByMeAsync.rejected, handleRejected)
+      .addCase(getTopicByMeAsync.pending, handlePending)
       .addCase(addTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.topics.push(action.payload.data);

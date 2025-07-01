@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useAppDispatch } from '../../../../store';
-import { searchLecturersAsync } from '../../../../store/auth/lecturerSlice';
+import { useAppDispatch } from '../../../store/index';
+import { searchLecturersAsync } from '../../../store/auth/lecturerSlice';
 import { toast } from 'react-toastify';
 import { FaUserCircle } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { FacultyMajors } from '../../../../types/enum';
+import { FacultyMajors } from '../../../types/enum';
 
 const AddMultipleTopicsModal = ({ isOpen, onClose, onSubmit }) => {
     const dispatch = useAppDispatch();
