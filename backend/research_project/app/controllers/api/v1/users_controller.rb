@@ -23,7 +23,26 @@ module Api
           total_count: topics.size
         }, status: :ok
       end
+      def groups_me
+        search = params[:search]
+        status = params[:status]
 
+        groups = current_user.groups + current_user.lecture_groups
+        groups = groups.uniq # loại bỏ trùng nếu user là cả student và lecturer
+
+        if search.present?
+          groups = groups.select { |g| g.name.downcase.include?(search.downcase) }
+        end
+
+        if status.present?
+          groups = groups.select { |g| g.status.to_s == status.to_s }
+        end
+
+        render json: {
+          groups: groups.as_json,
+          total_count: groups.size
+        }, status: :ok
+      end
       def students_my_faculty
         faculty = current_user.faculty
         search = params[:search]
@@ -38,10 +57,10 @@ module Api
         students = User.student.where("LOWER(faculty) = ?", faculty.downcase)
 
         if search.present?
-          students = students.where(
-            "student_code = :search OR name = :search OR email = :search",
-            search: search
-          )
+           students = students.where(
+              "student_code LIKE :search OR name LIKE :search OR email LIKE :search",
+              search: "%#{search}%"
+            )
         end
 
         students = students.includes(:groups, :lecture_groups)

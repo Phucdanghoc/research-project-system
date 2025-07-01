@@ -5,6 +5,45 @@ module Api
       before_action :set_topic, only: [:show, :update, :destroy]
       before_action :authorize_lecturer_or_admin!, only: [:create, :update, :destroy]
 
+
+      def faculty_me
+        faculty = current_user.faculty
+        if faculty.blank?
+          return render json: { error: "Current user's faculty is not set." }, status: :bad_request
+        end
+
+        topics = Topic.joins(:lecturer).where("LOWER(users.faculty) = ?", faculty.downcase)
+
+        # Optional filter
+        if params[:keyword].present?
+          keyword = params[:keyword]
+          topics = topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
+        end
+
+        if params[:status].present?
+          if Topic.statuses.keys.include?(params[:status])
+            topics = topics.where(status: Topic.statuses[params[:status]])
+          else
+            return render json: { error: "Invalid status. Allowed: #{Topic.statuses.keys.join(', ')}" }, status: :bad_request
+          end
+        end
+
+        if params[:category].present?
+          topics = topics.where(category: params[:category])
+        end
+
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+        paginated = topics.includes(:groups, :lecturer).order(created_at: :desc).page(page).per(per_page)
+
+        render json: {
+          topics: paginated.map { |t| topic_response(t) },
+          current_page: paginated.current_page,
+          total_pages: paginated.total_pages,
+          total_count: paginated.total_count
+        }, status: :ok
+      end
+
       # GET /topics
       def index
         page = params[:page] || 1
