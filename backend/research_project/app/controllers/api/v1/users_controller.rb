@@ -23,12 +23,13 @@ module Api
           total_count: topics.size
         }, status: :ok
       end
-      def students_by_faculty
-        faculty = params[:faculty]
+
+      def students_my_faculty
+        faculty = current_user.faculty
         search = params[:search]
 
         if faculty.blank?
-          return render json: { error: "Faculty parameter is required." }, status: :bad_request
+          return render json: { error: "Current user's faculty is not set." }, status: :bad_request
         end
 
         page = params[:page] || 1
