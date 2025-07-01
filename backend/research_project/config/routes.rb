@@ -27,7 +27,7 @@ Rails.application.routes.draw do
           
           get :lecturers
           get 'lecturers/search', action: :search_lecturers
-          get 'students/faculty', to: 'users#students_by_faculty'
+          get 'students/my-faculty', action: :students_my_faculty
           get 'me'
           get 'topic/me', action: :topic_me
         end
