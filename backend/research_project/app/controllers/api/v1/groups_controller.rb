@@ -17,13 +17,18 @@ module Api
                     .per(per_page)
 
         render json: {
-          groups: @groups.as_json(include: [:lecturer, :defense, :students]),
+          groups: @groups.as_json(include: {
+            lecturer: { only: [:id, :name, :faculty] },
+            defense: {},
+            students: {}
+          }),
           current_page: @groups.current_page,
           total_pages: @groups.total_pages,
           total_count: @groups.total_count
         }, status: :ok
       end
       
+      # GET /groups/search?keyword=...
       def search
         keyword = params[:keyword]
 
@@ -42,7 +47,11 @@ module Api
                     .per(per_page)
 
         render json: {
-          groups: @groups.as_json(include: [:lecturer, :defense, :students]),
+          groups: @groups.as_json(include: {
+            lecturer: { only: [:id, :name, :faculty] },
+            defense: {},
+            students: {}
+          }),
           current_page: @groups.current_page,
           total_pages: @groups.total_pages,
           total_count: @groups.total_count
@@ -51,7 +60,11 @@ module Api
 
       # GET /groups/:id
       def show
-        render json: @group.to_json(include: [:lecturer, :defense, :students]), status: :ok
+        render json: @group.as_json(include: {
+          lecturer: { only: [:id, :name, :faculty] },
+          defense: {},
+          students: {}
+        }), status: :ok
       end
 
       # POST /groups
@@ -74,7 +87,15 @@ module Api
         end
 
         if @group.save
-          render json: { message: "Group successfully created.", group: @group.as_json(include: [:lecturer, :defense, :students, :topics]) }, status: :created
+          render json: {
+            message: "Group successfully created.",
+            group: @group.as_json(include: {
+              lecturer: { only: [:id, :name, :faculty] },
+              defense: {},
+              students: {},
+              topics: {}
+            })
+          }, status: :created
         else
           render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
         end
@@ -89,7 +110,15 @@ module Api
         end
 
         if @group.update(group_params)
-          render json: { message: "Group successfully updated.", group: @group }, status: :ok
+          render json: {
+            message: "Group successfully updated.",
+            group: @group.as_json(include: {
+              lecturer: { only: [:id, :name, :faculty] },
+              defense: {},
+              students: {},
+              topics: {}
+            })
+          }, status: :ok
         else
           render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
         end
@@ -118,17 +147,26 @@ module Api
         if student_ids.blank?
           return render json: { error: "Student IDs are required." }, status: :bad_request
         end
+
         valid_student_ids = User.where(id: student_ids, role: :student).pluck(:id)
         if valid_student_ids.empty?
           return render json: { error: "No valid student IDs provided." }, status: :bad_request
         end
+
         invalid_ids = student_ids.map(&:to_i) - valid_student_ids
         if invalid_ids.any?
           return render json: { error: "The following IDs are invalid or not students: #{invalid_ids.join(', ')}" }, status: :unprocessable_entity
         end
+
         @group.student_ids |= valid_student_ids
         if @group.save
-          render json: { message: "Students successfully added.", group: @group.as_json(include: [:students]) }, status: :ok
+          render json: {
+            message: "Students successfully added.",
+            group: @group.as_json(include: {
+              lecturer: { only: [:id, :name, :faculty] },
+              students: {}
+            })
+          }, status: :ok
         else
           render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
         end
