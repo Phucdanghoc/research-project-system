@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { FaHome, FaClipboardList, FaBook, FaUsers, FaBars, FaTimes } from 'react-icons/fa';
+import { FaHome, FaClipboardList, FaBook, FaUsers, FaBars, FaTimes, FaLayerGroup, FaObjectGroup } from 'react-icons/fa';
 import { IoMdLogOut } from 'react-icons/io';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -21,8 +21,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ],
         lecturer: [
             { link: '/lecturer/manage-topics', name: 'Danh sách đề tài', icon: FaClipboardList },
-            { link: '/lecturer/register-defense', name: 'Đăng ký bảo vệ', icon: FaBook },
-            { link: '/lecturer/view-students', name: 'Xem sinh viên', icon: FaUsers },
+            // { link: '/lecturer/register-defense', name: 'Đăng ký bảo vệ', icon: FaBook },
+            { link: '/lecturer/manage-groups', name: 'Danh sách nhóm', icon: FaLayerGroup },
+            { link: '/lecturer/manage-students', name: 'Xem sinh viên', icon: FaUsers },
         ],
         student: [
             { link: '/register-topic', name: 'Đăng ký đề tài', icon: FaBook },

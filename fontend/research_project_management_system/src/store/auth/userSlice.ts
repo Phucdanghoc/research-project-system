@@ -18,6 +18,7 @@ export const fetchUsersAsync = createAsyncThunk(
   }
 );
 
+
 export const addUserAsync = createAsyncThunk(
   'accounts/addUserAsync',
   async (user: Omit<User, 'id'> & { password?: string }, { rejectWithValue }) => {
@@ -127,6 +128,8 @@ const accountSlice = createSlice({
         state.error = action.payload as string;
       });
 
+    // Get user by ID
+ 
     // Delete user
     builder
       .addCase(deleteUserAsync.pending, (state) => {

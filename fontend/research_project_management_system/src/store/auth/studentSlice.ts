@@ -58,19 +58,7 @@ export const fetchStudentsAsync = createAsyncThunk(
   }
 );
 
-export const getStudentInFacultyAsync = createAsyncThunk(
-  'students/getStudentInFacultyAsync',
-  async ({ faculty, page = 1, per_page = 10 }: FacultyParams, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/students/faculty?faculty=${faculty}`, {
-        params: { page, per_page },
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
-);
+
 
 export const searchStudentsInFacultyAsync = createAsyncThunk(
   'students/searchStudentsInFacultyAsync',
@@ -149,6 +137,18 @@ export const deleteStudentAsync = createAsyncThunk(
     }
   }
 );
+export const getStudentInFacultyAsync = createAsyncThunk(
+  'accounts/fetchUsersAsync',
+  async ({ page = 1, per_page = 10, search = '' }: { page: number; per_page: number; search: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/students/my-faculty', { params: { page, per_page, search } });
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Lấy danh sách tài khoản thất bại';
+      return rejectWithValue(errorMessage);
+    }
+  }
+)
 
 const studentSlice = createSlice({
   name: 'students',
@@ -245,6 +245,7 @@ const studentSlice = createSlice({
         state.error = null;
       })
       .addCase(importStudentsFromExcel.rejected, handleRejected);
+
   },
 });
 

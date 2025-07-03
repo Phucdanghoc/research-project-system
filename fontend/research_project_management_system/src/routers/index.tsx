@@ -5,9 +5,11 @@ import LoginPage from '../pages/auth/LoginPage';
 import AdminLayout from '../pages/admin/layout';
 import LecturerLayout from '../pages/lecturer/layout';
 import ManagerStudents from '../pages/admin/account/StudentManager';
+import LecturerGroup from '../pages/lecturer/groups/LecturerGroup';
 import ManagerLectures from '../pages/admin/account/LecturerManager';
 import ManageTopics from '../pages/admin/topics/TopicManager';
 import LecturerTopics from '../pages/lecturer/topics/LecturerTopic';
+import LecturerStudent from '../pages/lecturer/students/LecturerStudent';
 import NotFoundPage from '../pages/404/index';
 import ManagerDashboard from '../pages/admin/dashboard/index';
 import ProtectedAdmin from './ProtectedAdmin';
@@ -64,6 +66,8 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="dashboard" replace /> },
       { path: 'dashboard', element: <ManagerDashboard /> },
       { path: 'manage-topics', element: <LecturerTopics /> },
+      { path: 'manage-students', element: <LecturerStudent /> },
+      { path: 'manage-groups', element: <LecturerGroup /> },
       { path: 'test', element: <Test /> },
     ]
   },
