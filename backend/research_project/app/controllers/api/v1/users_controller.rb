@@ -39,10 +39,17 @@ module Api
         end
 
         render json: {
-          groups: groups.as_json,
+          groups: groups.as_json(include: {
+            lecturer: { only: [:id, :name, :faculty] },
+            defense: {},
+            students: {},
+            topics: {}
+          }),
           total_count: groups.size
         }, status: :ok
+
       end
+
       def students_my_faculty
         faculty = current_user.faculty
         search = params[:search]
