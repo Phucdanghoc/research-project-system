@@ -20,7 +20,8 @@ module Api
           groups: @groups.as_json(include: {
             lecturer: { only: [:id, :name, :faculty] },
             defense: {},
-            students: {}
+            students: {},
+            topics: {}
           }),
           current_page: @groups.current_page,
           total_pages: @groups.total_pages,
@@ -50,7 +51,8 @@ module Api
           groups: @groups.as_json(include: {
             lecturer: { only: [:id, :name, :faculty] },
             defense: {},
-            students: {}
+            students: {},
+            topics: {}
           }),
           current_page: @groups.current_page,
           total_pages: @groups.total_pages,
@@ -61,9 +63,10 @@ module Api
       # GET /groups/:id
       def show
         render json: @group.as_json(include: {
-          lecturer: { only: [:id, :name, :faculty] },
+          lecturer: {},
           defense: {},
-          students: {}
+          students: {},
+          topics: {}
         }), status: :ok
       end
 
@@ -164,7 +167,8 @@ module Api
             message: "Students successfully added.",
             group: @group.as_json(include: {
               lecturer: { only: [:id, :name, :faculty] },
-              students: {}
+              students: {},
+              topics: {}
             })
           }, status: :ok
         else
