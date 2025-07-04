@@ -11,24 +11,33 @@ module Api
         :search_students, :search_lecturers
       ]
       before_action :set_user, only: [:show, :update]
+
       def me
         render json: current_user.as_json(include: [:groups, :lecture_groups]), status: :ok
       end
 
       def topic_me
-        topics = current_user.topics.order(created_at: :desc)
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+
+        topics = current_user.topics.order(created_at: :desc).page(page).per(per_page)
 
         render json: {
           topics: topics.as_json,
-          total_count: topics.size
+          current_page: topics.current_page,
+          total_pages: topics.total_pages,
+          total_count: topics.total_count
         }, status: :ok
       end
+
       def groups_me
         search = params[:search]
         status = params[:status]
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
 
         groups = current_user.groups + current_user.lecture_groups
-        groups = groups.uniq # loại bỏ trùng nếu user là cả student và lecturer
+        groups = groups.uniq
 
         if search.present?
           groups = groups.select { |g| g.name.downcase.include?(search.downcase) }
@@ -38,17 +47,24 @@ module Api
           groups = groups.select { |g| g.status.to_s == status.to_s }
         end
 
+        # Custom pagination cho mảng
+        paginated_groups = Kaminari.paginate_array(groups)
+                                  .page(page)
+                                  .per(per_page)
+
         render json: {
-          groups: groups.as_json(include: {
+          groups: paginated_groups.as_json(include: {
             lecturer: { only: [:id, :name, :faculty] },
             defense: {},
             students: {},
             topics: {}
           }),
-          total_count: groups.size
+          current_page: paginated_groups.current_page,
+          total_pages: paginated_groups.total_pages,
+          total_count: paginated_groups.total_count
         }, status: :ok
-
       end
+
 
       def students_my_faculty
         faculty = current_user.faculty
@@ -230,6 +246,8 @@ module Api
       def search_by_role(role)
         keyword = params[:keyword]
         faculty = params[:faculty]
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
 
         conditions = User.arel_table[:role].eq(User.roles[role])
 
@@ -243,9 +261,6 @@ module Api
           conditions = conditions.and(User.arel_table[:faculty].matches("%#{faculty}%"))
         end
 
-        page = params[:page] || 1
-        per_page = params[:per_page] || 10
-
         users = User.where(conditions)
                     .includes(:groups, :lecture_groups)
                     .order(created_at: :desc)
@@ -258,6 +273,7 @@ module Api
           total_count: users.total_count
         }, status: :ok
       end
+
 
     end
   end
