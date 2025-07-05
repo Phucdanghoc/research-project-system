@@ -16,6 +16,8 @@ Rails.application.routes.draw do
                   }
 
       # User routes
+      get 'users/profile', to: 'users#profile'
+      
       resources :users do
         collection do
           post :import_csv
@@ -34,8 +36,9 @@ Rails.application.routes.draw do
         end
       end
 
-      get "topics/filter_by_category", to: "topics#filter_by_category"
       post 'users/verify_token', to: 'users#verify_token'
+
+      get "topics/filter_by_category", to: "topics#filter_by_category"
       post "topics/generate", to: "topics#generate_topics"
       get "topics/lecturer/:id", to: "topics#search_by_lecturer"
       get 'topics/faculty_me', to: 'topics#faculty_me'

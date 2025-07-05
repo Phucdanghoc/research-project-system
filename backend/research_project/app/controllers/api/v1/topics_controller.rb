@@ -293,10 +293,10 @@ module Api
         lecturer = topic.lecturer
 
         topic.as_json(include: :groups).merge({
-          lecturer_name: lecturer&.name,
-          faculty: lecturer&.faculty
+          lecturer: lecturer&.as_json(only: [:id, :name, :email, :phone, :faculty, :lecturer_code])
         })
       end
+
 
       def generate_unique_topic_code
         year = Time.current.year
