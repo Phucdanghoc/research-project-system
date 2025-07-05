@@ -15,6 +15,30 @@ module Api
       def me
         render json: current_user.as_json(include: [:groups, :lecture_groups]), status: :ok
       end
+      def profile
+        user = current_user
+
+        render json: user.as_json(
+          only: [:id, :email, :role, :name, :student_code, :lecturer_code, :class_name, :faculty, :major, :phone, :gender, :birth],
+          include: {
+            groups: {
+              include: {
+                lecturer: { only: [:id, :name, :faculty] },
+                defense: {},
+                students: { only: [:id, :name, :student_code, :email] },
+                topics: {only: :id}
+              }
+            },
+            lecture_groups: {
+              include: {
+                students: { only: [:id, :name, :student_code, :email] },
+                topics: {}
+              }
+            },
+            topics: {}
+          }
+        ), status: :ok
+      end
 
       def topic_me
         page = params[:page] || 1
