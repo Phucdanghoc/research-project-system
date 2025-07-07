@@ -115,6 +115,17 @@ export const updateTopicAsync = createAsyncThunk(
     }
   }
 );
+export const getTopicByIdAsync = createAsyncThunk(
+  'topics/getTopicByIdAsync',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/topics/${id}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Lấy thông tin đề tài thất bại');
+    }
+  }
+);
 
 export const deleteTopicAsync = createAsyncThunk(
   'topics/deleteTopicAsync',
@@ -130,6 +141,7 @@ export const deleteTopicAsync = createAsyncThunk(
 
 interface TopicState {
   topics: Topic[];
+  topic ?: Topic | null;
   loading: boolean;
   total_pages: number;
   current_page: number;
@@ -139,6 +151,7 @@ interface TopicState {
 const initialState: TopicState = {
   topics: [],
   loading: false,
+  topic: null,
   total_pages: 1,
   current_page: 1,
   error: null,
@@ -187,6 +200,15 @@ const topicSlice = createSlice({
       .addCase(addTopicAsync.pending, handlePending)
       .addCase(getTopicByMeAsync.fulfilled, handleFulfilledFetch)
       .addCase(getTopicByMeAsync.rejected, handleRejected)
+      .addCase(getTopicByIdAsync.pending, handlePending)
+      .addCase(getTopicByIdAsync.fulfilled, (state, action) =>
+        {
+          state.loading = false;
+          state.topic = action.payload;
+          state.error = null;
+        }
+      )
+      .addCase(getTopicByIdAsync.rejected, handleRejected)
       .addCase(getTopicByMeAsync.pending, handlePending)
       .addCase(addTopicAsync.fulfilled, (state, action) => {
         state.loading = false;

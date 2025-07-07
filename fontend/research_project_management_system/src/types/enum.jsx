@@ -53,10 +53,21 @@ export const FacultyMajors = {
   },
 };
 export const StatusConfig = {
-  open: { label: 'Hoạt động' },
-  closed: { label: 'Không hoạt động' },
-  pending: { label: 'Chờ duyệt' },
+  open: { 
+    label: 'Hoạt động',
+    className: 'bg-green-100 text-green-700 border border-green-300' 
+  },
+  closed: { 
+    label: 'Không hoạt động',
+    className: 'bg-gray-200 text-gray-500 border border-gray-300'
+  },
+  pending: { 
+    label: 'Chờ duyệt',
+    className: 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+  },
+  // Thêm các trạng thái khác nếu cần
 };
+
 
 export const TopicCategory = {
   RESEARCH: 'Nghiên cứu',
@@ -67,3 +78,4 @@ export const TopicCategory = {
   INNOVATION: 'Sáng tạo',
   ENTREPRENEURSHIP: 'Khởi nghiệp',
 };
+

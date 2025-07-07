@@ -21,7 +21,7 @@ const TableAdmin = ({
           {actions && <th className={cellClassName}>Hành động</th>}
         </tr>
       </thead>
-      <tbody>
+      <tbody >
         {data.length > 0 ? (
           data.map((item, rowIndex) => (
             <tr key={item.id || rowIndex} className={rowClassName}>
@@ -32,11 +32,10 @@ const TableAdmin = ({
                     : item[column.key] || '-'}
                 </td>
               ))}
-              {actions && (
-                <td className={`${cellClassName} flex justify-center space-x-2`}>
-                  {actions(item, rowIndex)}
-                </td>
-              )}
+              <td className={`${cellClassName}  justify-center items-center space-x-2`}>
+                {actions(item, rowIndex)}
+              </td>
+
             </tr>
           ))
         ) : (

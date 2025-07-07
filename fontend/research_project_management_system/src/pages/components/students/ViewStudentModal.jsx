@@ -1,19 +1,7 @@
 import { FaUserCircle, FaTimes } from 'react-icons/fa';
 import { TimeService } from '../../../utils/time';
-import { useEffect } from 'react';
-import { useAppDispatch } from '../../../store';
-import { getLecturerByIdAsync } from '../../../store/auth/lecturerSlice';
 
 const ViewStudentModal = ({ isOpen, onClose, student }) => {
-  const dispatch = useAppDispatch();
-  const { lecturers, loading: lecturersLoading, error: lecturersError } = useAppDispatch((state) => state.lecturers);
-
-  useEffect(() => {
-    if (isOpen && student?.lecturer_id) {
-      dispatch(getLecturerByIdAsync(student.lecturer_id));
-    }
-  }, [isOpen, student?.lecturer_id, dispatch]);
-
   if (!isOpen || !student) return null;
 
   return (
@@ -53,24 +41,26 @@ const ViewStudentModal = ({ isOpen, onClose, student }) => {
 
         <div className="mb-6 bg-gray-50 rounded-lg p-5 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <FaUserCircle className="mr-2" /> Thông tin giảng viên
+            <FaUserCircle className="mr-2" /> Thông tin nhóm
           </h3>
-          {lecturersLoading ? (
-            <p className="text-sm text-gray-600">Đang tải thông tin giảng viên...</p>
-          ) : lecturersError ? (
-            <p className="text-sm text-red-600">Lỗi: {lecturersError}</p>
-          ) : lecturers ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-              <p><span className="font-medium text-gray-700">Họ tên:</span> {lecturers.name || 'Không có'}</p>
-              <p><span className="font-medium text-gray-700">Mã giảng viên:</span> {lecturers.lecturer_code || 'Không có'}</p>
-              <p><span className="font-medium text-gray-700">Email:</span> {lecturers.email || 'Không có'}</p>
-              <p><span className="font-medium text-gray-700">Số điện thoại:</span> {lecturers.phone || 'Không có'}</p>
-              <p><span className="font-medium text-gray-700">Ngày sinh:</span> {lecturers.birth || 'Không có'}</p>
-              <p><span className="font-medium text-gray-700">Chuyên ngành:</span> {lecturers.major || 'Không có'}</p>
-              <p><span className="font-medium text-gray-700">Khoa:</span> {lecturers.faculty || 'Không có'}</p>
-            </div>
+          {student.groups && student.groups.length > 0 ? (
+            student.groups.map((group, index) => (
+              <div key={index} className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-4">
+                <p><span className="font-medium text-gray-700">Tên nhóm:</span> {group.name || 'Không có'}</p>
+                <p><span className="font-medium text-gray-700">Mã nhóm:</span> {group.group_code || 'Không có'}</p>
+                <p><span className="font-medium text-gray-700">Trạng thái:</span> {group.status || 'Không có'}</p>
+                <p>
+                  <span className="font-medium text-gray-700">Ngày tạo:</span>{' '}
+                  {TimeService.convertDateStringToDDMMYYYY(group.created_at) || 'Không có'}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-700">Ngày cập nhật:</span>{' '}
+                  {TimeService.convertDateStringToDDMMYYYY(group.updated_at) || 'Không có'}
+                </p>
+              </div>
+            ))
           ) : (
-            <p className="text-sm text-gray-600">Không tìm thấy thông tin giảng viên.</p>
+            <p className="text-sm text-gray-600">Không tìm thấy thông tin nhóm.</p>
           )}
         </div>
 

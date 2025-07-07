@@ -31,7 +31,7 @@ const TableView = ({
             <th className="py-2 px-4">Danh mục</th>
             <th className="py-2 px-4">Ngày tạo</th>
             <th className="py-2 px-4">Hành động</th>
-            <th className='py-2 px-4'>Tạo nhóm</th>
+            {!isAdmin &&  <th className='py-2 px-4'>Tạo nhóm</th>}
           </tr>
         </thead>
         <tbody>
@@ -107,7 +107,7 @@ const TableView = ({
                   </div>
                 </td>
 
-                {/* <td className="py-2 px-4 border-b">{topic.lecturer_name || '-'}</td> */}
+                {isAdmin && <td className="py-2 px-4 border-b">{topic.lecturer ? topic.lecturer.name : '-'}</td>}
                 <td className="py-2 px-4 border-b">{TopicCategory[topic.category] || '-'}</td>
                 <td className="py-2 px-4 border-b">{TimeService.convertDateStringToDDMMYYYY(topic.created_at)}</td>
                 <td className="py-2 px-4 border-b">

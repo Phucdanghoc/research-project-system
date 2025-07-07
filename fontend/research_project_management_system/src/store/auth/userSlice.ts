@@ -43,6 +43,19 @@ export const updateUserAsync = createAsyncThunk(
     }
   }
 );
+export const getUserByIdAsync = createAsyncThunk(
+  'accounts/getUserByIdAsync',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/users/${id}`);
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Lấy thông tin tài khoản thất bại';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 export const deleteUserAsync = createAsyncThunk(
   'accounts/deleteUserAsync',
   async (id: number, { rejectWithValue }) => {

@@ -1,15 +1,12 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import type { User } from '../../types/user';
 import { TokenService } from '../../services/token';
 
-const api = axios.create({
-  baseURL: 'http://localhost:3000/api/v1/users',
-  headers: { Authorization: `Bearer ${TokenService.getToken()}` },
-});
-
+// Types
 interface StudentState {
   students: User[];
+  student: User | null;
   loading: boolean;
   current_page: number;
   total_pages: number;
@@ -18,159 +15,117 @@ interface StudentState {
   error: string | null;
 }
 
-const initialState: StudentState = {
-  students: [],
-  current_page: 1,
-  rows_imported: 0,
-  total_pages: 1,
-  total_count: 0,
-  loading: false,
-  error: null,
-};
-
 interface PaginationParams {
   page?: number;
   per_page?: number;
+  search?: string;
 }
 
-interface FacultyParams extends PaginationParams {
-  faculty: string;
-}
+const api = axios.create({
+  baseURL: 'http://localhost:3000/api/v1/users',
+  headers: { Authorization: `Bearer ${TokenService.getToken()}` },
+});
 
-interface SearchParams extends FacultyParams {
-  keyword: string;
-}
-
-// Helper function to handle API errors
 const handleApiError = (error: any): string =>
   error.response?.data?.message || 'Operation failed';
 
+const createStudentThunk = (actionType: string, apiCall: (params: any) => Promise<any>) =>
+  createAsyncThunk(
+    actionType,
+    async (params: any, { rejectWithValue }) => {
+      try {
+        const response = await apiCall(params);
+        return response.data;
+      } catch (error) {
+        return rejectWithValue(handleApiError(error));
+      }
+    }
+  );
+
 // Thunks
-export const fetchStudentsAsync = createAsyncThunk(
+export const fetchStudentsAsync = createStudentThunk(
   'students/fetchStudentsAsync',
-  async ({ page = 1, per_page = 10 }: PaginationParams, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/students', { params: { page, per_page } });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
+  (params: PaginationParams) => api.get('/students', { params })
 );
 
-
-
-export const searchStudentsInFacultyAsync = createAsyncThunk(
-  'students/searchStudentsInFacultyAsync',
-  async ({ faculty, keyword, page = 1, per_page = 10 }: SearchParams, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/students/faculty/search?faculty=${faculty}`, {
-        params: { keyword, page, per_page },
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
+export const getStudentInFacultyAsync = createStudentThunk(
+  'students/getStudentInFacultyAsync',
+  (params: PaginationParams) => api.get('/students/my-faculty', { params })
 );
 
-export const importStudentsFromExcel = createAsyncThunk(
-  'students/importStudentsFromExcel',
-  async (file: File, { rejectWithValue }) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const response = await api.post('/import_csv', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
-);
-
-export const searchStudentsAsync = createAsyncThunk(
+export const searchStudentsAsync = createStudentThunk(
   'students/searchStudentsAsync',
-  async ({ keyword, page = 1, per_page = 10 }: PaginationParams & { keyword: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/students/search', { params: { keyword, page, per_page } });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
+  (params: PaginationParams & { keyword: string }) => api.get('/students/search', { params })
 );
 
-export const addStudentAsync = createAsyncThunk(
+export const searchStudentsInFacultyAsync = createStudentThunk(
+  'students/searchStudentsInFacultyAsync',
+  ({ faculty, ...params }: PaginationParams & { faculty: string; keyword: string }) =>
+    api.get(`/students/faculty/search?faculty=${faculty}`, { params })
+);
+
+export const addStudentAsync = createStudentThunk(
   'students/addStudentAsync',
-  async (student: Omit<User, 'id'> & { password?: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.post('', { user: student });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
+  (student: Omit<User, 'id'> & { password?: string }) => api.post('', { user: student })
 );
 
-export const updateStudentAsync = createAsyncThunk(
+export const updateStudentAsync = createStudentThunk(
   'students/updateStudentAsync',
-  async (student: User & { password?: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.put(`/${student.id}`, student);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
-  }
+  (student: User & { password?: string }) => api.put(`/${student.id}`, student)
 );
 
-export const deleteStudentAsync = createAsyncThunk(
+export const deleteStudentAsync = createStudentThunk(
   'students/deleteStudentAsync',
-  async (id: number, { rejectWithValue }) => {
-    try {
-      await api.delete(`/${id}`);
-      return id;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error));
-    }
+  (id: number) => api.delete(`/${id}`)
+);
+
+export const importStudentsFromExcel = createStudentThunk(
+  'students/importStudentsFromExcel',
+  (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/import_csv', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   }
 );
-export const getStudentInFacultyAsync = createAsyncThunk(
-  'accounts/fetchUsersAsync',
-  async ({ page = 1, per_page = 10, search = '' }: { page: number; per_page: number; search: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/students/my-faculty', { params: { page, per_page, search } });
-      return response.data;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Lấy danh sách tài khoản thất bại';
-      return rejectWithValue(errorMessage);
-    }
-  }
-)
+export const getStudentByIdAsync = createStudentThunk(
+  'students/getStudentByIdAsync',
+  (id: number) => api.get(`/${id}`)
+);
 
+// Slice
 const studentSlice = createSlice({
   name: 'students',
-  initialState,
+  initialState: {
+    students: [],
+    student: null as User | null,
+    current_page: 1,
+    rows_imported: 0,
+    total_pages: 1,
+    total_count: 0,
+    loading: false,
+    error: null,
+  } as StudentState,
   reducers: {
-    clearError(state) {
+    clearError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-    // Common reducer handlers
     const handlePending = (state: StudentState) => {
       state.loading = true;
       state.error = null;
     };
 
-    const handleRejected = (state: StudentState, action: any) => {
+    const handleRejected = (state: StudentState, action: PayloadAction<unknown>) => {
       state.loading = false;
-      state.error = action.payload as string;
+      state.error = typeof action.payload === 'string'
+        ? action.payload
+        : 'Operation failed';
     };
 
-    const handleListFulfilled = (state: StudentState, action: any) => {
+    const handleListFulfilled = (state: StudentState, action: PayloadAction<any>) => {
       state.loading = false;
       state.students = action.payload.users || [];
       state.current_page = action.payload.current_page;
@@ -179,43 +134,24 @@ const studentSlice = createSlice({
       state.error = null;
     };
 
-    // Fetch students
-    builder
-      .addCase(fetchStudentsAsync.pending, handlePending)
-      .addCase(fetchStudentsAsync.fulfilled, handleListFulfilled)
-      .addCase(fetchStudentsAsync.rejected, handleRejected);
+    [
+      fetchStudentsAsync,
+      getStudentInFacultyAsync,
+      searchStudentsAsync,
+      searchStudentsInFacultyAsync,
+    ].forEach((thunk) => {
+      builder
+        .addCase(thunk.pending, handlePending)
+        .addCase(thunk.fulfilled, handleListFulfilled)
+        .addCase(thunk.rejected, handleRejected);
+    });
 
-    // Get students in faculty
     builder
-      .addCase(getStudentInFacultyAsync.pending, handlePending)
-      .addCase(getStudentInFacultyAsync.fulfilled, handleListFulfilled)
-      .addCase(getStudentInFacultyAsync.rejected, handleRejected);
-
-    // Search students in faculty
-    builder
-      .addCase(searchStudentsInFacultyAsync.pending, handlePending)
-      .addCase(searchStudentsInFacultyAsync.fulfilled, handleListFulfilled)
-      .addCase(searchStudentsInFacultyAsync.rejected, handleRejected);
-
-    // Search students
-    builder
-      .addCase(searchStudentsAsync.pending, handlePending)
-      .addCase(searchStudentsAsync.fulfilled, handleListFulfilled)
-      .addCase(searchStudentsAsync.rejected, handleRejected);
-
-    // Add student
-    builder
-      .addCase(addStudentAsync.pending, handlePending)
       .addCase(addStudentAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.students.push(action.payload.user);
         state.error = null;
       })
-      .addCase(addStudentAsync.rejected, handleRejected);
-
-    // Update student
-    builder
-      .addCase(updateStudentAsync.pending, handlePending)
       .addCase(updateStudentAsync.fulfilled, (state, action) => {
         state.loading = false;
         const updatedStudent = action.payload.user;
@@ -224,28 +160,21 @@ const studentSlice = createSlice({
         );
         state.error = null;
       })
-      .addCase(updateStudentAsync.rejected, handleRejected);
-
-    // Delete student
-    builder
-      .addCase(deleteStudentAsync.pending, handlePending)
       .addCase(deleteStudentAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.students = state.students.filter((student) => student.id !== action.payload);
         state.error = null;
       })
-      .addCase(deleteStudentAsync.rejected, handleRejected);
-
-    // Import students
-    builder
-      .addCase(importStudentsFromExcel.pending, handlePending)
       .addCase(importStudentsFromExcel.fulfilled, (state, action) => {
         state.loading = false;
         state.rows_imported = action.payload.count;
         state.error = null;
       })
-      .addCase(importStudentsFromExcel.rejected, handleRejected);
-
+      .addCase(getStudentByIdAsync.fulfilled, (state, action) => {
+        state.student = action.payload;
+        state.loading = false;
+        state.error = null;
+      });
   },
 });
 

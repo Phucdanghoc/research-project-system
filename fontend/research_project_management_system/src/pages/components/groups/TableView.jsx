@@ -18,7 +18,7 @@ const TableView = ({ groups, onViewGroup, onEditGroup, onDeleteGroup }) => {
           {groups.length > 0 ? (
             groups.map((group) => (
               <tr key={group.id} className="hover:bg-blue-100">
-                <td className="py-2 px-4 border-b">{group.id}</td>
+                <td className="py-2 px-4 border-b">{group.group_code || '-'}</td>
                 <td className="py-2 px-4 border-b font-bold">{group.name}</td>
                 <td className="py-2 px-4 border-b">{group.topic_title || '-'}</td>
                 <td className="py-2 px-4 border-b">{TimeService.convertDateStringToDDMMYYYY(group.created_at)}</td>

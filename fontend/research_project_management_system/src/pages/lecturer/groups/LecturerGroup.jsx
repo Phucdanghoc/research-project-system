@@ -117,7 +117,8 @@ const LecturerGroup = () => {
       <ViewGroupModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
-        group={selectedGroup}
+        groupId={selectedGroup ? selectedGroup.id : null}
+        dispatch={dispatch}
       />
     </div>
   );

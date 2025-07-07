@@ -17,6 +17,7 @@ import {
   clearError,
 } from '../../../store/auth/studentSlice';
 import { toast } from 'react-toastify';
+import ImportCsvModal from '../../../components/ImportCsvModal';
 const ManageStudents = () => {
   const dispatch = useAppDispatch();
   const { students, loading, error, current_page, total_pages } = useSelector((state) => state.students);
@@ -40,6 +41,7 @@ const ManageStudents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [availableMajors, setAvailableMajors] = useState([]); // State để lưu danh sách ngành theo khoa được chọn
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -101,6 +103,8 @@ const ManageStudents = () => {
   };
 
   const handleViewStudent = (student) => {
+    console.log('student', student);
+    
     setSelectedStudent(student);
     setIsViewModalOpen(true);
   };
@@ -189,8 +193,6 @@ const ManageStudents = () => {
     setFormData({ ...formData, [name]: value });
     // console.log(`Form data updated: ${formData.faculty}: ${value}`);
     // console.log(`Faculty: ${Object.values(FacultyMajors[formData.faculty].majors)}`);
-
-
   };
 
   const closeModal = () => {
@@ -289,7 +291,7 @@ const ManageStudents = () => {
   );
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
+    <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý sinh viên</h1>
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
         <input
@@ -305,17 +307,14 @@ const ManageStudents = () => {
         >
           Thêm sinh viên
         </button>
-        <label className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center cursor-pointer">
+        <button
+          onClick={() => setIsImportModalOpen(true)}
+          className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center"
+        >
           Tải lên CSV
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleCsvUpload}
-            className="hidden"
-          />
-        </label>
+        </button>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto ">
         <TableAdmin
           columns={tableColumns}
           data={students}
@@ -472,17 +471,18 @@ const ManageStudents = () => {
       <ViewUserModal
         isOpen={isViewModalOpen}
         onClose={closeModal}
-        user={selectedStudent}
-        fields={[
-          { label: 'Tên', key: 'name' },
-          { label: 'Email', key: 'email' },
-          { label: 'Mã sinh viên', key: 'student_code' },
-          { label: 'Lớp', key: 'class_name' },
-          { label: 'Khoa', key: 'faculty' },
-          { label: 'Chuyên ngành', key: 'major' },
-          { label: 'Số điện thoại', key: 'phone' },
-          { label: 'Giới tính', key: 'gender' },
-        ]}
+        userId={selectedStudent?.id}
+        // user={selectedStudent}
+        // fields={[
+        //   { label: 'Tên', key: 'name' },
+        //   { label: 'Email', key: 'email' },
+        //   { label: 'Mã sinh viên', key: 'student_code' },
+        //   { label: 'Lớp', key: 'class_name' },
+        //   { label: 'Khoa', key: 'faculty' },
+        //   { label: 'Chuyên ngành', key: 'major' },
+        //   { label: 'Số điện thoại', key: 'phone' },
+        //   { label: 'Giới tính', key: 'gender' },
+        // ]}
       />
 
       <DeleteConfirmationModal
@@ -490,6 +490,14 @@ const ManageStudents = () => {
         onClose={closeModal}
         onConfirm={handleConfirmDelete}
         itemName={selectedStudent?.name || ''}
+      />
+      <ImportCsvModal
+        isOpen={isImportModalOpen}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          dispatch(fetchStudentsAsync({ page: 1, per_page: studentsPerPage }));
+          setCurrentPage(1);
+        }}
       />
     </div>
   );

@@ -12,7 +12,7 @@ export const loginAsync = createAsyncThunk(
   async (credentials: UserLogin, { rejectWithValue }) => {
     try {
       const response = await api.post('/login', { user: credentials });
-      return response.data; // Giả sử API trả về { user: { role, ... }, token }
+      return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Đăng nhập thất bại';
       return rejectWithValue(errorMessage);
@@ -27,7 +27,7 @@ export const logoutAsync = createAsyncThunk(
     try {
       api.defaults.headers.common['Authorization'] = 'Bearer ' + TokenService.getToken();
       const response = await api.delete('/logout');
-      return response.data; 
+      return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Đăng nhập thất bại';
       return rejectWithValue(errorMessage);
@@ -47,12 +47,12 @@ export const verifyTokenAsync = createAsyncThunk(
         '/verify_token',
         {
           token,
-        }, // Không gửi token trong body
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      return response.data; // Giả sử API trả về { user: { role, ... } }
+      return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Xác thực thất bại';
       return rejectWithValue(errorMessage);
@@ -96,7 +96,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Xử lý loginAsync
       .addCase(loginAsync.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -112,7 +111,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Xử lý verifyTokenAsync
       .addCase(verifyTokenAsync.pending, (state) => {
         state.loading = true;
         state.error = null;

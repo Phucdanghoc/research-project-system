@@ -149,6 +149,8 @@ const LecturerTopic = () => {
   }, []);
 
   const handleViewTopic = useCallback((topic) => {
+    console.log(`Viewing topic: ${topic.title}`);
+    
     setSelectedTopic(topic);
     setIsViewModalOpen(true);
   }, []);
@@ -308,8 +310,8 @@ const LecturerTopic = () => {
       <ViewTopicModal
         isOpen={isViewModalOpen}
         onClose={resetFormAndClose}
-        topic={selectedTopic}
-        facultyMajors={FacultyMajors}
+        // topic={selectedTopic}
+        topicId={selectedTopic ? selectedTopic.id : null}
       />
       {groupFormData && (
         <AddEditGroupModal

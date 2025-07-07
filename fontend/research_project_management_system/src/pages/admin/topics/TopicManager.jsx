@@ -134,6 +134,7 @@ const ManageTopics = () => {
   }, []);
 
   const handleViewTopic = useCallback((topic) => {
+    
     setSelectedTopic(topic);
     setIsViewModalOpen(true);
   }, []);
@@ -285,6 +286,7 @@ const ManageTopics = () => {
         handleDeleteTopic={handleDeleteTopic}
         handleStatusChange={handleStatusChange}
         statuses={STATUSES}
+        isAdmin={true}
       />
 
       {total_pages > 1 && (
@@ -292,11 +294,10 @@ const ManageTopics = () => {
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || loading}
-            className={`px-3 py-1 rounded ${
-              currentPage === 1 || loading
+            className={`px-3 py-1 rounded ${currentPage === 1 || loading
                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+              }`}
             aria-label="Trang trước"
           >
             Trước
@@ -306,11 +307,10 @@ const ManageTopics = () => {
               key={index + 1}
               onClick={() => handlePageChange(index + 1)}
               disabled={loading}
-              className={`px-3 py-1 rounded ${
-                currentPage === index + 1
+              className={`px-3 py-1 rounded ${currentPage === index + 1
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              } ${loading ? 'cursor-not-allowed' : ''}`}
+                } ${loading ? 'cursor-not-allowed' : ''}`}
               aria-label={`Trang ${index + 1}`}
             >
               {index + 1}
@@ -319,11 +319,10 @@ const ManageTopics = () => {
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === total_pages || loading}
-            className={`px-3 py-1 rounded ${
-              currentPage === total_pages || loading
+            className={`px-3 py-1 rounded ${currentPage === total_pages || loading
                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
+              }`}
             aria-label="Trang sau"
           >
             Sau
@@ -359,9 +358,10 @@ const ManageTopics = () => {
         onSubmit={handleSubmitMultipleTopics}
       />
       <ViewTopicModal
+        topicId={selectedTopic?.id}
         isOpen={isViewModalOpen}
         onClose={resetFormAndClose}
-        topic={selectedTopic}
+        // topic={selectedTopic}
         facultyMajors={FacultyMajors}
       />
       <DeleteConfirmationModal

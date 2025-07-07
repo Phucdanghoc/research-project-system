@@ -1,3 +1,11 @@
 name,email,password,student_code,class_name,faculty,major,phone,gender
-Charlie Le,charlie@student.edu,pass123,S004,Class D,Information Technology,Computer Science,934544890,Male
-Diana Pham,diana@student.edu,pass123,S005,Class E,Arts,Graphic Design,94567448901,Female
+Nguyễn Văn An,an.nguyen@sv.edu.vn,pass1234,S230001,Lớp CNTT01,CNTT,KTPM,0935123456,male
+Trần Thị Bình,binh.tran@sv.edu.vn,pass5678,S230002,Lớp CNTT02,CNTT,ATTT,0978234567,female
+Lê Hoàng Cường,cuong.le@sv.edu.vn,pass9012,S230003,Lớp KTCN01,KTCN,KTDT,0912345678,male
+Phạm Minh Duyên,duyen.pham@sv.edu.vn,pass3456,S230004,Lớp QTKD01,QTKD,MKT,0987654321,female
+Hoàng Văn Đức,duc.hoang@sv.edu.vn,pass7890,S230005,Lớp NN01,NN,NNAN,0945678901,male
+Vũ Thị Hồng,hong.vu@sv.edu.vn,pass2345,S230006,Lớp TK01,TK,TKDH,0967891234,female
+Đặng Quốc Hưng,hung.dang@sv.edu.vn,pass6789,S230007,Lớp DL01,DL,QTDL,0923456789,male
+Bùi Thị Lan,lan.bui@sv.edu.vn,pass0123,S230008,Lớp CNTT03,CNTT,TTNT,0956789012,female
+Ngô Văn Minh,minh.ngo@sv.edu.vn,pass4567,S230009,Lớp KTCN02,KTCN,HTTT,0931234567,male
+Đỗ Thị Ngọc,ngoc.do@sv.edu.vn,pass8901,S230010,Lớp QTKD02,QTKD,KDQT,0979123456,female

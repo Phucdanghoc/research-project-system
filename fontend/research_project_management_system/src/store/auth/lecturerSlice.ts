@@ -1,12 +1,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import type { User } from '../../types/user';
 import { TokenService } from '../../services/token';
 
-const api = axios.create({
-  baseURL: 'http://localhost:3000/api/v1/users',
-  headers: { Authorization: `Bearer ${TokenService.getToken()}` },
-});
+// Types
+interface LecturerResponse {
+  user: User;
+  users?: User[];
+  current_page?: number;
+  total_pages?: number;
+  total_count?: number;
+  count?: number;
+}
 
 interface LecturerState {
   lecturers: User[];
@@ -17,66 +23,52 @@ interface LecturerState {
   total_count: number;
   error: string | null;
 }
-
-const initialState: LecturerState = {
-  lecturers: [],
-  current_page: 1,
-  rows_imported: 0,
-  total_pages: 1,
-  total_count: 0,
-  loading: false,
-  error: null,
-};
-
 interface PaginationParams {
   page?: number;
   per_page?: number;
+  search?: string;
 }
+// API Configuration
+const api = axios.create({
+  baseURL: 'http://localhost:3000/api/v1/users',
+  headers: { Authorization: `Bearer ${TokenService.getToken()}` },
+});
 
-interface SearchParams extends PaginationParams {
-  keyword: string;
-}
-
-// Helper function to handle API errors
-const handleApiError = (error: any, defaultMessage: string): string =>
-  error.response?.data?.message || defaultMessage;
+// Thunk Creator Helper
+const createLecturerThunk = <T>(
+  type: string,
+  handler: (params: T) => Promise<any>,
+  errorMessage: string
+) =>
+  createAsyncThunk(
+    `lecturers/${type}`,
+    async (params: T, { rejectWithValue }) => {
+      try {
+        const response = await handler(params);
+        return response.data as LecturerResponse;
+      } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || errorMessage);
+      }
+    }
+  );
 
 // Thunks
-export const fetchLecturersAsync = createAsyncThunk(
-  'lecturers/fetchLecturersAsync',
-  async ({ page = 1, per_page = 10 }: PaginationParams, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/lecturers', { params: { page, per_page } });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error, 'Lấy danh sách giảng viên thất bại'));
-    }
-  }
+export const fetchLecturersAsync = createLecturerThunk(
+  'fetchLecturers',
+  (params: PaginationParams) => api.get('/lecturers', { params }),
+  'Lấy danh sách giảng viên thất bại'
 );
 
-
-export const getLecturerByIdAsync = createAsyncThunk(
-  'lecturers/getLecturerByIdAsync',
-  async (id: number, { rejectWithValue }) => {
-    try {
-      const response = await api.get(`/${id}`);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error, 'Lấy chi tiết giảng viên thất bại'));
-    }
-  }
+export const getLecturerByIdAsync = createLecturerThunk(
+  'getLecturerById',
+  (id: number) => api.get(`/${id}`),
+  'Lấy chi tiết giảng viên thất bại'
 );
 
-export const searchLecturersAsync = createAsyncThunk(
-  'lecturers/searchLecturersAsync',
-  async ({ keyword, page = 1, per_page = 10 }: SearchParams, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/lecturers/search', { params: { keyword, page, per_page } });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(handleApiError(error, 'Tìm kiếm giảng viên thất bại'));
-    }
-  }
+export const searchLecturersAsync = createLecturerThunk(
+  'searchLecturers',
+  (params: string) => api.get('/lecturers/search', { params }),
+  'Tìm kiếm giảng viên thất bại'
 );
 
 export const importLecturersFromExcel = createAsyncThunk(
@@ -133,99 +125,64 @@ export const deleteLecturerAsync = createAsyncThunk(
 
 const lecturerSlice = createSlice({
   name: 'lecturers',
-  initialState,
+  initialState: {
+    lecturers: [],
+    current_page: 1,
+    rows_imported: 0,
+    total_pages: 1,
+    total_count: 0,
+    loading: false,
+    error: null,
+  } as LecturerState,
   reducers: {
-    clearError(state) {
+    clearError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-    // Common reducer handlers
+    // Generic handlers
     const handlePending = (state: LecturerState) => {
       state.loading = true;
       state.error = null;
     };
 
-    const handleRejected = (state: LecturerState, action: any) => {
+    const handleRejected = (state: LecturerState, action: PayloadAction<any>) => {
       state.loading = false;
-      state.error = action.payload as string;
+      state.error = typeof action.payload === 'string' ? action.payload : 'Đã xảy ra lỗi';
     };
 
-    const handleListFulfilled = (state: LecturerState, action: any) => {
+    const handleListResponse = (state: LecturerState, action: PayloadAction<LecturerResponse>) => {
       state.loading = false;
       state.lecturers = action.payload.users || [];
-      state.current_page = action.payload.current_page;
-      state.total_pages = action.payload.total_pages;
-      state.total_count = action.payload.total_count;
+      state.current_page = action.payload.current_page || 1;
+      state.total_pages = action.payload.total_pages || 1;
+      state.total_count = action.payload.total_count || 0;
       state.error = null;
     };
 
-    // Fetch lecturers
-    builder
-      .addCase(fetchLecturersAsync.pending, handlePending)
-      .addCase(fetchLecturersAsync.fulfilled, handleListFulfilled)
-      .addCase(fetchLecturersAsync.rejected, handleRejected);
+    // Add cases for all thunks
+    [fetchLecturersAsync, searchLecturersAsync].forEach(thunk => {
+      builder
+        .addCase(thunk.pending, handlePending)
+        .addCase(thunk.fulfilled, handleListResponse)
+        .addCase(thunk.rejected, handleRejected);
+    });
 
-    // Get lecturer by ID
+    // Handle specific cases
     builder
-      .addCase(getLecturerByIdAsync.pending, handlePending)
       .addCase(getLecturerByIdAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.lecturers = [action.payload.user]; // Store single lecturer
+        if (action.payload.user) {
+          state.lecturers = [action.payload.user];
+        }
         state.error = null;
-      })
-      .addCase(getLecturerByIdAsync.rejected, handleRejected);
-
-    // Search lecturers
-    builder
-      .addCase(searchLecturersAsync.pending, handlePending)
-      .addCase(searchLecturersAsync.fulfilled, handleListFulfilled)
-      .addCase(searchLecturersAsync.rejected, handleRejected);
-
-    // Import lecturers
-    builder
-      .addCase(importLecturersFromExcel.pending, handlePending)
-      .addCase(importLecturersFromExcel.fulfilled, (state, action) => {
-        state.loading = false;
-        state.rows_imported = action.payload.count;
-        state.error = null;
-      })
-      .addCase(importLecturersFromExcel.rejected, handleRejected);
-
-    // Add lecturer
-    builder
-      .addCase(addLecturerAsync.pending, handlePending)
-      .addCase(addLecturerAsync.fulfilled, (state, action) => {
-        state.loading = false;
-        state.lecturers.push(action.payload.user);
-        state.error = null;
-      })
-      .addCase(addLecturerAsync.rejected, handleRejected);
-
-    // Update lecturer
-    builder
-      .addCase(updateLecturerAsync.pending, handlePending)
-      .addCase(updateLecturerAsync.fulfilled, (state, action) => {
-        state.loading = false;
-        const updatedLecturer = action.payload.user;
-        state.lecturers = state.lecturers.map((lecturer) =>
-          lecturer.id === updatedLecturer.id ? updatedLecturer : lecturer
-        );
-        state.error = null;
-      })
-      .addCase(updateLecturerAsync.rejected, handleRejected);
-
-    // Delete lecturer
-    builder
-      .addCase(deleteLecturerAsync.pending, handlePending)
-      .addCase(deleteLecturerAsync.fulfilled, (state, action) => {
-        state.loading = false;
-        state.lecturers = state.lecturers.filter((lecturer) => lecturer.id !== action.payload);
-        state.error = null;
-      })
-      .addCase(deleteLecturerAsync.rejected, handleRejected);
+      });
   },
 });
 
 export const { clearError } = lecturerSlice.actions;
 export default lecturerSlice.reducer;
+
+function handleApiError(error: unknown, arg1: string): unknown {
+  throw new Error('Function not implemented.');
+}

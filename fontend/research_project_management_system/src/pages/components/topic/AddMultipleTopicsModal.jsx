@@ -65,7 +65,10 @@ const AddMultipleTopicsModal = ({ isOpen, onClose, onSubmit }) => {
         handleClose();
     };
 
-    const selectedLecturer = lecturers ?? lecturers.find((lecturer) => lecturer.id === formData.lecturer_id);
+    // Fix logic: find the selected lecturer by id from lecturers array
+    const selectedLecturer = lecturers && Array.isArray(lecturers)
+        ? lecturers.find((lecturer) => lecturer.id === formData.lecturer_id)
+        : null;
 
     if (!isOpen) return null;
 
@@ -122,18 +125,18 @@ const AddMultipleTopicsModal = ({ isOpen, onClose, onSubmit }) => {
                     </div>
 
                     {selectedLecturer && (
-                        <div className="w-full md:w-1/2">
-                            <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-md">
+                        <div className="w-full mb-4">
+                            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow">
                                 <div className="flex items-center mb-3">
                                     <FaUserCircle className="text-3xl text-blue-600 mr-3" />
                                     <h3 className="text-lg font-semibold text-gray-700">{selectedLecturer.name || '-'}</h3>
                                 </div>
-                                <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
                                     <p><strong>Mã giảng viên:</strong> {selectedLecturer.lecturer_code || '-'}</p>
                                     <p><strong>Email:</strong> {selectedLecturer.email || '-'}</p>
                                     <p><strong>Số điện thoại:</strong> {selectedLecturer.phone || '-'}</p>
                                     <p><strong>Ngày sinh:</strong> {selectedLecturer.birth || '-'}</p>
-                                    <p><strong>Khoa:</strong> {FacultyMajors[selectedLecturer.faculty].name || '-'}</p>
+                                    {/* <p><strong>Khoa:</strong> {FacultyMajors[selectedLecturer.faculty]?.name || '-'}</p> */}
                                 </div>
                             </div>
                         </div>
