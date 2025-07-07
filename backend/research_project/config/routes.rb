@@ -37,7 +37,9 @@ Rails.application.routes.draw do
       end
 
       post 'users/verify_token', to: 'users#verify_token'
-
+      post 'users/reset-password', to: 'users#reset_password'
+      post 'users/change-password', to: 'users#change_password'
+      
       get "topics/filter_by_category", to: "topics#filter_by_category"
       post "topics/generate", to: "topics#generate_topics"
       get "topics/lecturer/:id", to: "topics#search_by_lecturer"

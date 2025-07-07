@@ -15,6 +15,50 @@ module Api
       def me
         render json: current_user.as_json(include: [:groups, :lecture_groups]), status: :ok
       end
+      
+      def reset_password
+        unless current_user&.admin?
+          return render json: { error: "Only admin can reset passwords" }, status: :forbidden
+        end
+
+        email = params[:email]
+        user = User.find_by(email: email)
+
+        return render json: { error: "User not found" }, status: :not_found unless user
+
+        if user.phone.blank?
+          return render json: { error: "User does not have a phone number" }, status: :unprocessable_entity
+        end
+
+        new_password = user.phone.to_s
+
+        if user.update(password: new_password)
+          render json: { message: "Password reset to user's phone number" }, status: :ok
+        else
+          render json: { error: "Failed to reset password", details: user.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+      def change_password
+        current_password = params[:current_password]
+        new_password = params[:new_password]
+
+        user = current_user
+        unless user.valid_password?(current_password)
+          return render json: { error: "Current password is incorrect" }, status: :unauthorized
+        end
+
+        if new_password.blank?
+          return render json: { error: "New password cannot be blank" }, status: :unprocessable_entity
+        end
+
+        if user.update(password: new_password)
+          render json: { message: "Password updated successfully" }, status: :ok
+        else
+          render json: { error: "Failed to update password", details: user.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
       def profile
         user = current_user
 
