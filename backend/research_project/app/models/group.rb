@@ -3,6 +3,7 @@ class Group < ApplicationRecord
   enum :status, { pending: 0, accepted: 1, denied: 2 }
   belongs_to :lecturer, class_name: "User"
   belongs_to :defense, optional: true
+  belongs_to :student_lead, class_name: 'User', optional: true
   
   validates :name, presence: true
   validates :lecturer, presence: true
