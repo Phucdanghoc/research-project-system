@@ -114,7 +114,7 @@ module Api
       # PATCH/PUT /groups/:id
       def update
         if current_user.lecturer?
-          unless @group.topic.lecturer_id == current_user.id
+          unless @group.topics.first&.lecturer_id == current_user.id
             return render json: { error: "You can only update groups for your own topics." }, status: :forbidden
           end
         elsif current_user.student?
@@ -131,7 +131,8 @@ module Api
             return render json: { error: "Invalid student IDs: #{invalid_ids.join(', ')}" }, status: :unprocessable_entity
           end
 
-          if @group.update(student_ids: valid_ids.uniq)
+          # ✅ This updates both student_ids and name/description
+          if @group.update(group_params.merge(student_ids: valid_ids.uniq))
             return render json: {
               message: "Group successfully updated.",
               group: @group.as_json(include: {
@@ -146,6 +147,7 @@ module Api
           end
         end
 
+        # fallback for lecturer
         if @group.update(group_params)
           render json: {
             message: "Group successfully updated.",
@@ -161,10 +163,11 @@ module Api
         end
       end
 
+
       # DELETE /groups/:id
       def destroy
         if current_user.lecturer?
-          unless @group.topic.lecturer_id == current_user.id
+          unless @group.topics.first&.lecturer_id == current_user.id
             return render json: { error: "You can only delete groups for your own topics." }, status: :forbidden
           end
         end
@@ -214,7 +217,7 @@ module Api
       end
 
       def group_params
-        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, student_ids: [])
+        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, :status, :def_status, student_ids: [])
       end
     end
   end
