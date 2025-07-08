@@ -10,13 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_03_105926) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_08_085254) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.adminpack"
   enable_extension "pg_catalog.plpgsql"
 
   create_table "defenses", force: :cascade do |t|
     t.string "name"
-    t.datetime "defense_time"
+    t.datetime "defenseTime"
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -48,6 +49,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_03_105926) do
     t.bigint "defense_id"
     t.integer "status", default: 0, null: false
     t.string "group_code"
+    t.text "description"
+    t.bigint "student_lead_id"
     t.index ["defense_id"], name: "index_groups_on_defense_id"
     t.index ["group_code"], name: "index_groups_on_group_code", unique: true
     t.index ["lecturer_id"], name: "index_groups_on_lecturer_id"
@@ -121,6 +124,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_03_105926) do
   add_foreign_key "group_users", "users"
   add_foreign_key "groups", "defenses"
   add_foreign_key "groups", "users", column: "lecturer_id"
+  add_foreign_key "groups", "users", column: "student_lead_id"
   add_foreign_key "groups_users", "groups"
   add_foreign_key "groups_users", "users"
   add_foreign_key "lecturer_defenses", "defenses"
