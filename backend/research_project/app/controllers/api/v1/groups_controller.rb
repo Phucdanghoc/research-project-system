@@ -20,21 +20,19 @@ module Api
             lecturer: { only: [:id, :name, :faculty] },
             defense: {},
             students: {},
-            topics: {}
+            topics: {},
+            student_lead: { only: [:id, :name, :student_code] }
           }),
           current_page: @groups.current_page,
           total_pages: @groups.total_pages,
           total_count: @groups.total_count
         }, status: :ok
       end
-      
+
       # GET /groups/search?keyword=...
       def search
         keyword = params[:keyword]
-
-        if keyword.blank?
-          return render json: { error: "Keyword is required." }, status: :bad_request
-        end
+        return render json: { error: "Keyword is required." }, status: :bad_request if keyword.blank?
 
         page = params[:page] || 1
         per_page = params[:per_page] || 10
@@ -51,7 +49,8 @@ module Api
             lecturer: { only: [:id, :name, :faculty] },
             defense: {},
             students: {},
-            topics: {}
+            topics: {},
+            student_lead: { only: [:id, :name, :student_code] }
           }),
           current_page: @groups.current_page,
           total_pages: @groups.total_pages,
@@ -65,34 +64,33 @@ module Api
           lecturer: {},
           defense: {},
           students: {},
-          topics: {}
+          topics: {},
+          student_lead: { only: [:id, :name, :student_code] }
         }), status: :ok
       end
 
       # POST /groups
       def create
         topic = Topic.find_by(id: params[:topic_id])
+        return render json: { error: "Topic not found." }, status: :not_found if topic.nil?
 
-        if topic.nil?
-          return render json: { error: "Topic not found." }, status: :not_found
-        end
-
-        # If current user is a lecturer, they can only create for their own topics
         if current_user.lecturer? && topic.lecturer_id != current_user.id
           return render json: { error: "You can only create groups for your own topics." }, status: :forbidden
         end
 
-        # Determine lecturer_id
-        lecturer_id = topic.lecturer_id
-        @group = Group.new(name: params[:name], lecturer_id: lecturer_id)
-        @group.topics << topic
-
-        # Add students to the group
         student_ids = Array(params[:student_ids]).map(&:to_i)
 
-        # ✅ If the user is a student, auto-add themself
+        # Create group
+        @group = Group.new(
+          name: params[:name],
+          lecturer_id: topic.lecturer_id,
+          description: params[:description]
+        )
+        @group.topics << topic
+
         if current_user.student?
           student_ids << current_user.id unless student_ids.include?(current_user.id)
+          @group.student_lead_id = current_user.id
         end
 
         @group.student_ids = student_ids.uniq if student_ids.any?
@@ -104,13 +102,15 @@ module Api
               lecturer: { only: [:id, :name, :faculty] },
               defense: {},
               students: {},
-              topics: {}
+              topics: {},
+              student_lead: { only: [:id, :name, :student_code] }
             })
           }, status: :created
         else
           render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
         end
       end
+
       # PATCH/PUT /groups/:id
       def update
         if current_user.lecturer?
@@ -118,20 +118,27 @@ module Api
             return render json: { error: "You can only update groups for your own topics." }, status: :forbidden
           end
         elsif current_user.student?
-          unless @group.students.include?(current_user)
-            return render json: { error: "You must be a member of this group to update it." }, status: :forbidden
+          unless current_user.id == @group.student_lead_id
+            return render json: { error: "Only the group leader can update the group." }, status: :forbidden
           end
 
           student_ids = Array(group_params[:student_ids]).map(&:to_i)
           student_ids << current_user.id unless student_ids.include?(current_user.id)
 
-          if @group.update(student_ids: student_ids.uniq)
+          valid_ids = User.where(id: student_ids, role: :student).pluck(:id)
+          invalid_ids = student_ids - valid_ids
+          if invalid_ids.any?
+            return render json: { error: "Invalid student IDs: #{invalid_ids.join(', ')}" }, status: :unprocessable_entity
+          end
+
+          if @group.update(student_ids: valid_ids.uniq)
             return render json: {
               message: "Group successfully updated.",
               group: @group.as_json(include: {
                 lecturer: { only: [:id, :name, :faculty] },
                 students: {},
-                topics: {}
+                topics: {},
+                student_lead: { only: [:id, :name, :student_code] }
               })
             }, status: :ok
           else
@@ -139,14 +146,14 @@ module Api
           end
         end
 
-        # Fallback for admin or other roles (if needed)
         if @group.update(group_params)
           render json: {
             message: "Group successfully updated.",
             group: @group.as_json(include: {
               lecturer: { only: [:id, :name, :faculty] },
               students: {},
-              topics: {}
+              topics: {},
+              student_lead: { only: [:id, :name, :student_code] }
             })
           }, status: :ok
         else
@@ -173,17 +180,11 @@ module Api
         end
 
         student_ids = params[:student_ids]
-
-        if student_ids.blank?
-          return render json: { error: "Student IDs are required." }, status: :bad_request
-        end
+        return render json: { error: "Student IDs are required." }, status: :bad_request if student_ids.blank?
 
         valid_student_ids = User.where(id: student_ids, role: :student).pluck(:id)
-        if valid_student_ids.empty?
-          return render json: { error: "No valid student IDs provided." }, status: :bad_request
-        end
-
         invalid_ids = student_ids.map(&:to_i) - valid_student_ids
+
         if invalid_ids.any?
           return render json: { error: "The following IDs are invalid or not students: #{invalid_ids.join(', ')}" }, status: :unprocessable_entity
         end
@@ -195,7 +196,8 @@ module Api
             group: @group.as_json(include: {
               lecturer: { only: [:id, :name, :faculty] },
               students: {},
-              topics: {}
+              topics: {},
+              student_lead: { only: [:id, :name, :student_code] }
             })
           }, status: :ok
         else
@@ -204,12 +206,6 @@ module Api
       end
 
       private
-
-      def authorize_lecturer_or_admin!
-        unless current_user.admin? || current_user.lecturer?
-          render json: { error: "Not authorized to perform this action." }, status: :forbidden
-        end
-      end
 
       def set_group
         @group = Group.find(params[:id])
