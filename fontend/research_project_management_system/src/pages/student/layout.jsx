@@ -1,10 +1,10 @@
 import { useSelector } from 'react-redux';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import Loading from '../../components/Loading';
 
-const LecturerLayout = () => {
+const StudentLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
   console.log(`isAuthenticated: ${isAuthenticated}`);
@@ -30,4 +30,4 @@ const LecturerLayout = () => {
   );
 };
 
-export default LecturerLayout;
+export default StudentLayout;

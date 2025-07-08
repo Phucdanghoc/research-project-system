@@ -12,7 +12,6 @@
 
 ActiveRecord::Schema[8.0].define(version: 2025_07_08_085254) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_catalog.adminpack"
   enable_extension "pg_catalog.plpgsql"
 
   create_table "defenses", force: :cascade do |t|
