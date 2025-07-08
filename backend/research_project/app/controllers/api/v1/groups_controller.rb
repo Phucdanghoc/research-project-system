@@ -117,14 +117,34 @@ module Api
           unless @group.topic.lecturer_id == current_user.id
             return render json: { error: "You can only update groups for your own topics." }, status: :forbidden
           end
+        elsif current_user.student?
+          unless @group.students.include?(current_user)
+            return render json: { error: "You must be a member of this group to update it." }, status: :forbidden
+          end
+
+          student_ids = Array(group_params[:student_ids]).map(&:to_i)
+          student_ids << current_user.id unless student_ids.include?(current_user.id)
+
+          if @group.update(student_ids: student_ids.uniq)
+            return render json: {
+              message: "Group successfully updated.",
+              group: @group.as_json(include: {
+                lecturer: { only: [:id, :name, :faculty] },
+                students: {},
+                topics: {}
+              })
+            }, status: :ok
+          else
+            return render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
+          end
         end
 
+        # Fallback for admin or other roles (if needed)
         if @group.update(group_params)
           render json: {
             message: "Group successfully updated.",
             group: @group.as_json(include: {
               lecturer: { only: [:id, :name, :faculty] },
-              defense: {},
               students: {},
               topics: {}
             })
