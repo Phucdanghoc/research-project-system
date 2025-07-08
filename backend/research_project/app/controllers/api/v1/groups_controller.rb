@@ -3,7 +3,6 @@ module Api
     class GroupsController < ApplicationController
       before_action :authenticate_api_user!
       before_action :set_group, only: [:show, :update, :destroy, :add_students]
-      before_action :authorize_lecturer_or_admin!, only: [:create, :update, :destroy, :add_students]
 
       # GET /groups
       def index
@@ -78,16 +77,25 @@ module Api
           return render json: { error: "Topic not found." }, status: :not_found
         end
 
+        # If current user is a lecturer, they can only create for their own topics
         if current_user.lecturer? && topic.lecturer_id != current_user.id
           return render json: { error: "You can only create groups for your own topics." }, status: :forbidden
         end
 
-        @group = Group.new(name: params[:name], lecturer_id: topic.lecturer_id)
+        # Determine lecturer_id
+        lecturer_id = topic.lecturer_id
+        @group = Group.new(name: params[:name], lecturer_id: lecturer_id)
         @group.topics << topic
 
-        if params[:student_ids].present?
-          @group.student_ids = params[:student_ids].map(&:to_i)
+        # Add students to the group
+        student_ids = Array(params[:student_ids]).map(&:to_i)
+
+        # ✅ If the user is a student, auto-add themself
+        if current_user.student?
+          student_ids << current_user.id unless student_ids.include?(current_user.id)
         end
+
+        @group.student_ids = student_ids.uniq if student_ids.any?
 
         if @group.save
           render json: {
@@ -103,7 +111,6 @@ module Api
           render json: { errors: @group.errors.full_messages }, status: :unprocessable_entity
         end
       end
-
       # PATCH/PUT /groups/:id
       def update
         if current_user.lecturer?
@@ -191,7 +198,7 @@ module Api
       end
 
       def group_params
-        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, student_ids: [])
+        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, student_ids: [])
       end
     end
   end
