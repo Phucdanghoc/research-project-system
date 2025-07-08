@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAppDispatch } from '../../../store';
 import { FaBook, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FacultyMajors, StatusConfig, TopicCategory } from '../../../types/enum';
-import { getLecturerByIdAsync } from '../../../store/auth/lecturerSlice';
-import { getTopicByIdAsync } from '../../../store/auth/topicSlice';
+import { getLecturerByIdAsync } from '../../../store/slices/lecturerSlice';
+import { getTopicByIdAsync } from '../../../store/slices/topicSlice';
 import DOMPurify from 'dompurify';
 import { useSelector } from 'react-redux';
 
@@ -15,6 +15,8 @@ const ViewTopicModal = ({ isOpen, onClose, topicId }) => {
   const [expandedRequirement, setExpandedRequirement] = useState(false);
 
   useEffect(() => {
+    console.log(`ViewTopicModal isOpen: ${isOpen}, topicId: ${topicId}`);
+    
     if (isOpen && topicId) {
       dispatch(getTopicByIdAsync(topicId));
     }
@@ -33,13 +35,13 @@ const ViewTopicModal = ({ isOpen, onClose, topicId }) => {
     }));
   };
 
-  if (!isOpen || !topic) return null;
+  if (!isOpen || !topicId || !topic) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900/80 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-gray-900/80 flex items-center justify-center p-2 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 bg-blue-50 border-b border-gray-200">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-blue-700 flex items-center gap-2">
             <FaBook className="text-blue-600" /> {topic.title}
           </h2>
@@ -53,7 +55,7 @@ const ViewTopicModal = ({ isOpen, onClose, topicId }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-gray-50">
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 bg-gray-50 hide-scrollbar">
           {/* Topic & Lecturer Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
@@ -92,7 +94,7 @@ const ViewTopicModal = ({ isOpen, onClose, topicId }) => {
                 onClick={() => setExpandedDescription(!expandedDescription)}
               >
                 <label className="text-lg font-semibold text-blue-700">Mô tả</label>
-                {expandedDescription ? (
+                {expandedDescription ? (  
                   <FaChevronUp className="text-blue-600" />
                 ) : (
                   <FaChevronDown className="text-blue-600" />
@@ -184,7 +186,7 @@ const ViewTopicModal = ({ isOpen, onClose, topicId }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end">
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
@@ -215,6 +217,15 @@ const ViewTopicModal = ({ isOpen, onClose, topicId }) => {
           .prose p {
             font-size: 0.95rem;
             color: #374151;
+          }
+          /* Hide scrollbar for Chrome, Safari and Opera */
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          /* Hide scrollbar for IE, Edge and Firefox */
+          .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
           }
         `}</style>
       </div>

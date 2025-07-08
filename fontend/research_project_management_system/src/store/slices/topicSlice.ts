@@ -15,22 +15,27 @@ export const fetchTopicsAsync = createAsyncThunk(
       const response = await api.get('/topics', { params: { page, per_page } });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Lấy danh sách đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Lấy danh sách đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const getTopicByMeAsync = createAsyncThunk(
   'topics/getTopicByMeAsync',
-  async ({ keyword, status, page = 1, per_page = 10 }: { keyword: string; status: string; page: number; per_page: number }, { rejectWithValue }) => {
+  async (
+    { keyword, status, page = 1, per_page = 10 }: { keyword: string; status: string; page: number; per_page: number },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await api.get('/topics/me', { params: { page, per_page, keyword, status } });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Lấy danh sách đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Lấy danh sách đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
-)
+);
 
 export const searchTopicAsync = createAsyncThunk(
   'topics/searchTopicAsync',
@@ -39,7 +44,8 @@ export const searchTopicAsync = createAsyncThunk(
       const response = await api.get('/topics/search', { params: { keyword, page, per_page } });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Tìm kiếm đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Tìm kiếm đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -51,22 +57,11 @@ export const filterByCategoryAsync = createAsyncThunk(
       const response = await api.get('/topics/filter_by_category', { params: { category, page, per_page } });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Lọc theo danh mục thất bại');
+      const errorMessage = error.response?.data?.message || 'Lọc theo danh mục thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
-
-const getTopicByLecturerAsync = createAsyncThunk(
-  'topics/getTopicByLecturerAsync',
-  async ({ lecturer, page = 1, per_page = 10 }: { lecturer: number; page: number; per_page: number }, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/topics/lecturer/:id', { params: { lecturer, page, per_page } });
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Lọc theo giảng viên thất bại');
-    }
-  }
-)
 
 export const filterByStatusAsync = createAsyncThunk(
   'topics/filterByStatusAsync',
@@ -75,19 +70,21 @@ export const filterByStatusAsync = createAsyncThunk(
       const response = await api.get('/topics/filter_by_status', { params: { status, page, per_page } });
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Lọc theo trạng thái thất bại');
+      const errorMessage = error.response?.data?.message || 'Lọc theo trạng thái thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const addTopicAsync = createAsyncThunk(
   'topics/addTopicAsync',
-  async (topic: Omit<Topic, 'id' | 'createdAt' | 'updateAt'>, { rejectWithValue }) => {
+  async (topic: Omit<Topic, 'id' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
     try {
-      const response = await api.post('/topics', { topic });
+      const response = await api.post('/topics', topic);
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Thêm đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Thêm đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -99,7 +96,8 @@ export const generateTopicAsync = createAsyncThunk(
       const response = await api.post('/topics/generate', topic);
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Tạo đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Tạo đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -108,13 +106,15 @@ export const updateTopicAsync = createAsyncThunk(
   'topics/updateTopicAsync',
   async (topic: Topic, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/topics/${topic.id}`, { topic });
+      const response = await api.put(`/topics/${topic.id}`, topic);
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Cập nhật đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Cập nhật đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
+
 export const getTopicByIdAsync = createAsyncThunk(
   'topics/getTopicByIdAsync',
   async (id: number, { rejectWithValue }) => {
@@ -122,7 +122,8 @@ export const getTopicByIdAsync = createAsyncThunk(
       const response = await api.get(`/topics/${id}`);
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Lấy thông tin đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Lấy thông tin đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -134,14 +135,15 @@ export const deleteTopicAsync = createAsyncThunk(
       await api.delete(`/topics/${id}`);
       return id;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Xóa đề tài thất bại');
+      const errorMessage = error.response?.data?.message || 'Xóa đề tài thất bại';
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
 interface TopicState {
   topics: Topic[];
-  topic ?: Topic | null;
+  topic: Topic | null;
   loading: boolean;
   total_pages: number;
   current_page: number;
@@ -150,8 +152,8 @@ interface TopicState {
 
 const initialState: TopicState = {
   topics: [],
-  loading: false,
   topic: null,
+  loading: false,
   total_pages: 1,
   current_page: 1,
   error: null,
@@ -166,16 +168,19 @@ const topicSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Common handlers
     const handlePending = (state: TopicState) => {
       state.loading = true;
       state.error = null;
     };
 
-    const handleFulfilledFetch = (state: TopicState, action: any) => {
+    const handleFetchFulfilled = (state: TopicState, action: any) => {
       state.loading = false;
-      state.topics = action.payload.topics || [];
-      state.total_pages = action.payload.total_pages;
-      state.current_page = action.payload.current_page;
+      console.log(`Fetched topics:`, action.payload.data?.topics);
+      
+      state.topics = action.payload?.topics || [];
+      state.total_pages = action.payload?.total_pages || 1;
+      state.current_page = action.payload?.current_page || 1;
       state.error = null;
     };
 
@@ -184,45 +189,44 @@ const topicSlice = createSlice({
       state.error = action.payload as string;
     };
 
+    // Fetch topics
     builder
       .addCase(fetchTopicsAsync.pending, handlePending)
-      .addCase(fetchTopicsAsync.fulfilled, handleFulfilledFetch)
+      .addCase(fetchTopicsAsync.fulfilled, handleFetchFulfilled)
       .addCase(fetchTopicsAsync.rejected, handleRejected)
-      .addCase(searchTopicAsync.pending, handlePending)
-      .addCase(searchTopicAsync.fulfilled, handleFulfilledFetch)
-      .addCase(searchTopicAsync.rejected, handleRejected)
-      .addCase(filterByCategoryAsync.pending, handlePending)
-      .addCase(filterByCategoryAsync.fulfilled, handleFulfilledFetch)
-      .addCase(filterByCategoryAsync.rejected, handleRejected)
-      .addCase(filterByStatusAsync.pending, handlePending)
-      .addCase(filterByStatusAsync.fulfilled, handleFulfilledFetch)
-      .addCase(filterByStatusAsync.rejected, handleRejected)
-      .addCase(addTopicAsync.pending, handlePending)
-      .addCase(getTopicByMeAsync.fulfilled, handleFulfilledFetch)
-      .addCase(getTopicByMeAsync.rejected, handleRejected)
-      .addCase(getTopicByIdAsync.pending, handlePending)
-      .addCase(getTopicByIdAsync.fulfilled, (state, action) =>
-        {
-          state.loading = false;
-          state.topic = action.payload;
-          state.error = null;
-        }
-      )
-      .addCase(getTopicByIdAsync.rejected, handleRejected)
+      // Get topics by me
       .addCase(getTopicByMeAsync.pending, handlePending)
+      .addCase(getTopicByMeAsync.fulfilled, handleFetchFulfilled)
+      .addCase(getTopicByMeAsync.rejected, handleRejected)
+      // Search topics
+      .addCase(searchTopicAsync.pending, handlePending)
+      .addCase(searchTopicAsync.fulfilled, handleFetchFulfilled)
+      .addCase(searchTopicAsync.rejected, handleRejected)
+      // Filter by category
+      .addCase(filterByCategoryAsync.pending, handlePending)
+      .addCase(filterByCategoryAsync.fulfilled, handleFetchFulfilled)
+      .addCase(filterByCategoryAsync.rejected, handleRejected)
+      // Filter by status
+      .addCase(filterByStatusAsync.pending, handlePending)
+      .addCase(filterByStatusAsync.fulfilled, handleFetchFulfilled)
+      .addCase(filterByStatusAsync.rejected, handleRejected)
+      // Add topic
+      .addCase(addTopicAsync.pending, handlePending)
       .addCase(addTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.topics.push(action.payload.data);
         state.error = null;
       })
       .addCase(addTopicAsync.rejected, handleRejected)
+      // Generate topic
       .addCase(generateTopicAsync.pending, handlePending)
       .addCase(generateTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.topics.push(...action.payload.topics);
-        state.error = null;
+        state.topics.push(...(action.payload.data?.topics || []));
+        state.error  = null;
       })
       .addCase(generateTopicAsync.rejected, handleRejected)
+      // Update topic
       .addCase(updateTopicAsync.pending, handlePending)
       .addCase(updateTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
@@ -233,6 +237,15 @@ const topicSlice = createSlice({
         state.error = null;
       })
       .addCase(updateTopicAsync.rejected, handleRejected)
+      // Get topic by ID
+      .addCase(getTopicByIdAsync.pending, handlePending)
+      .addCase(getTopicByIdAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.topic = action.payload;
+        state.error = null;
+      })
+      .addCase(getTopicByIdAsync.rejected, handleRejected)
+      // Delete topic
       .addCase(deleteTopicAsync.pending, handlePending)
       .addCase(deleteTopicAsync.fulfilled, (state, action) => {
         state.loading = false;

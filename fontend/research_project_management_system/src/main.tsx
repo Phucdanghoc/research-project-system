@@ -4,7 +4,8 @@ import { ToastContainer } from 'react-toastify';
 
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
-import AppRouter from './routers';
+// @ts-ignore
+import AppRouter from './routers/index.jsx';
 import store from './store';
 
 const rootElement = document.getElementById('root');

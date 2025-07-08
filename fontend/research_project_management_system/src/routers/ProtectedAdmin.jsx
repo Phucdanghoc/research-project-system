@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
-import { verifyTokenAsync } from '../store/auth/authSlice';
+import { verifyTokenAsync } from '../store/slices/authSlice';
 import { TokenService } from '../services/token';
 import Loading from '../components/Loading';
 

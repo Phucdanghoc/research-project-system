@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaKey } from 'react-icons/fa';
 import { useAppDispatch } from '../../../store/index';
 import TableAdmin from './components/Table';
 import AddEditUserModal from './components/AddEditUserModal';
@@ -15,9 +15,10 @@ import {
   deleteStudentAsync,
   importStudentsFromExcel,
   clearError,
-} from '../../../store/auth/studentSlice';
+} from '../../../store/slices/studentSlice';
 import { toast } from 'react-toastify';
 import ImportCsvModal from '../../../components/ImportCsvModal';
+import { resetPasswordAsync } from '../../../store/slices/userSlice';
 const ManageStudents = () => {
   const dispatch = useAppDispatch();
   const { students, loading, error, current_page, total_pages } = useSelector((state) => state.students);
@@ -104,7 +105,7 @@ const ManageStudents = () => {
 
   const handleViewStudent = (student) => {
     console.log('student', student);
-    
+
     setSelectedStudent(student);
     setIsViewModalOpen(true);
   };
@@ -223,6 +224,15 @@ const ManageStudents = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+  const handleResetPassword = async (student) => {
+    try {
+      await dispatch(resetPasswordAsync(student.email)).unwrap();
+      toast.success('Đặt lại mật khẩu thành công!');
+    } catch (error) {
+      console.error('Reset password failed:', error);
+      toast.error('Đặt lại mật khóa thất bại!');
+    }
+  };
 
   const handleCsvUpload = async (e) => {
     const file = e.target.files[0];
@@ -260,8 +270,8 @@ const ManageStudents = () => {
       render: (item) =>
         FacultyMajors[item.faculty]?.majors.find((m) => m.code === item.major)?.name || item.major,
     },
-    { header: 'Sđt', key: 'phone' },
-    { header: 'Giới tính', key: 'gender', render: (item) => (item.gender === 'Male' ? 'Nam' : 'Nữ') },
+    { header: 'Số điện thoại', key: 'phone' },
+    // { header: 'Giới tính', key: 'gender', render: (item) => (item.gender === 'Male' ? 'Nam' : 'Nữ') },
   ];
 
   const tableActions = (item) => (
@@ -286,6 +296,13 @@ const ManageStudents = () => {
         title="Xóa"
       >
         <FaTrash />
+      </button>
+      <button
+        onClick={() => handleResetPassword(item)}
+        className="text-blue-600 hover:text-blue-800"
+        title="Đặt lại mật khẩu"
+      >
+        <FaKey />
       </button>
     </>
   );
@@ -472,17 +489,17 @@ const ManageStudents = () => {
         isOpen={isViewModalOpen}
         onClose={closeModal}
         userId={selectedStudent?.id}
-        // user={selectedStudent}
-        // fields={[
-        //   { label: 'Tên', key: 'name' },
-        //   { label: 'Email', key: 'email' },
-        //   { label: 'Mã sinh viên', key: 'student_code' },
-        //   { label: 'Lớp', key: 'class_name' },
-        //   { label: 'Khoa', key: 'faculty' },
-        //   { label: 'Chuyên ngành', key: 'major' },
-        //   { label: 'Số điện thoại', key: 'phone' },
-        //   { label: 'Giới tính', key: 'gender' },
-        // ]}
+      // user={selectedStudent}
+      // fields={[
+      //   { label: 'Tên', key: 'name' },
+      //   { label: 'Email', key: 'email' },
+      //   { label: 'Mã sinh viên', key: 'student_code' },
+      //   { label: 'Lớp', key: 'class_name' },
+      //   { label: 'Khoa', key: 'faculty' },
+      //   { label: 'Chuyên ngành', key: 'major' },
+      //   { label: 'Số điện thoại', key: 'phone' },
+      //   { label: 'Giới tính', key: 'gender' },
+      // ]}
       />
 
       <DeleteConfirmationModal

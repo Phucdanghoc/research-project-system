@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppDispatch } from '../store/index';
-import { importStudentsFromExcel } from '../store/auth/studentSlice';
+import { importStudentsFromExcel } from '../store/slices/studentSlice';
 import { toast } from 'react-toastify';
 import Papa from 'papaparse';
 

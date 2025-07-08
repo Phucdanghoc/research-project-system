@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { getStudentByIdAsync, clearError } from '../../../../store/auth/studentSlice';
+import { getStudentByIdAsync, clearError } from '../../../../store/slices/studentSlice';
 import {  useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../../store';
 

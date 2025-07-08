@@ -1,4 +1,4 @@
-import { FaEye, FaEdit, FaTrash, FaChevronDown, FaPlusCircle } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaChevronDown, FaPlusCircle, FaKey, FaKeycdn, FaRegCaretSquareLeft } from 'react-icons/fa';
 import { TopicCategory } from '../../../types/enum';
 import { TimeService } from '../../../utils/time';
 const TableView = ({
@@ -10,6 +10,7 @@ const TableView = ({
   handleViewTopic,
   handleEditTopic,
   handleDeleteTopic,
+  handleResetPassword,
   handleStatusChange,
   handleCreateGroup,
   statuses,
@@ -127,6 +128,7 @@ const TableView = ({
                       <FaEdit />
                     </button>
                     {isAdmin && (
+                     <>
                       <button
                         onClick={() => handleDeleteTopic(topic)}
                         className="text-red-600 hover:text-red-800"
@@ -134,6 +136,8 @@ const TableView = ({
                       >
                         <FaTrash />
                       </button>
+                      
+                      </>
                     )}
 
                   </div>

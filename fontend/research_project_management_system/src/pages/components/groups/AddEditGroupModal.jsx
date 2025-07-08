@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch } from '../../../store';
-import { getStudentInFacultyAsync } from '../../../store/auth/studentSlice';
+import { getStudentInFacultyAsync } from '../../../store/slices/studentSlice';
 import { useSelector } from 'react-redux';
 
 const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic }) => {

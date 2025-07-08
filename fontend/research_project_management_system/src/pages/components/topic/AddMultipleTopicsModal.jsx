@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useAppDispatch } from '../../../store/index';
-import { searchLecturersAsync } from '../../../store/auth/lecturerSlice';
+import { searchLecturersAsync } from '../../../store/slices/lecturerSlice';
 import { toast } from 'react-toastify';
 import { FaUserCircle } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
-import { FacultyMajors } from '../../../types/enum';
 
 const AddMultipleTopicsModal = ({ isOpen, onClose, onSubmit }) => {
+
     const dispatch = useAppDispatch();
     const { lecturers, loading, error } = useSelector((state) => state.lecturers);
     const [searchTerm, setSearchTerm] = useState('');
@@ -65,10 +65,10 @@ const AddMultipleTopicsModal = ({ isOpen, onClose, onSubmit }) => {
         handleClose();
     };
 
-    // Fix logic: find the selected lecturer by id from lecturers array
-    const selectedLecturer = lecturers && Array.isArray(lecturers)
-        ? lecturers.find((lecturer) => lecturer.id === formData.lecturer_id)
+    const selectedLecturer = Array.isArray(lecturers)
+        ? lecturers.find((lecturer) => lecturer && lecturer.id === formData.lecturer_id)
         : null;
+
 
     if (!isOpen) return null;
 

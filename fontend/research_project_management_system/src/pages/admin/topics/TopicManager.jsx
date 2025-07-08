@@ -17,7 +17,7 @@ import {
   searchTopicAsync,
   filterByStatusAsync,
   generateTopicAsync,
-} from '../../../store/auth/topicSlice';
+} from '../../../store/slices/topicSlice';
 import { toast } from 'react-toastify';
 
 const statusConfig = {
@@ -72,7 +72,6 @@ const ManageTopics = () => {
     }
   }, [dispatch, currentPage, searchQuery, selectedStatus]);
 
-  // Handle error toast
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -80,7 +79,6 @@ const ManageTopics = () => {
     }
   }, [error, dispatch]);
 
-  // Update available majors based on selected faculty
   useEffect(() => {
     const majors = FacultyMajors[formData.faculty]?.majors.map((m) => m.code) || [];
     setAvailableMajors(majors);
@@ -116,6 +114,7 @@ const ManageTopics = () => {
 
   const handleEditTopic = useCallback((topic) => {
     setSelectedTopic(topic);
+    
     setFormData({
       title: topic.title || '',
       topic_code: topic.topic_code || '',
@@ -125,7 +124,7 @@ const ManageTopics = () => {
       student_quantity: topic.student_quantity?.toString() || '',
       status: topic.status || 'open',
       lecturer_id: topic.lecturer_id?.toString() || '',
-      lecturer_name: topic.lecturer_name || '',
+      lecturer_name: topic.lecturer?.name || '',
       category: topic.category || '',
       faculty: topic.faculty || '',
       major: topic.major || '',
@@ -143,6 +142,7 @@ const ManageTopics = () => {
     setSelectedTopic(topic);
     setIsDeleteModalOpen(true);
   }, []);
+
 
   const handleAddMultipleTopics = useCallback(() => {
     setIsAddMultipleModalOpen(true);
@@ -169,6 +169,7 @@ const ManageTopics = () => {
         dispatch(fetchTopicsAsync({ page: currentPage, per_page: TOPICS_PER_PAGE }));
         toast.success(isEdit ? 'Cập nhật đề tài thành công!' : 'Thêm đề tài thành công!');
       } catch (error) {
+        console.error(isEdit ? 'Update topic failed:' : 'Add topic failed:', error);
         toast.error(isEdit ? 'Cập nhật đề tài thất bại!' : 'Thêm đề tài thất bại!');
       }
     },

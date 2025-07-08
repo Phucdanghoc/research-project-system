@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../../store';
-import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupByLecturerAsync } from '../../../store/auth/groupSlice';
+import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupByLecturerAsync } from '../../../store/slices/groupSlice';
 import FilterBar from '../../components/students/FilterBar';
 import TableView from '../../components/groups/TableView';
 import AddEditGroupModal from '../../components/groups/AddEditGroupModal';

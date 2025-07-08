@@ -15,7 +15,7 @@ import {
   deleteLecturerAsync,
   importLecturersFromExcel,
   clearError,
-} from '../../../store/auth/lecturerSlice';
+} from '../../../store/slices/lecturerSlice';
 import { toast } from 'react-toastify';
 
 const ManageLecturers = () => {
@@ -294,7 +294,7 @@ const ManageLecturers = () => {
         />
         <button
           onClick={handleAddLecturer}
-          className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
+          className="w-full sm:w-64 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
         >
           Thêm giảng viên
         </button>

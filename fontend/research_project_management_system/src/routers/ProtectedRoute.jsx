@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '../store';
-import { verifyTokenAsync } from '../store/auth/authSlice';
+import { verifyTokenAsync } from '../store/slices/authSlice';
 import { TokenService } from '../services/token';
 import Loading from '../components/Loading';
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, memo } from 'react';
 import { useAppDispatch } from '../../../store';
-import { searchLecturersAsync } from '../../../store/auth/lecturerSlice';
+import { searchLecturersAsync } from '../../../store/slices/lecturerSlice';
 import { TopicCategory } from '../../../types/enum';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -13,10 +13,11 @@ import TextStyle from '@tiptap/extension-text-style';
 import { useDebouncedCallback } from 'use-debounce';
 import EditorToolbar from '../../../components/EditorWithToolbar';
 import ListItem from '@tiptap/extension-list-item';
+import { useSelector } from 'react-redux';
 
 const AddEditTopicModal = ({ isOpen, onClose, onSubmit, formData, onInputChange, statuses, isEdit, isLecturer = false }) => {
   const dispatch = useAppDispatch();
-  const { lecturers, loading, error } = useAppDispatch((state) => state.lecturers);
+  const { lecturers, loading, error } = useSelector((state) => state.lecturers);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [firstSearch, setFirstSearch] = useState(false);
@@ -79,6 +80,8 @@ const AddEditTopicModal = ({ isOpen, onClose, onSubmit, formData, onInputChange,
 
   useEffect(() => {
     if (!firstSearch) {
+      console.log('Setting initial search term:', formData);
+      
       setSearchTerm(formData.lecturer_name || '');
     }
   }, [formData.lecturer_name, firstSearch]);
@@ -91,6 +94,8 @@ const AddEditTopicModal = ({ isOpen, onClose, onSubmit, formData, onInputChange,
 
   const debouncedSearch = useDebouncedCallback((term) => {
     if (term.length >= 2) {
+      console.log(`Searching lecturers with term: ${term}`);
+      
       dispatch(searchLecturersAsync({ keyword: term }));
       setIsDropdownOpen(true);
     } else {

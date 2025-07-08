@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { loginAsync, clearError } from '../../store/auth/authSlice';
+import { loginAsync, clearError } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '../../store/index';
 import { FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { IoMdMail } from 'react-icons/io';
-import AuthCheck from '../../hooks/useAuth'; 
+import AuthCheck from '../../hooks/useAuth';
 
 const LoginPage = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });

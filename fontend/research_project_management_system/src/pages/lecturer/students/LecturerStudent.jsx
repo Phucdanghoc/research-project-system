@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../../store';
-import { getStudentInFacultyAsync, clearError } from '../../../store/auth/studentSlice';
+import { getStudentInFacultyAsync, clearError } from '../../../store/slices/studentSlice';
 import FilterBar from '../../components/students/FilterBar';
 import TableView from '../../components/students/TableView';
 import ViewStudentModal from '../../components/students/ViewStudentModal';

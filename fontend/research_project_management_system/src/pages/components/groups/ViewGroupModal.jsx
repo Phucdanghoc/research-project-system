@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FaUsers, FaTimes, FaChevronDown, FaChevronUp, FaUserCircle, FaUniversity, FaBook } from 'react-icons/fa';
-import { getGroupAsync } from '../../../store/auth/groupSlice';
+import { getGroupAsync } from '../../../store/slices/groupSlice';
 import { TimeService } from '../../../utils/time';
 import DOMPurify from 'dompurify';
 import { useSelector, useDispatch } from 'react-redux';

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { verifyTokenAsync } from "../store/auth/authSlice";
+import { verifyTokenAsync } from "../store/slices/authSlice";
 import { useAppDispatch } from "../store";
 import { TokenService } from "../services/token";
 

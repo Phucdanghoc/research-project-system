@@ -10,10 +10,10 @@ import {
   updateTopicAsync,
   clearError,
   getTopicByMeAsync,
-} from '../../../store/auth/topicSlice';
+} from '../../../store/slices/topicSlice';
 import { toast } from 'react-toastify';
 import AddEditGroupModal from '../../components/groups/AddEditGroupModal';
-import { createGroupAsync } from '../../../store/auth/groupSlice';
+import { createGroupAsync } from '../../../store/slices/groupSlice';
 
 const statusConfig = {
   open: { icon: <FaCheckCircle className="text-green-600" />, label: 'Mở', border: 'border-green-600' },
