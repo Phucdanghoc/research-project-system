@@ -1,14 +1,21 @@
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
+
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
-import   AppRouter from './routers/index.js';
-import store from './store/index.ts';
+import AppRouter from './routers';
+import store from './store';
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
+createRoot(rootElement).render(
   <Provider store={store}>
-      <AppRouter />
-      <ToastContainer />
-  </Provider>,
+    <AppRouter />
+    <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+  </Provider>
 );

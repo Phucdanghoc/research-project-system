@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { UserLogin } from '../types/user';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api/v1',
 });
 
 export const loginUser = async (credentials : UserLogin ) => {

@@ -16,7 +16,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_08_080302) do
 
   create_table "defenses", force: :cascade do |t|
     t.string "name"
-    t.datetime "defenseTime"
+    t.datetime "defense_time"
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

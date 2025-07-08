@@ -1,5 +1,5 @@
-class RenameDefenseTimeInDefenses < ActiveRecord::Migration[8.0]
+class ChangeTitleNullableInTopics < ActiveRecord::Migration[7.1]
   def change
-    rename_column :defenses, :defenseTime, :defense_time
+    change_column_null :topics, :title, true
   end
 end
