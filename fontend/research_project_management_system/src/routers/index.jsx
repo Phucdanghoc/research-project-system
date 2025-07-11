@@ -16,6 +16,12 @@ import LecturerGroup from '../pages/lecturer/groups/LecturerGroup';
 import ProfilePage from '../pages/profile/ProfilePage';
 import Test from '../pages/lecturer/topics/Test';
 import NotFoundPage from '../pages/404';
+import DashboardStudent from '../pages/student/dashboard/DashboardStudent';
+import { GroupStudent } from '../pages/student/group/GroupStudent';
+import StudentLayout from '../pages/student/layout';
+import ProtectedStudent from './ProtectedStudent';
+import StudentTopic from '../pages/student/topic/TopicStudent';
+import ManagerGroup from '../pages/admin/group/ManagerGroup';
 
 const router = createBrowserRouter([
   {
@@ -46,6 +52,7 @@ const router = createBrowserRouter([
       { path: 'manage-students', element: <ManagerStudents /> },
       { path: 'manage-lecturers', element: <ManagerLecturers /> },
       { path: 'manage-topics', element: <ManageTopics /> },
+      { path: 'manage-groups', element: <ManagerGroup /> },
       { path: 'setup-areas', element: <ManagerStudents /> },
     ],
   },
@@ -64,6 +71,20 @@ const router = createBrowserRouter([
       { path: 'manage-groups', element: <LecturerGroup /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'test', element: <Test /> },
+    ],
+  },
+  {
+    path: '/student',
+    element: (
+      <ProtectedStudent>
+        <StudentLayout />
+      </ProtectedStudent>
+    ), children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
+      { path: 'dashboard', element: <DashboardStudent /> },
+      { path: 'student-topics', element: <StudentTopic /> },
+      { path: 'student-groups', element: <GroupStudent /> },
+      { path: 'profile', element: <ProfilePage /> },
     ],
   },
   {

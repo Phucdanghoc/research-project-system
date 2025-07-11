@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { FaExclamationTriangle } from 'react-icons/fa';
+import TitleHandler from '../../components/TitleHandler';
 
 const NotFound = () => {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
+      <TitleHandler />
       <div className="bg-white p-8  text-center">
         <FaExclamationTriangle className="text-6xl text-yellow-500 mx-auto mb-4" />
         <h1 className="text-4xl font-bold text-gray-800 mb-2">404 - Trang Không Tìm Thấy</h1>

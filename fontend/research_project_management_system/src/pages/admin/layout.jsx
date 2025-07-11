@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import Loading from '../../components/Loading';
+import TitleHandler from '../../components/TitleHandler';
 
 const AdminLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -22,6 +23,7 @@ const AdminLayout = () => {
           isOpen ? 'ml-64' : 'ml-16'
         }`}
       >
+        <TitleHandler />
         <main className="flex-1 p-6 bg-white">
           <Outlet />
         </main>

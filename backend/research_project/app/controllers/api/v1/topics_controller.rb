@@ -14,7 +14,6 @@ module Api
 
         topics = Topic.joins(:lecturer).where("LOWER(users.faculty) = ?", faculty.downcase)
 
-        # Optional filter
         if params[:keyword].present?
           keyword = params[:keyword]
           topics = topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")

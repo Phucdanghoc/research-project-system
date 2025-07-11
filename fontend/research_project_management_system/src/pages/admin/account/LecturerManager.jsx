@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { FaEye, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaKey } from 'react-icons/fa';
 import { useAppDispatch } from '../../../store/index';
 import TableAdmin from './components/Table';
 import AddEditUserModal from './components/AddEditUserModal';
@@ -17,6 +17,7 @@ import {
   clearError,
 } from '../../../store/slices/lecturerSlice';
 import { toast } from 'react-toastify';
+import { resetPasswordAsync } from '../../../store/slices/userSlice';
 
 const ManageLecturers = () => {
   const dispatch = useAppDispatch();
@@ -33,7 +34,7 @@ const ManageLecturers = () => {
     role: 'lecturer',
     lecturer_code: '',
     faculty: '',
-   
+
     phone: '',
     gender: '',
   });
@@ -78,7 +79,7 @@ const ManageLecturers = () => {
       role: 'lecturer',
       lecturer_code: '',
       faculty: '',
-     
+
       phone: '',
       gender: '',
     });
@@ -132,6 +133,15 @@ const ManageLecturers = () => {
     } catch (error) {
       console.error('Add lecturer failed:', error);
       toast.error('Thêm giảng viên mới thất bại!');
+    }
+  };
+  const handleResetPassword = async (student) => {
+    try {
+      await dispatch(resetPasswordAsync(student.email)).unwrap();
+      toast.success('Đặt lại mật khẩu thành công!');
+    } catch (error) {
+      console.error('Reset password failed:', error);
+      toast.error('Đặt lại mật khóa thất bại!');
     }
   };
 
@@ -199,7 +209,7 @@ const ManageLecturers = () => {
       role: 'lecturer',
       lecturer_code: '',
       faculty: '',
-     
+
       phone: '',
       gender: '',
     });
@@ -278,11 +288,18 @@ const ManageLecturers = () => {
       >
         <FaTrash />
       </button>
+      <button
+        onClick={() => handleResetPassword(item)}
+        className="text-blue-600 hover:text-blue-800"
+        title="Đặt lại mật khẩu"
+      >
+        <FaKey />
+      </button>
     </>
   );
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
+    <div className="p-6 bg-white">
       <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý giảng viên</h1>
       <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
         <input
@@ -379,7 +396,7 @@ const ManageLecturers = () => {
               })),
             ],
           },
-        
+
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
           {
             name: 'gender',
@@ -418,7 +435,7 @@ const ManageLecturers = () => {
               })),
             ],
           },
-        
+
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
           {
             name: 'gender',
@@ -436,20 +453,7 @@ const ManageLecturers = () => {
       <ViewUserModal
         isOpen={isViewModalOpen}
         onClose={closeModal}
-        user={selectedLecturer}
-        fields={[
-          { label: 'Tên', key: 'name' },
-          { label: 'Email', key: 'email' },
-          { label: 'Mã giảng viên', key: 'lecturer_code' },
-          { label: 'Bộ môn', key: 'department' },
-          {
-            label: 'Khoa',
-            key: 'faculty',
-            render: (value) => FacultyMajors[value]?.name || value,
-          },
-          { label: 'Số điện thoại', key: 'phone' },
-          { label: 'Giới tính', key: 'gender', render: (value) => (value === 'Male' ? 'Nam' : value === 'Female' ? 'Nữ' : value) },
-        ]}
+        userId={selectedLecturer?.id}
       />
 
       <DeleteConfirmationModal

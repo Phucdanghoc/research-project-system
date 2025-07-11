@@ -10,7 +10,6 @@ const TableView = ({
   handleViewTopic,
   handleEditTopic,
   handleDeleteTopic,
-  handleResetPassword,
   handleStatusChange,
   handleCreateGroup,
   statuses,
@@ -136,7 +135,6 @@ const TableView = ({
                       >
                         <FaTrash />
                       </button>
-                      
                       </>
                     )}
 

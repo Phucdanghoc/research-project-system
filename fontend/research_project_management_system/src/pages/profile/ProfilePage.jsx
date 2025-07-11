@@ -6,7 +6,7 @@ import { FacultyMajors } from '../../types/enum';
 // Function to generate random color
 const getRandomColor = () => {
   const colors = [
-    'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+    'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
     'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
   ];
   return colors[Math.floor(Math.random() * colors.length)];
@@ -99,7 +99,7 @@ const ProfilePage = () => {
             {getInitials(profile.name)}
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-1">{profile.name}</h2>
-          <span className="text-sm text-gray-500 mb-2">
+          <span className="text-sm font-semibold text-gray-500 mb-2 rounded-full px-3 py-1 bg-blue-200">
             {profile.role === 'student' ? 'Sinh viên' : profile.role === 'lecturer' ? 'Giảng viên' : profile.role}
           </span>
           {isLecturer && (
@@ -149,11 +149,14 @@ const ProfilePage = () => {
                 }
               />
             )}
-            <Info label="Mã giảng viên" value={profile.lecturer_code || '-'} />
+            {isLecturer && <Info label="Mã giảng viên" value={profile.lecturer_code || '-'} />}
             {!isLecturer && (
-              <Info label="Nhóm" value={profile.groups?.length > 0 ? profile.groups.join(', ') : '-'} />
+              <Info label="Nhóm" value={profile.groups?.length > 0 ? profile.groups.join(', ') : <p className="text-white mx-10 rounded-full px-1 py-1 flex items-center justify-center bg-red-500">
+                Chưa có
+              </p>
+              } />
             )}
-           
+
           </div>
         </div>
       </div>
@@ -259,14 +262,13 @@ function Info({ label, value }) {
 // Step indicator for modal
 function Step({ active, children }) {
   return (
-        <span
-          className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold ${
-            active ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-400'
-          }`}
-        >
-        {children}
-        </span>
-    );
+    <span
+      className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold ${active ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-400'
+        }`}
+    >
+      {children}
+    </span>
+  );
 }
 
 export default ProfilePage;

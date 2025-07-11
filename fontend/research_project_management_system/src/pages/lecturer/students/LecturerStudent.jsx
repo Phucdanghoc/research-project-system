@@ -11,7 +11,6 @@ import { useSelector } from 'react-redux';
 const LecturerStudent = () => {
     const dispatch = useAppDispatch();
     const { students, total, page, per_page, loading, error } = useSelector((state) => state.students);
-    const [faculty, setFaculty] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,7 +33,7 @@ const LecturerStudent = () => {
         setCurrentPage(1);
         console.log(`Search term: ${searchTerm}`);
         
-        dispatch(getStudentInFacultyAsync({ search: searchTerm, page: 1, per_page }));
+        dispatch(getStudentInFacultyAsync({ search: searchTerm, page: 1, per_page : 10 }));
     };
     const handleViewStudent = (student) => {
         setSelectedStudent(student);

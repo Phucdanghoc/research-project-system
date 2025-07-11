@@ -36,6 +36,21 @@ export const getTopicByMeAsync = createAsyncThunk(
     }
   }
 );
+export const getTopicsInFacultyAsync = createAsyncThunk(
+  'topics/getTopicInMyFacultyAsync',
+  async (
+    { keyword, status, page = 1, per_page = 10 }: { keyword: string; status: string; page: number; per_page: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.get('/topics/faculty_me', { params: { page, per_page, keyword, status } });
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Lấy danh sách đề tài trong khoa thất bại';
+      return rejectWithValue(errorMessage);
+    }
+  }
+)
 
 export const searchTopicAsync = createAsyncThunk(
   'topics/searchTopicAsync',
@@ -177,7 +192,7 @@ const topicSlice = createSlice({
     const handleFetchFulfilled = (state: TopicState, action: any) => {
       state.loading = false;
       console.log(`Fetched topics:`, action.payload.data?.topics);
-      
+
       state.topics = action.payload?.topics || [];
       state.total_pages = action.payload?.total_pages || 1;
       state.current_page = action.payload?.current_page || 1;
@@ -198,6 +213,10 @@ const topicSlice = createSlice({
       .addCase(getTopicByMeAsync.pending, handlePending)
       .addCase(getTopicByMeAsync.fulfilled, handleFetchFulfilled)
       .addCase(getTopicByMeAsync.rejected, handleRejected)
+      // Get topics in my faculty
+      .addCase(getTopicsInFacultyAsync.pending, handlePending)
+      .addCase(getTopicsInFacultyAsync.fulfilled, handleFetchFulfilled)
+      .addCase(getTopicsInFacultyAsync.rejected, handleRejected)
       // Search topics
       .addCase(searchTopicAsync.pending, handlePending)
       .addCase(searchTopicAsync.fulfilled, handleFetchFulfilled)
@@ -223,7 +242,7 @@ const topicSlice = createSlice({
       .addCase(generateTopicAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.topics.push(...(action.payload.data?.topics || []));
-        state.error  = null;
+        state.error = null;
       })
       .addCase(generateTopicAsync.rejected, handleRejected)
       // Update topic

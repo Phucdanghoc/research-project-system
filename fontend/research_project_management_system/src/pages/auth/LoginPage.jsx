@@ -7,6 +7,7 @@ import { useAppDispatch } from '../../store/index';
 import { FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { IoMdMail } from 'react-icons/io';
 import AuthCheck from '../../hooks/useAuth';
+import TitleHandler from '../../components/TitleHandler';
 
 const LoginPage = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -37,9 +38,10 @@ const LoginPage = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
+
   return (
     <>
+      <TitleHandler />
       <AuthCheck /> {/* Thêm AuthCheck để kiểm tra token */}
       <div className="min-h-screen flex bg-blue-400">
         <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center relative overflow-hidden">

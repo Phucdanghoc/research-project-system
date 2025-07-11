@@ -78,7 +78,6 @@ export const searchLecturersAsync = createAsyncThunk(
     }
   }
 );
-
 export const importLecturersFromExcel = createAsyncThunk(
   'lecturers/importLecturersFromExcel',
   async (file: File, { rejectWithValue }) => {

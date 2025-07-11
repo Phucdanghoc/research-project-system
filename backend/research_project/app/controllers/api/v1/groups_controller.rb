@@ -217,7 +217,7 @@ module Api
       end
 
       def group_params
-        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, :status, :def_status, student_ids: [])
+        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, :status, :def_status, :student_lead_id, student_ids: [])
       end
     end
   end

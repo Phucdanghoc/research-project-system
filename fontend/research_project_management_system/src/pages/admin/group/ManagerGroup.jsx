@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../../store';
-import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupByMeAsync, updateGroupStatusAsync } from '../../../store/slices/groupSlice';
+import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupsAsync } from '../../../store/slices/groupSlice';
 import FilterBar from '../../components/students/FilterBar';
 import TableView from '../../components/groups/TableView';
 import AddEditGroupModal from '../../components/groups/AddEditGroupModal';
@@ -9,7 +9,7 @@ import Pagination from '../../components/students/Pagination';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 
-const LecturerGroup = () => {
+const ManagerGroup   = () => {
   const dispatch = useAppDispatch();
   const { groups, total, page, per_page, loading, error } = useSelector((state) => state.groups);
   const [faculty, setFaculty] = useState('');
@@ -21,9 +21,8 @@ const LecturerGroup = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchGroupByMeAsync({ faculty, search: searchTerm, page: currentPage, per_page }));
-
-  }, [searchTerm, currentPage, per_page, dispatch]);
+    dispatch(fetchGroupsAsync({ faculty, search: searchTerm, page: currentPage, per_page }));
+  }, [searchTerm, currentPage, per_page, faculty, dispatch]);
 
   useEffect(() => {
     if (error) {
@@ -35,9 +34,6 @@ const LecturerGroup = () => {
     setFaculty(faculty);
     setSearchTerm(searchTerm);
     setCurrentPage(1);
-    // if (faculty) {
-    //   dispatch(getGroupsAsync({ faculty, search: searchTerm, page: 1, per_page }));
-    // }
   };
 
   const handleAddGroup = () => {
@@ -50,13 +46,6 @@ const LecturerGroup = () => {
     setSelectedGroup(group);
     setIsEdit(true);
     setIsAddEditModalOpen(true);
-  };
-  const handleChangeStatus = (id, status) => {
-    console.log('id', id, 'status', status);
-    
-    dispatch(updateGroupStatusAsync({ id,  status  })).then(() => {
-      toast.success('Cập nhật nhóm thành công');
-    });
   };
 
   const handleViewGroup = (group) => {
@@ -87,7 +76,7 @@ const LecturerGroup = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Quản lý nhóm</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Quản lý nhóm (Admin)</h1>
         <button
           onClick={handleAddGroup}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -105,7 +94,6 @@ const LecturerGroup = () => {
             onViewGroup={handleViewGroup}
             onEditGroup={handleEditGroup}
             onDeleteGroup={handleDeleteGroup}
-            onStatusChange={handleChangeStatus}
           />
           <Pagination
             total={total}
@@ -117,11 +105,7 @@ const LecturerGroup = () => {
       )}
       <AddEditGroupModal
         isOpen={isAddEditModalOpen}
-        onClose={() => {
-          setIsAddEditModalOpen(false);
-          setSelectedGroup(null);
-          setIsEdit(false);
-        }}
+        onClose={() => setIsAddEditModalOpen(false)}
         onSubmit={handleSubmitGroup}
         groupData={selectedGroup}
         isEdit={isEdit}
@@ -136,4 +120,4 @@ const LecturerGroup = () => {
   );
 };
 
-export default LecturerGroup;
+export default ManagerGroup ;

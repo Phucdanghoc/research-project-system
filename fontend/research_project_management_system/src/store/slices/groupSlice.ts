@@ -36,11 +36,34 @@ export const fetchGroupsAsync = createAsyncThunk(
         }
     }
 );
+
+export const updateGroupStatusAsync = createAsyncThunk(
+    'groups/updateGroupStatusAsync',
+    async (groupForm: any, { rejectWithValue }) => {
+        try {
+            console.log(`groupForm`, groupForm  );
+            const response = await api.patch(`/groups/${groupForm.id}`, { group: {
+                status: groupForm.status
+            } });
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Cập nhật nhóm thất bại');
+        }
+    }
+);
+
 export const updateGroupAsync = createAsyncThunk(
     'groups/updateGroupAsync',
-    async (groupForm: Group, { rejectWithValue }) => {
+    async (groupForm: any, { rejectWithValue }) => {
         try {
-            const response = await api.put(`/groups/${groupForm.id}`, { groupForm });
+            console.log(`groupForm`, groupForm  );
+            
+            const response = await api.put(`/groups/${groupForm.id}`, { group  : {
+                name: groupForm.groupData.name,
+                student_ids: groupForm.groupData.student_ids,
+                student_lead_id: parseInt(groupForm.groupData.student_lead_id),
+                description: groupForm.groupData.description,
+            } });
             return response.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Cập nhật nhóm thất bại');
@@ -69,8 +92,8 @@ export const getGroupAsync = createAsyncThunk(
         }
     }
 )
-export const fetchGroupByLecturerAsync = createAsyncThunk(
-    'groups/fetchGroupByLecturerAsync',
+export const fetchGroupByMeAsync = createAsyncThunk(
+    'groups/fetchGroupByMeAsync',
     async ({ page = 1, per_page = 10 , status = '', keyword  = '' }: { page: number; per_page: number , status : string, keyword : string }, { rejectWithValue }) => {
         try {
             const response = await api.get('users/groups/me', { params: { page, per_page , status, keyword} });
@@ -114,18 +137,18 @@ const groupSlice = createSlice({
                 state.error = action.payload as string;
             });
         builder
-            .addCase(fetchGroupByLecturerAsync.pending, (state) => {
+            .addCase(fetchGroupByMeAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchGroupByLecturerAsync.fulfilled, (state, action) => {
+            .addCase(fetchGroupByMeAsync.fulfilled, (state, action) => {
                 state.loading = false;
                 state.groups = action.payload.groups || [];
                 state.total_pages = action.payload.total_pages;
                 state.current_page = action.payload.current_page;
                 state.error = null;
             })
-            .addCase(fetchGroupByLecturerAsync.rejected, (state, action) => {
+            .addCase(fetchGroupByMeAsync.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
@@ -189,6 +212,19 @@ const groupSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             });
+        builder.addCase(updateGroupStatusAsync.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        })
+        .addCase(updateGroupStatusAsync.fulfilled, (state, action) => {
+            state.loading = false;
+            state.groups = state.groups.map((group) => group.id === action.payload.group.id ? action.payload.group : group);
+            state.error = null;
+        })
+        .addCase(updateGroupStatusAsync.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+        });
 
     },
 });
