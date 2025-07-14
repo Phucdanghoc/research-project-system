@@ -61,11 +61,14 @@ Rails.application.routes.draw do
           get :me
         end
       end
+      get 'defenses/me', to: 'defenses#my_defense'
+      get 'defenses/check-time', to: 'defenses#check_time'
       resources :defenses do
         collection do
           get :search
         end
       end
+      resources :lecturer_defenses, only: [:index, :show, :create, :update, :destroy]
     end
   end
 
