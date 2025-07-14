@@ -2,7 +2,7 @@ module Api
   module V1
     class LecturerDefensesController < ApplicationController
       before_action :authenticate_api_user!
-      before_action :authorize_admin!
+      before_action :authorize_admin!, only: [:create, :update]
       before_action :set_lecturer_defense, only: [:show, :update, :destroy]
 
       # GET /lecturer_defenses
