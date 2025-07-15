@@ -27,6 +27,7 @@ module Api
           total_count: @defenses.total_count
         }, status: :ok
       end
+      
       def search
         page = params[:page] || 1
         per_page = params[:per_page] || 10
@@ -132,16 +133,35 @@ module Api
           }
         })
       end
+
       def create
-        @defense = Defense.new(defense_params)
+        @defense = Defense.new(defense_params.except(:lecturer_ids))
         if @defense.save
+          if params[:defense][:lecturer_ids].present?
+            lecturer_ids = params[:defense][:lecturer_ids].map(&:to_i)
+            lecturer_ids.each do |lecturer_id|
+              LecturerDefense.create(lecturer_id: lecturer_id, defense_id: @defense.id)
+            end
+          end
+
           render json: { message: "Defense successfully created.", defense: @defense }, status: :created
         else
           render json: { errors: @defense.errors.full_messages }, status: :unprocessable_entity
         end
       end
+
       def update
-        if @defense.update(defense_params)
+        if @defense.update(defense_params.except(:lecturer_ids))
+          if params[:defense][:lecturer_ids].present?
+            @defense.lecturer_defenses.where.not(lecturer_id: params[:defense][:lecturer_ids]).destroy_all
+
+            new_ids = params[:defense][:lecturer_ids].map(&:to_i)
+            current_ids = @defense.lecturer_defenses.pluck(:lecturer_id)
+            (new_ids - current_ids).each do |lecturer_id|
+              LecturerDefense.create(lecturer_id: lecturer_id, defense_id: @defense.id)
+            end
+          end
+
           render json: { message: "Defense successfully updated.", defense: @defense }, status: :ok
         else
           render json: { errors: @defense.errors.full_messages }, status: :unprocessable_entity
@@ -168,7 +188,7 @@ module Api
       end
 
       def defense_params
-        params.require(:defense).permit(:name, :defense_time, :status, :start_time, :end_time)
+        params.require(:defense).permit(:name, :defense_time, :status, :start_time, :end_time, lecturer_ids: [])
       end
     end
   end
