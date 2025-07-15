@@ -10,16 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_08_123924) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_14_144956) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "defenses", force: :cascade do |t|
     t.string "name"
-    t.datetime "defenseTime"
+    t.datetime "defense_time"
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.string "defense_code"
+    t.index ["defense_code"], name: "index_defenses_on_defense_code", unique: true
   end
 
   create_table "group_topics", force: :cascade do |t|
@@ -69,7 +73,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_08_123924) do
   create_table "lecturer_defenses", force: :cascade do |t|
     t.bigint "lecturer_id", null: false
     t.bigint "defense_id", null: false
-    t.decimal "point", precision: 5, scale: 1
+    t.decimal "point", precision: 4, scale: 2
     t.text "comment"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
