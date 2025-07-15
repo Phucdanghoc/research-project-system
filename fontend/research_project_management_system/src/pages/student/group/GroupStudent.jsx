@@ -9,7 +9,7 @@ import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import TextStyle from '@tiptap/extension-text-style';
 import ListItem from '@tiptap/extension-list-item';
-import { FaUsers, FaChevronUp, FaChevronDown, FaUserCircle, FaUniversity, FaBook, FaUserPlus } from 'react-icons/fa';
+import { FaUsers, FaUserCircle, FaUniversity, FaBook, FaUserPlus } from 'react-icons/fa';
 import EditorToolbar from '../../../components/EditorWithToolbar';
 import { fetchGroupByMeAsync, updateGroupAsync, deleteGroupAsync } from '../../../store/slices/groupSlice';
 import { getStudentInFacultyAsync } from '../../../store/slices/studentSlice';
@@ -17,6 +17,7 @@ import DOMPurify from 'dompurify';
 import { TimeService } from '../../../utils/time';
 import { useSelector } from 'react-redux';
 import { TopicCategory } from '../../../types/enum';
+import { StudentCard } from '../../../components/cards/StudentCard';
 
 export const GroupStudent = () => {
   const dispatch = useAppDispatch();
@@ -25,11 +26,7 @@ export const GroupStudent = () => {
   const { groups, loading: groupLoading, error: groupError } = useSelector((state) => state.groups);
   const { students, loading: studentsLoading } = useSelector((state) => state.students);
   const group = groups?.[0];
-  const [expandedGroupInfo, setExpandedGroupInfo] = useState(true);
-  const [expandedTopicInfo, setExpandedTopicInfo] = useState(false);
-  const [expandedDescription, setExpandedDescription] = useState(false);
-  const [expandedLecturerInfo, setExpandedLecturerInfo] = useState(false);
-  const [expandedStudentList, setExpandedStudentList] = useState(false);
+  const [activeTab, setActiveTab] = useState('groupInfo');
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [isEditingMembers, setIsEditingMembers] = useState(false);
   const [isInvitingMembers, setIsInvitingMembers] = useState(false);
@@ -149,8 +146,6 @@ export const GroupStudent = () => {
     setSelectedStudentIds(group?.students?.map((s) => s.id) || []);
   };
 
-
-
   const handleSaveInviteMembers = async () => {
     if (invitedStudentIds.length === 0) {
       toast.error('Vui lòng chọn ít nhất một sinh viên để mời.');
@@ -238,17 +233,7 @@ export const GroupStudent = () => {
   const studentChips = useMemo(
     () =>
       groupStudents.map((student) => (
-        <div
-          key={student.id}
-          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center"
-        >
-          {student.name} ({student.student_code})
-          {student.id === currentStudentId ? (
-            <span className="ml-2 text-blue-600">(Bạn)</span>
-          ) : student.id === group?.student_lead_id ? (
-            <span className="ml-2 text-blue-600">(Trưởng nhóm)</span>
-          ) : null}
-        </div>
+       <StudentCard  student={student} />
       )),
     [groupStudents, currentStudentId, group]
   );
@@ -293,354 +278,361 @@ export const GroupStudent = () => {
           </h2>
         </div>
 
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-2 p-4 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('groupInfo')}
+              className={`px-4 py-2 text-sm font-medium flex items-center ${
+                activeTab === 'groupInfo'
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              <FaUsers className="mr-2" /> Thông tin nhóm
+            </button>
+            {groupTopics.length > 0 && (
+              <button
+                onClick={() => setActiveTab('topicInfo')}
+                className={`px-4 py-2 text-sm font-medium flex items-center ${
+                  activeTab === 'topicInfo'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+              >
+                <FaBook className="mr-2" /> Thông tin đề tài
+              </button>
+            )}
+            {groupLecturer && (
+              <button
+                onClick={() => setActiveTab('lecturerInfo')}
+                className={`px-4 py-2 text-sm font-medium flex items-center ${
+                  activeTab === 'lecturerInfo'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+              >
+                <FaUserCircle className="mr-2" /> Giảng viên
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('studentList')}
+              className={`px-4 py-2 text-sm font-medium flex items-center ${
+                activeTab === 'studentList'
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              <FaUsers className="mr-2" /> Sinh viên ({groupStudents.length})
+            </button>
+            {isLeader && (
+              <button
+                onClick={() => setActiveTab('inviteMembers')}
+                className={`px-4 py-2 text-sm font-medium flex items-center ${
+                  activeTab === 'inviteMembers'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+              >
+                <FaUserPlus className="mr-2" /> Mời thành viên
+              </button>
+            )}
+          </nav>
+        </div>
+        {/* Tab Content */}
         <div className="p-6 sm:p-8 bg-white space-y-6 overflow-y-auto">
           {groupLoading && <p className="text-base text-gray-500">Đang tải dữ liệu nhóm...</p>}
           {groupError && <p className="text-base text-red-600">Lỗi: {groupError}</p>}
           {group && (
             <>
-              {/* Group Information */}
-              <div className="bg-gray-50 rounded-lg border border-gray-200">
-                <div
-                  className="flex justify-between items-center cursor-pointer p-3 bg-blue-100 rounded-t-lg"
-                  onClick={() => setExpandedGroupInfo(!expandedGroupInfo)}
-                >
-                  <h3 className="text-xl font-semibold text-blue-700 flex items-center">
-                    <FaUsers className="mr-2" /> Thông tin nhóm
-                  </h3>
-                  {expandedGroupInfo ? <FaChevronUp className="text-blue-600" /> : <FaChevronDown className="text-blue-600" />}
-                </div>
-                {expandedGroupInfo && (
-                  <div className="p-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-                      {isEditingInfo ? (
-                        <>
-                          <div>
-                            <span className="font-medium text-gray-800">Tên nhóm: </span>
-                            <input
-                              type="text"
-                              value={formData.name}
-                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-1"
-                              placeholder="Nhập tên nhóm"
-                              required
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <span className="font-medium text-gray-800">Mô tả nhóm: </span>
-                            <EditorToolbar editor={descriptionEditor} />
-                            <EditorContent editor={descriptionEditor} />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Tên nhóm: </span> {group.name}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Mã nhóm: </span> {group.group_code || 'Không có'}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Trạng thái: </span>
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${group.status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : group.status === 'approved'
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-red-100 text-red-700'
-                                }`}
-                            >
-                              {group.status === 'pending'
-                                ? 'Đang chờ'
-                                : group.status === 'approved'
-                                  ? 'Đã duyệt'
-                                  : group.status || 'Không xác định'}
-                            </span>
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Trạng thái bảo vệ: </span>
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${group.defense_id ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                }`}
-                            >
-                              {group.defense_id ? 'Đã đăng ký bảo vệ' : 'Chưa đăng ký bảo vệ'}
-                            </span>
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Trưởng nhóm: </span>
-                            {groupLeader?.name || 'Không xác định'} ({groupLeader?.student_code})
-                            {group.student_lead_id === currentStudentId ? ' (Bạn)' : ''}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Ngày tạo: </span>
-                            {TimeService.convertDateStringToDDMMYYYY(group.created_at)}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Ngày cập nhật: </span>
-                            {TimeService.convertDateStringToDDMMYYYY(group.updated_at)}
-                          </p>
-                          <div className="col-span-2">
-                            <span className="font-medium text-gray-800">Mô tả nhóm: </span>
-                            <div
-                              className="prose prose-sm max-w-none text-gray-600 mt-2 p-4 bg-white rounded-b-lg border-t border-gray-200"
-                              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(group.description || '<p>Chưa có mô tả</p>') }}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Topic Information */}
-              {groupTopics.length > 0 && (
-                <div className="bg-gray-50 rounded-lg border border-gray-200">
-                  <div
-                    className="flex justify-between items-center cursor-pointer p-3 bg-blue-100 rounded-t-lg"
-                    onClick={() => setExpandedTopicInfo(!expandedTopicInfo)}
-                  >
-                    <h3 className="text-xl font-semibold text-blue-700 flex items-center">
-                      <FaBook className="mr-2" /> Thông tin đề tài
-                    </h3>
-                    {expandedTopicInfo ? <FaChevronUp className="text-blue-600" /> : <FaChevronDown className="text-blue-600" />}
-                  </div>
-                  {expandedTopicInfo && (
-                    <div className="p-5">
-                      {groupTopics.map((topic) => (
-                        <div key={topic.id} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Tên đề tài:</span> {topic.title}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Mã đề tài:</span> {topic.topic_code}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Danh mục: </span>
-                            {TopicCategory[topic.category] || 'Không có'}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Trạng thái:</span>
-                            <span
-                              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${topic.status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : topic.status === 'approved'
-                                  ? 'bg-green-100 text-green-700'
-                                  : topic.status === 'open'
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-red-100 text-red-700'
-                                }`}
-                            >
-                              {topic.status === 'pending'
-                                ? 'Đang chờ'
-                                : topic.status === 'approved'
-                                  ? 'Đã duyệt'
-                                  : topic.status === 'open'
-                                    ? 'Mở'
-                                    : topic.status || 'Không xác định'}
-                            </span>
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Số lượng sinh viên: </span>
-                            {topic.student_quantity || 0}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Ngày tạo: </span>
-                            {TimeService.convertDateStringToDDMMYYYY(topic.created_at)}
-                          </p>
-                          <p className="text-gray-600">
-                            <span className="font-medium text-gray-800">Ngày cập nhật: </span>
-                            {TimeService.convertDateStringToDDMMYYYY(topic.updated_at)}
-                          </p>
-                          <div className="col-span-2">
-                            <span className="font-medium text-gray-800">Mô tả đề tài:</span>
-                            <div
-                              className="prose prose-sm max-w-none text-gray-600 mt-2 p-4 bg-white rounded-b-lg border-t border-gray-200"
-                              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(topic.description || '<p>Chưa có mô tả</p>') }}
-                            />
-                          </div>
-                          {topic.requirement && (
-                            <div className="col-span-2">
-                              <span className="font-medium text-gray-800">Yêu cầu đề tài:</span>
-                              <div
-                                className="prose prose-sm max-w-none text-gray-600 mt-2 p-4 bg-white rounded-b-lg border-t border-gray-200"
-                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(topic.requirement || '<p>Chưa có yêu cầu</p>') }}
-                              />
-                            </div>
-                          )}
+              {/* Group Information Tab */}
+              {activeTab === 'groupInfo' && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
+                    {isEditingInfo ? (
+                      <>
+                        <div>
+                          <span className="font-medium text-gray-800">Tên nhóm: </span>
+                          <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-1"
+                            placeholder="Nhập tên nhóm"
+                            required
+                          />
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {groupLecturer && (
-                <div className="bg-gray-50 rounded-lg border border-gray-200">
-                  <div
-                    className="flex justify-between items-center cursor-pointer p-3 bg-blue-100 rounded-t-lg"
-                    onClick={() => setExpandedLecturerInfo(!expandedLecturerInfo)}
-                  >
-                    <h3 className="text-xl font-semibold text-blue-700 flex items-center">
-                      <FaUserCircle className="mr-2" /> Giảng viên hướng dẫn
-                    </h3>
-                    {expandedLecturerInfo ? <FaChevronUp className="text-blue-600" /> : <FaChevronDown className="text-blue-600" />}
-                  </div>
-                  {expandedLecturerInfo && (
-                    <div className="p-5">
-                      <div className="flex flex-col sm:flex-row gap-6 items-center">
-                        <div className="flex-shrink-0">
-                          <FaUserCircle className="text-gray-400 bg-gray-100 rounded-full p-1" size={70} />
+                        <div className="col-span-2">
+                          <span className="font-medium text-gray-800">Mô tả nhóm: </span>
+                          <EditorToolbar editor={descriptionEditor} />
+                          <EditorContent editor={descriptionEditor} />
                         </div>
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800">Họ tên:</span>
-                            <span className="text-gray-700">{groupLecturer.name || 'Không có'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800">Mã giảng viên:</span>
-                            <span className="text-gray-700">{groupLecturer.lecturer_code || 'Không có'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800">Email:</span>
-                            <span className="text-gray-700">{groupLecturer.email || 'Không có'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800">Số điện thoại:</span>
-                            <span className="text-gray-700">{groupLecturer.phone || 'Không có'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <FaUniversity className="text-blue-400" />
-                            <span className="font-medium text-gray-800">Khoa:</span>
-                            <span className="text-gray-700">{groupLecturer.faculty || 'Không có'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800">Ngày sinh:</span>
-                            <span className="text-gray-700">
-                              {groupLecturer.birth ? TimeService.convertDateStringToDDMMYYYY(groupLecturer.birth) : 'Không có'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Student List */}
-              <div className="bg-gray-50 rounded-lg border border-gray-200">
-                <div
-                  className="flex justify-between items-center cursor-pointer p-3 bg-blue-100 rounded-t-lg"
-                  onClick={() => setExpandedStudentList(!expandedStudentList)}
-                >
-                  <h3 className="text-xl font-semibold text-blue-700 flex items-center">
-                    <FaUsers className="mr-2" /> Danh sách sinh viên ({groupStudents.length})
-                  </h3>
-                  {expandedStudentList ? <FaChevronUp className="text-blue-600" /> : <FaChevronDown className="text-blue-600" />}
-                </div>
-                {expandedStudentList && (
-                  <div className="p-5">
-                    {isEditingMembers ? (
-                      <div className="space-y-4">
-                        <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
-                          <table className="w-full text-sm text-gray-800">
-                            <thead>
-                              <tr className="border-b border-gray-200 sticky top-0 bg-gray-50">
-                                <th className="p-3 text-left font-medium">Chọn</th>
-                                <th className="p-3 text-left font-medium">Tên</th>
-                                <th className="p-3 text-left font-medium">Mã sinh viên</th>
-                                <th className="p-3 text-left font-medium">Lớp</th>
-                              </tr>
-                            </thead>
-                            <tbody>{studentRows}</tbody>
-                          </table>
-                        </div>
-                        <div className="flex justify-end space-x-3">
-                          <button
-                            onClick={handleCancelEditMembers}
-                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                          >
-                            Hủy
-                          </button>
-                          <button
-                            onClick={handleSaveMembers}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-                            disabled={selectedStudentIds.length === 0}
-                          >
-                            Lưu
-                          </button>
-                        </div>
-                      </div>
+                      </>
                     ) : (
-                      <div className="flex flex-wrap gap-2">{studentChips}</div>
+                      <>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Tên nhóm: </span> {group.name}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Mã nhóm: </span> {group.group_code || 'Không có'}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Trạng thái: </span>
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                              group.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : group.status === 'approved'
+                                ? 'bg-green-100 text-green-700'
+                                : group.status === 'denied'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {group.status === 'pending'
+                              ? 'Đang chờ'
+                              : group.status === 'approved'
+                              ? 'Đã duyệt'
+                              : group.status === 'denied'
+                              ? 'Không duyệt'
+                              : group.status || 'Không xác định'}
+                          </span>
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Trạng thái bảo vệ: </span>
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                              group.defense_id ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                          >
+                            {group.defense_id ? 'Đã đăng ký bảo vệ' : 'Chưa đăng ký bảo vệ'}
+                          </span>
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Trưởng nhóm: </span>
+                          {groupLeader?.name || 'Không xác định'} ({groupLeader?.student_code})
+                          {group.student_lead_id === currentStudentId ? ' (Bạn)' : ''}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Ngày tạo: </span>
+                          {TimeService.convertDateStringToDDMMYYYY(group.created_at)}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium text-gray-800">Ngày cập nhật: </span>
+                          {TimeService.convertDateStringToDDMMYYYY(group.updated_at)}
+                        </p>
+                        <div className="col-span-2">
+                          <span className="font-medium text-gray-800">Mô tả nhóm: </span>
+                          <div
+                            className="prose prose-sm max-w-none text-gray-600 mt-2 p-4 bg-white rounded-b-lg border-t border-gray-200"
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(group.description || '<p>Chưa có mô tả</p>') }}
+                          />
+                        </div>
+                      </>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Invite Members */}
-              {isLeader && (
-                <div className="bg-gray-50 rounded-lg border border-gray-200">
-                  <div
-                    className="flex justify-between items-center cursor-pointer p-3 bg-blue-100 rounded-t-lg"
-                    onClick={() => setIsInvitingMembers(!isInvitingMembers)}
-                  >
-                    <h3 className="text-xl font-semibold text-blue-700 flex items-center">
-                      <FaUserPlus className="mr-2" /> Mời thành viên mới
-                    </h3>
-                    {isInvitingMembers ? <FaChevronUp className="text-blue-600" /> : <FaChevronDown className="text-blue-600" />}
-                  </div>
-                  {isInvitingMembers && (
-                    <div className="p-5">
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm sinh viên</label>
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={handleSearchChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 transition-colors placeholder-gray-400"
-                          placeholder="Tìm kiếm theo tên hoặc mã sinh viên"
+              {/* Topic Information Tab */}
+              {activeTab === 'topicInfo' && groupTopics.length > 0 && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                  {groupTopics.map((topic) => (
+                    <div key={topic.id} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Tên đề tài:</span> {topic.title}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Mã đề tài:</span> {topic.topic_code}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Danh mục: </span>
+                        {TopicCategory[topic.category] || 'Không có'}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Trạng thái: </span>
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                            topic.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : topic.status === 'approved'
+                              ? 'bg-green-100 text-green-700'
+                              : topic.status === 'open'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {topic.status === 'pending'
+                            ? 'Đang chờ'
+                            : topic.status === 'approved'
+                            ? 'Đã duyệt'
+                            : topic.status === 'open'
+                            ? 'Mở'
+                            : topic.status || 'Không xác định'}
+                        </span>
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Số lượng sinh viên: </span>
+                        {topic.student_quantity || 0}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Ngày tạo: </span>
+                        {TimeService.convertDateStringToDDMMYYYY(topic.created_at)}
+                      </p>
+                      <p className="text-gray-600">
+                        <span className="font-medium text-gray-800">Ngày cập nhật: </span>
+                        {TimeService.convertDateStringToDDMMYYYY(topic.updated_at)}
+                      </p>
+                      <div className="col-span-2">
+                        <span className="font-medium text-gray-800">Mô tả đề tài:</span>
+                        <div
+                          className="prose prose-sm max-w-none text-gray-600 mt-2 p-4 bg-white rounded-b-lg border-t border-gray-200"
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(topic.description || '<p>Chưa có mô tả</p>') }}
                         />
                       </div>
-                      <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
-                        {studentsLoading ? (
-                          <p className="text-sm text-gray-500">Đang tải sinh viên...</p>
-                        ) : availableInviteStudents.length > 0 ? (
-                          <table className="w-full text-sm text-gray-800">
-                            <thead>
-                              <tr className="border-b border-gray-200 sticky top-0 bg-gray-50">
-                                <th className="p-3 text-left font-medium">Chọn</th>
-                                <th className="p-3 text-left font-medium">Tên</th>
-                                <th className="p-3 text-left font-medium">Mã sinh viên</th>
-                                <th className="p-3 text-left font-medium">Lớp</th>
-                              </tr>
-                            </thead>
-                            <tbody>{inviteRows}</tbody>
-                          </table>
-                        ) : (
-                          <p className="text-sm text-gray-500">Không tìm thấy sinh viên có thể mời.</p>
-                        )}
+                      {topic.requirement && (
+                        <div className="col-span-2">
+                          <span className="font-medium text-gray-800">Yêu cầu đề tài:</span>
+                          <div
+                            className="prose prose-sm max-w-none text-gray-600 mt-2 p-4 bg-white rounded-b-lg border-t border-gray-200"
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(topic.requirement || '<p>Chưa có yêu cầu</p>') }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Lecturer Information Tab */}
+              {activeTab === 'lecturerInfo' && groupLecturer && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                  <div className="flex flex-col sm:flex-row gap-6 items-center">
+                    <div className="flex-shrink-0">
+                      <FaUserCircle className="text-gray-400 bg-gray-100 rounded-full p-1" size={70} />
+                    </div>
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 text-base">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">Họ tên:</span>
+                        <span className="text-gray-700">{groupLecturer.name || 'Không có'}</span>
                       </div>
-                      <div className="flex justify-end space-x-3 mt-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">Mã giảng viên:</span>
+                        <span className="text-gray-700">{groupLecturer.lecturer_code || 'Không có'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">Email:</span>
+                        <span className="text-gray-700">{groupLecturer.email || 'Không có'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">Số điện thoại:</span>
+                        <span className="text-gray-700">{groupLecturer.phone || 'Không có'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FaUniversity className="text-blue-400" />
+                        <span className="font-medium text-gray-800">Khoa:</span>
+                        <span className="text-gray-700">{groupLecturer.faculty || 'Không có'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">Ngày sinh:</span>
+                        <span className="text-gray-700">
+                          {groupLecturer.birth ? TimeService.convertDateStringToDDMMYYYY(groupLecturer.birth) : 'Không có'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Student List Tab */}
+              {activeTab === 'studentList' && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                  {isEditingMembers ? (
+                    <div className="space-y-4">
+                      <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
+                        <table className="w-full text-sm text-gray-800">
+                          <thead>
+                            <tr className="border-b border-gray-200 sticky top-0 bg-gray-50">
+                              <th className="p-3 text-left font-medium">Chọn</th>
+                              <th className="p-3 text-left font-medium">Tên</th>
+                              <th className="p-3 text-left font-medium">Mã sinh viên</th>
+                              <th className="p-3 text-left font-medium">Lớp</th>
+                            </tr>
+                          </thead>
+                          <tbody>{studentRows}</tbody>
+                        </table>
+                      </div>
+                      <div className="flex justify-end space-x-3">
                         <button
-                          onClick={handleCancelInviteMembers}
+                          onClick={handleCancelEditMembers}
                           className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
                         >
                           Hủy
                         </button>
                         <button
-                          onClick={handleSaveInviteMembers}
+                          onClick={handleSaveMembers}
                           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-                          disabled={invitedStudentIds.length === 0}
+                          disabled={selectedStudentIds.length === 0}
                         >
-                          Mời
+                          Lưu
                         </button>
                       </div>
                     </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">{studentChips}</div>
                   )}
                 </div>
               )}
 
-              {/* Action Buttons (Leader Only) */}
+              {activeTab === 'inviteMembers' && isLeader && (
+                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm sinh viên</label>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 transition-colors placeholder-gray-400"
+                      placeholder="Tìm kiếm theo tên hoặc mã sinh viên"
+                    />
+                  </div>
+                  <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
+                    {studentsLoading ? (
+                      <p className="text-sm text-gray-500">Đang tải sinh viên...</p>
+                    ) : availableInviteStudents.length > 0 ? (
+                      <table className="w-full text-sm text-gray-800">
+                        <thead>
+                          <tr className="border-b border-gray-200 sticky top-0 bg-gray-50">
+                            <th className="p-3 text-left font-medium">Chọn</th>
+                            <th className="p-3 text-left font-medium">Tên</th>
+                            <th className="p-3 text-left font-medium">Mã sinh viên</th>
+                            <th className="p-3 text-left font-medium">Lớp</th>
+                          </tr>
+                        </thead>
+                        <tbody>{inviteRows}</tbody>
+                      </table>
+                    ) : (
+                      <p className="text-sm text-gray-500">Không tìm thấy sinh viên có thể mời.</p>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-4">
+                    <button
+                      onClick={handleCancelInviteMembers}
+                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={handleSaveInviteMembers}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                      disabled={invitedStudentIds.length === 0}
+                    >
+                      Mời
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {isLeader && (
                 <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
                   <button
@@ -653,18 +645,18 @@ export const GroupStudent = () => {
                   <button
                     onClick={handleEditMembers}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-                    disabled={isEditingInfo || isInvitingMembers}
+                    disabled={isEditingInfo || isInvitingMembers || activeTab !== 'studentList'}
                   >
                     Chỉnh sửa thành viên
                   </button>
                   <button
                     onClick={handleEditInfo}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-                    disabled={isEditingMembers || isInvitingMembers}
+                    disabled={isEditingMembers || isInvitingMembers || activeTab !== 'groupInfo'}
                   >
                     Chỉnh sửa thông tin
                   </button>
-                  {isEditingInfo && (
+                  {isEditingInfo && activeTab === 'groupInfo' && (
                     <>
                       <button
                         onClick={handleCancelEditInfo}

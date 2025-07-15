@@ -104,6 +104,18 @@ export const fetchGroupByMeAsync = createAsyncThunk(
     }
 )
 
+export const searchGroupsAsync = createAsyncThunk(
+    'groups/searchGroupsAsync',
+    async (keyword: string, { rejectWithValue }) => {
+        try {
+            const response = await api.get('/groups/search', { params: { keyword } });
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Tìm kiếm nhóm thất bại');
+        }
+    }
+);
+
 const groupSlice = createSlice({
     name: 'groups',
     initialState: {
@@ -226,6 +238,22 @@ const groupSlice = createSlice({
             state.error = action.payload as string;
         });
 
+        builder
+            .addCase(searchGroupsAsync.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(searchGroupsAsync.fulfilled, (state, action) => {
+                state.loading = false;
+                state.groups = action.payload.groups || [];
+                state.total_pages = action.payload.total_pages;
+                state.current_page = action.payload.current_page;
+                state.error = null;
+            })
+            .addCase(searchGroupsAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
     },
 });
 

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { FaEye, FaEdit, FaTrash, FaKey } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaKey, FaPlus, FaFileCsv } from 'react-icons/fa';
 import { useAppDispatch } from '../../../store/index';
 import TableAdmin from './components/Table';
 import AddEditUserModal from './components/AddEditUserModal';
 import ViewUserModal from './components/ViewUserModal';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import ImportCsvModal from '../../../components/ImportCsvModal';
 import { FacultyMajors } from '../../../types/enum';
 import {
   fetchLecturersAsync,
@@ -18,6 +19,7 @@ import {
 } from '../../../store/slices/lecturerSlice';
 import { toast } from 'react-toastify';
 import { resetPasswordAsync } from '../../../store/slices/userSlice';
+import { debounce } from 'lodash';
 
 const ManageLecturers = () => {
   const dispatch = useAppDispatch();
@@ -26,6 +28,7 @@ const ManageLecturers = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedLecturer, setSelectedLecturer] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -34,14 +37,12 @@ const ManageLecturers = () => {
     role: 'lecturer',
     lecturer_code: '',
     faculty: '',
-
     phone: '',
     gender: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const lecturersPerPage = 10;
-  const [availableMajors, setAvailableMajors] = useState([]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -51,26 +52,6 @@ const ManageLecturers = () => {
     }
   }, [dispatch, currentPage, searchQuery]);
 
-  useEffect(() => {
-    if (error) {
-      alert(error);
-      dispatch(clearError());
-    }
-  }, [error, dispatch]);
-
-  useEffect(() => {
-    if (formData.faculty) {
-      const majors = FacultyMajors[formData.faculty]?.majors || [];
-      setAvailableMajors(majors);
-      if (!majors.find((m) => m.code === formData.major)) {
-        setFormData((prev) => ({ ...prev, major: '' }));
-      }
-    } else {
-      setAvailableMajors([]);
-      setFormData((prev) => ({ ...prev, major: '' }));
-    }
-  }, [formData.faculty]);
-
   const handleAddLecturer = () => {
     setFormData({
       name: '',
@@ -79,7 +60,6 @@ const ManageLecturers = () => {
       role: 'lecturer',
       lecturer_code: '',
       faculty: '',
-
       phone: '',
       gender: '',
     });
@@ -94,7 +74,6 @@ const ManageLecturers = () => {
       password: '',
       role: 'lecturer',
       lecturer_code: lecturer.lecturer_code || '',
-      department: lecturer.department || '',
       faculty: lecturer.faculty || '',
       phone: lecturer.phone || '',
       gender: lecturer.gender || '',
@@ -131,17 +110,7 @@ const ManageLecturers = () => {
       dispatch(fetchLecturersAsync({ page: currentPage, per_page: lecturersPerPage }));
       toast.success('Thêm giảng viên mới thành công!');
     } catch (error) {
-      console.error('Add lecturer failed:', error);
       toast.error('Thêm giảng viên mới thất bại!');
-    }
-  };
-  const handleResetPassword = async (student) => {
-    try {
-      await dispatch(resetPasswordAsync(student.email)).unwrap();
-      toast.success('Đặt lại mật khẩu thành công!');
-    } catch (error) {
-      console.error('Reset password failed:', error);
-      toast.error('Đặt lại mật khóa thất bại!');
     }
   };
 
@@ -166,7 +135,6 @@ const ManageLecturers = () => {
       toast.success('Cập nhật thông tin giảng viên thành công!');
     } catch (error) {
       toast.error('Cập nhật thông tin giảng viên thất bại!');
-      console.error('Update lecturer failed:', error);
     }
   };
 
@@ -187,7 +155,15 @@ const ManageLecturers = () => {
       toast.success('Xóa giảng viên thành công!');
     } catch (error) {
       toast.error('Xóa giảng viên thất bại!');
-      console.error('Delete lecturer failed:', error);
+    }
+  };
+
+  const handleResetPassword = async (lecturer) => {
+    try {
+      await dispatch(resetPasswordAsync(lecturer.email)).unwrap();
+      toast.success('Đặt lại mật khẩu thành công!');
+    } catch (error) {
+      toast.error('Đặt lại mật khẩu thất bại!');
     }
   };
 
@@ -209,17 +185,16 @@ const ManageLecturers = () => {
       role: 'lecturer',
       lecturer_code: '',
       faculty: '',
-
       phone: '',
       gender: '',
     });
     dispatch(clearError());
   };
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = debounce((e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
-  };
+  }, 300);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -228,240 +203,281 @@ const ManageLecturers = () => {
   const handleCsvUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     try {
       await dispatch(importLecturersFromExcel(file)).unwrap();
       dispatch(fetchLecturersAsync({ page: 1, per_page: lecturersPerPage }));
       setCurrentPage(1);
       toast.success('Nhập danh sách giảng viên từ CSV thành công!');
     } catch (error) {
-      console.error('CSV import failed:', error);
-      toast.error('Có lỗi khi nhập giảng viên từ CSV. Vui lòng thử lại.');
+      toast.error('Nhập danh sách giảng viên từ CSV thất bại!');
     }
-
     e.target.value = null;
   };
 
-  const tableColumns = [
-    {
-      header: 'Tên',
-      key: 'name',
-      render: (item) => <span className="font-bold">{item.name}</span>,
-    },
-    { header: 'Email', key: 'email' },
-    { header: 'Mã giảng viên', key: 'lecturer_code' },
-    {
-      header: 'Khoa',
-      key: 'faculty',
-      render: (item) => FacultyMajors[item.faculty]?.name || item.faculty,
-    },
-    // {
-    //   header: 'Chuyên ngành',
-    //   key: 'major',
-    //   render: (item) =>
-    //     FacultyMajors[item.faculty]?.majors.find((m) => m.code === item.major)?.name || item.major,
-    // },
-    { header: 'SĐT', key: 'phone' },
-    { header: 'Giới tính', key: 'gender', render: (item) => (item.gender === 'Male' ? 'Nam' : item.gender === 'Female' ? 'Nữ' : item.gender) },
-  ];
+  const tableColumns = useMemo(
+    () => [
+      {
+        header: 'Tên',
+        key: 'name',
+        render: (item) => <span className="font-semibold text-gray-800">{item.name}</span>,
+      },
+      { header: 'Email', key: 'email' },
+      { header: 'Mã giảng viên', key: 'lecturer_code' },
+      {
+        header: 'Khoa',
+        key: 'faculty',
+        render: (item) => FacultyMajors[item.faculty]?.name || item.faculty || 'Không có',
+      },
+      { header: 'Số điện thoại', key: 'phone' },
+      {
+        header: 'Giới tính',
+        key: 'gender',
+        render: (item) =>
+          item.gender?.toLowerCase() === 'male'
+            ? 'Nam'
+            : item.gender?.toLowerCase() === 'female'
+            ? 'Nữ'
+            : 'Không có',
+      },
+    ],
+    []
+  );
 
-  const tableActions = (item) => (
-    <>
-      <button
-        onClick={() => handleViewLecturer(item)}
-        className="text-blue-600 hover:text-blue-800"
-        title="Xem chi tiết"
-      >
-        <FaEye />
-      </button>
-      <button
-        onClick={() => handleEditLecturer(item)}
-        className="text-blue-600 hover:text-blue-800"
-        title="Sửa"
-      >
-        <FaEdit />
-      </button>
-      <button
-        onClick={() => handleDeleteLecturer(item)}
-        className="text-red-600 hover:text-red-800"
-        title="Xóa"
-      >
-        <FaTrash />
-      </button>
-      <button
-        onClick={() => handleResetPassword(item)}
-        className="text-blue-600 hover:text-blue-800"
-        title="Đặt lại mật khẩu"
-      >
-        <FaKey />
-      </button>
-    </>
+  const tableActions = useMemo(
+    () => (item) => (
+      <div className="flex space-x-2">
+        <button
+          onClick={() => handleViewLecturer(item)}
+          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 transition"
+          title="Xem chi tiết"
+          aria-label="Xem chi tiết giảng viên"
+        >
+          <FaEye className="text-lg" />
+        </button>
+        <button
+          onClick={() => handleEditLecturer(item)}
+          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 transition"
+          title="Sửa"
+          aria-label="Sửa thông tin giảng viên"
+        >
+          <FaEdit className="text-lg" />
+        </button>
+        <button
+          onClick={() => handleDeleteLecturer(item)}
+          className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition"
+          title="Xóa"
+          aria-label="Xóa giảng viên"
+        >
+          <FaTrash className="text-lg" />
+        </button>
+        <button
+          onClick={() => handleResetPassword(item)}
+          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 transition"
+          title="Đặt lại mật khẩu"
+          aria-label="Đặt lại mật khẩu giảng viên"
+        >
+          <FaKey className="text-lg" />
+        </button>
+      </div>
+    ),
+    []
   );
 
   return (
-    <div className="p-6 bg-white">
-      <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý giảng viên</h1>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
-        <input
-          type="text"
-          placeholder="Tìm kiếm theo tên, email hoặc mã giảng viên..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
-        />
-        <button
-          onClick={handleAddLecturer}
-          className="w-full sm:w-64 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
-        >
-          Thêm giảng viên
-        </button>
-        <label className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center cursor-pointer">
-          Tải lên CSV
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleCsvUpload}
-            className="hidden"
-          />
-        </label>
-      </div>
-      <div className="overflow-x-auto">
-        <TableAdmin
-          columns={tableColumns}
-          data={lecturers}
-          actions={tableActions}
-          emptyMessage={loading ? 'Đang tải...' : 'Không tìm thấy giảng viên nào.'}
-        />
-      </div>
-      {total_pages > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1 || loading}
-            className={`px-3 py-1 rounded ${currentPage === 1 || loading
-              ? 'bg-gray-200 text-gray-500'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-          >
-            Trước
-          </button>
-          {[...Array(total_pages)].map((_, index) => (
+    <div className="p-6 bg-gray-50 min-h-[calc(100vh-4rem)]">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <h1 className="text-2xl font-bold text-blue-600">Quản lý giảng viên</h1>
+          <div className="flex space-x-3">
             <button
-              key={index + 1}
-              onClick={() => handlePageChange(index + 1)}
-              disabled={loading}
-              className={`px-3 py-1 rounded ${currentPage === index + 1
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
+              onClick={handleAddLecturer}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition transform hover:scale-105"
             >
-              {index + 1}
+              <FaPlus /> Thêm giảng viên
             </button>
-          ))}
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === total_pages || loading}
-            className={`px-3 py-1 rounded ${currentPage === total_pages || loading
-              ? 'bg-gray-200 text-gray-500'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-          >
-            Sau
-          </button>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition transform hover:scale-105"
+            >
+              <FaFileCsv /> Tải lên CSV
+            </button>
+          </div>
         </div>
-      )}
 
-      <AddEditUserModal
-        isOpen={isAddModalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmitAdd}
-        formData={formData}
-        onInputChange={handleInputChange}
-        isEdit={false}
-        fields={[
-          { name: 'name', label: 'Tên', type: 'text', required: true },
-          { name: 'email', label: 'Email', type: 'email', required: true },
-          { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
-          { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
-          {
-            name: 'faculty',
-            label: 'Khoa',
-            type: 'select',
-            required: true,
-            options: [
-              { value: '', label: 'Chọn khoa' },
-              ...Object.keys(FacultyMajors).map((key) => ({
-                value: key,
-                label: FacultyMajors[key].name,
-              })),
-            ],
-          },
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            Lỗi: {error}
+          </div>
+        )}
 
-          { name: 'phone', label: 'Số điện thoại', type: 'text' },
-          {
-            name: 'gender',
-            label: 'Giới tính',
-            type: 'select',
-            options: [
-              { value: '', label: 'Chọn giới tính' },
-              { value: 'Male', label: 'Nam' },
-              { value: 'Female', label: 'Nữ' },
-            ],
-          },
-        ]}
-      />
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên, email hoặc mã giảng viên..."
+            onChange={handleSearchChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 transition"
+          />
+        </div>
 
-      <AddEditUserModal
-        isOpen={isEditModalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmitEdit}
-        formData={formData}
-        onInputChange={handleInputChange}
-        isEdit={true}
-        fields={[
-          { name: 'name', label: 'Tên', type: 'text', required: true },
-          { name: 'email', label: 'Email', type: 'email', required: true },
-          { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
-          {
-            name: 'faculty',
-            label: 'Khoa',
-            type: 'select',
-            required: true,
-            options: [
-              { value: '', label: 'Chọn khoa' },
-              ...Object.keys(FacultyMajors).map((key) => ({
-                value: key,
-                label: FacultyMajors[key].name,
-              })),
-            ],
-          },
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          <TableAdmin
+            columns={tableColumns}
+            data={lecturers}
+            actions={tableActions}
+            emptyMessage={
+              loading ? (
+                <div className="text-center py-8 text-gray-600 animate-pulse">Đang tải...</div>
+              ) : (
+                <div className="text-center py-8 text-gray-600">
+                  Không tìm thấy giảng viên nào.
+                </div>
+              )
+            }
+          />
+        </div>
 
-          { name: 'phone', label: 'Số điện thoại', type: 'text' },
-          {
-            name: 'gender',
-            label: 'Giới tính',
-            type: 'select',
-            options: [
-              { value: '', label: 'Chọn giới tính' },
-              { value: 'Male', label: 'Nam' },
-              { value: 'Female', label: 'Nữ' },
-            ],
-          },
-        ]}
-      />
+        {total_pages > 1 && (
+          <div className="flex justify-center mt-6 space-x-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === 1 || loading
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              } transition`}
+            >
+              Trước
+            </button>
+            {[...Array(total_pages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg ${
+                  currentPage === index + 1
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                } transition`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === total_pages || loading}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === total_pages || loading
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              } transition`}
+            >
+              Sau
+            </button>
+          </div>
+        )}
 
-      <ViewUserModal
-        isOpen={isViewModalOpen}
-        onClose={closeModal}
-        userId={selectedLecturer?.id}
-      />
+        <AddEditUserModal
+          isOpen={isAddModalOpen}
+          onClose={closeModal}
+          onSubmit={handleSubmitAdd}
+          formData={formData}
+          onInputChange={handleInputChange}
+          isEdit={false}
+          fields={[
+            { name: 'name', label: 'Tên', type: 'text', required: true },
+            { name: 'email', label: 'Email', type: 'email', required: true },
+            { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
+            { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
+            {
+              name: 'faculty',
+              label: 'Khoa',
+              type: 'select',
+              required: true,
+              options: [
+                { value: '', label: 'Chọn khoa' },
+                ...Object.keys(FacultyMajors).map((key) => ({
+                  value: key,
+                  label: FacultyMajors[key].name,
+                })),
+              ],
+            },
+            { name: 'phone', label: 'Số điện thoại', type: 'text' },
+            {
+              name: 'gender',
+              label: 'Giới tính',
+              type: 'select',
+              options: [
+                { value: '', label: 'Chọn giới tính' },
+                { value: 'Male', label: 'Nam' },
+                { value: 'Female', label: 'Nữ' },
+              ],
+            },
+          ]}
+        />
 
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={closeModal}
-        onConfirm={handleConfirmDelete}
-        itemName={selectedLecturer?.name || ''}
-      />
+        <AddEditUserModal
+          isOpen={isEditModalOpen}
+          onClose={closeModal}
+          onSubmit={handleSubmitEdit}
+          formData={formData}
+          onInputChange={handleInputChange}
+          isEdit={true}
+          fields={[
+            { name: 'name', label: 'Tên', type: 'text', required: true },
+            { name: 'email', label: 'Email', type: 'email', required: true },
+            { name: 'password', label: 'Mật khẩu (để trống nếu không đổi)', type: 'password' },
+            { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
+            {
+              name: 'faculty',
+              label: 'Khoa',
+              type: 'select',
+              required: true,
+              options: [
+                { value: '', label: 'Chọn khoa' },
+                ...Object.keys(FacultyMajors).map((key) => ({
+                  value: key,
+                  label: FacultyMajors[key].name,
+                })),
+              ],
+            },
+            { name: 'phone', label: 'Số điện thoại', type: 'text' },
+            {
+              name: 'gender',
+              label: 'Giới tính',
+              type: 'select',
+              options: [
+                { value: '', label: 'Chọn giới tính' },
+                { value: 'Male', label: 'Nam' },
+                { value: 'Female', label: 'Nữ' },
+              ],
+            },
+          ]}
+        />
+
+        <ViewUserModal
+          isOpen={isViewModalOpen}
+          onClose={closeModal}
+          userId={selectedLecturer?.id}
+        />
+
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={closeModal}
+          onConfirm={handleConfirmDelete}
+          itemName={selectedLecturer?.name || ''}
+        />
+
+        <ImportCsvModal
+          isOpen={isImportModalOpen}
+          onClose={() => {
+            setIsImportModalOpen(false);
+            dispatch(fetchLecturersAsync({ page: 1, per_page: lecturersPerPage }));
+            setCurrentPage(1);
+          }}
+          onUpload={handleCsvUpload}
+        />
+      </div>
     </div>
   );
 };

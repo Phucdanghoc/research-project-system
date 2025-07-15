@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useAppDispatch } from '../../../store';
-import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupsAsync } from '../../../store/slices/groupSlice';
+import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupsAsync, searchGroupsAsync } from '../../../store/slices/groupSlice';
 import FilterBar from '../../components/students/FilterBar';
 import TableView from '../../components/groups/TableView';
 import AddEditGroupModal from '../../components/groups/AddEditGroupModal';
@@ -9,7 +9,7 @@ import Pagination from '../../components/students/Pagination';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 
-const ManagerGroup   = () => {
+const ManagerGroup = () => {
   const dispatch = useAppDispatch();
   const { groups, total, page, per_page, loading, error } = useSelector((state) => state.groups);
   const [faculty, setFaculty] = useState('');
@@ -21,9 +21,14 @@ const ManagerGroup   = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchGroupsAsync({ faculty, search: searchTerm, page: currentPage, per_page }));
-  }, [searchTerm, currentPage, per_page, faculty, dispatch]);
-
+    dispatch(fetchGroupsAsync({ faculty, page: currentPage, per_page }));
+  }, [currentPage, per_page, faculty, dispatch]);
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      dispatch(searchGroupsAsync(searchTerm));
+      setCurrentPage(1);
+    }
+  }, [error, dispatch, searchTerm]);
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -120,4 +125,4 @@ const ManagerGroup   = () => {
   );
 };
 
-export default ManagerGroup ;
+export default ManagerGroup;

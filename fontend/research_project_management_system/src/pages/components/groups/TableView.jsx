@@ -9,7 +9,7 @@ const statusConfig = {
 };
 
 
-const TableView = ({ groups, onViewGroup, onEditGroup, onDeleteGroup, onStatusChange }) => {
+const TableView = ({ groups, onViewGroup, onEditGroup, onDeleteGroup, onStatusChange, isAdmin = false }) => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full bg-white shadow-md rounded-lg text-center">
@@ -34,7 +34,8 @@ const TableView = ({ groups, onViewGroup, onEditGroup, onDeleteGroup, onStatusCh
                 <td className="py-2 px-4 border-b">
                   <div className="flex items-center justify-center  space-x-2 border-blue-600 rounded-md  px-2 py-1">
                     {statusConfig[group.status]?.icon}
-                    <select 
+                    <select
+                      disabled={!isAdmin}
                       value={group.status}
                       onChange={(e) => onStatusChange(group.id, e.target.value)}
                       className="px-2 py-1   text-sm"
@@ -56,20 +57,25 @@ const TableView = ({ groups, onViewGroup, onEditGroup, onDeleteGroup, onStatusCh
                   >
                     <FaEye />
                   </button>
-                  <button
-                    onClick={() => onEditGroup(group)}
-                    className="text-green-600 hover:text-green-800"
-                    title="Chỉnh sửa"
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => onDeleteGroup(group.id)}
-                    className="text-red-600 hover:text-red-800"
-                    title="Xóa"
-                  >
-                    <FaTrash />
-                  </button>
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => onEditGroup(group)}
+                        className="text-yellow-600 hover:text-yellow-800"
+                        title="Chỉnh sửa"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => onDeleteGroup(group.id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Xóa"
+                      >
+                        <FaTrash />
+                      </button>
+                    </>
+                  )}
+
                 </td>
               </tr>
             ))

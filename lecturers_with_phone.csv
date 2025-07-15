@@ -1,0 +1,19 @@
+name,email,password,gender,role,birth,faculty,major,lecturer_code,phone
+Carol Le,carol@lecturer.edu,pass456,Female,lecturer,1980-01-10,CNTT,HTTT,L123,0911111111
+Nguyen Van An,an.cntt@school.edu,pass456,Male,lecturer,1981-03-25,CNTT,KTPM,L201,0911111112
+Pham Thi Lan,lan.cntt@school.edu,pass456,Female,lecturer,1979-09-12,CNTT,TTNT,L202,0911111113
+David Pham,david@lecturer.edu,pass456,Male,lecturer,1975-07-30,KTCN,KTMT,L124,0911111114
+Tran Van Tien,tien.ktcn@school.edu,pass456,Male,lecturer,1983-04-10,KTCN,CNPM,L203,0911111115
+Le Thi Mai,mai.ktcn@school.edu,pass456,Female,lecturer,1982-06-18,KTCN,HTTT,L204,0911111116
+Nguyen Thi Hoa,hoa.qtkd@school.edu,pass456,Female,lecturer,1977-11-22,QTKD,QTKD,L301,0911111117
+Pham Van Hung,hung.qtkd@school.edu,pass456,Male,lecturer,1980-05-14,QTKD,TCKT,L302,0911111118
+Bui Thi Thao,thao.qtkd@school.edu,pass456,Female,lecturer,1985-12-01,QTKD,MKT,L303,0911111119
+Doan Van Minh,minh.nn@school.edu,pass456,Male,lecturer,1984-07-20,NN,NNAN,L401,0911111120
+Tran Thi Kim,kim.nn@school.edu,pass456,Female,lecturer,1976-10-03,NN,NNJP,L402,0911111121
+Le Van Hieu,hieu.nn@school.edu,pass456,Male,lecturer,1982-02-28,NN,NNHN,L403,0911111122
+Nguyen Thi My,my.tk@school.edu,pass456,Female,lecturer,1983-09-09,TK,TKDH,L501,0911111123
+Vo Van Khoa,khoa.tk@school.edu,pass456,Male,lecturer,1980-08-16,TK,TKCN,L502,0911111124
+Dang Thi Ha,ha.tk@school.edu,pass456,Female,lecturer,1987-01-05,TK,TKNT,L503,0911111125
+Le Van Quang,quang.dl@school.edu,pass456,Male,lecturer,1978-03-11,DL,QTDL,L601,0911111126
+Pham Thi Dao,dao.dl@school.edu,pass456,Female,lecturer,1981-12-19,DL,QLKS,L602,0911111127
+Nguyen Van Hanh,hanh.dl@school.edu,pass456,Male,lecturer,1986-06-06,DL,QTDL,L603,0911111128

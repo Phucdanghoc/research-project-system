@@ -43,7 +43,7 @@ const ManageStudents = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [availableMajors, setAvailableMajors] = useState([]); // State để lưu danh sách ngành theo khoa được chọn
+  const [availableMajors, setAvailableMajors] = useState([]);
   useEffect(() => {
     if (searchQuery.trim()) {
       console.log('searchQuery', searchQuery);
@@ -54,12 +54,6 @@ const ManageStudents = () => {
     }
   }, [dispatch, currentPage, searchQuery]);
 
-  useEffect(() => {
-    if (error) {
-      alert(error);
-      dispatch(clearError());
-    }
-  }, [error, dispatch]);
   useEffect(() => {
     if (formData.faculty) {
       const majors = FacultyMajors[formData.faculty]?.majors || [];

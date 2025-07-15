@@ -31,6 +31,12 @@ const LecturerGroup = () => {
     }
   }, [error, dispatch]);
 
+
+  const searchAction = (searchTerm) => {
+    setSearchTerm(searchTerm);
+    setCurrentPage(1);
+  };
+
   const handleFilterChange = ({ faculty, searchTerm }) => {
     setFaculty(faculty);
     setSearchTerm(searchTerm);
