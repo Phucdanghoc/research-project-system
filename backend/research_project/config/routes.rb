@@ -61,6 +61,11 @@ Rails.application.routes.draw do
           get :me
         end
       end
+      resources :plans do
+        collection do
+          get :check_time
+        end
+      end
       get 'defenses/me', to: 'defenses#my_defense'
       get 'defenses/check-time', to: 'defenses#check_time'
       resources :defenses do

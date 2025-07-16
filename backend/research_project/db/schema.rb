@@ -10,18 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_14_144956) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_16_102733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "defenses", force: :cascade do |t|
     t.string "name"
-    t.datetime "defense_time"
     t.integer "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "start_time"
-    t.datetime "end_time"
     t.string "defense_code"
     t.index ["defense_code"], name: "index_defenses_on_defense_code", unique: true
   end
@@ -82,6 +79,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_14_144956) do
     t.index ["lecturer_id"], name: "index_lecturer_defenses_on_lecturer_id"
   end
 
+  create_table "plans", force: :cascade do |t|
+    t.time "start_time"
+    t.time "end_time"
+    t.date "date"
+    t.bigint "group_id", null: false
+    t.bigint "defense_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["defense_id"], name: "index_plans_on_defense_id"
+    t.index ["group_id"], name: "index_plans_on_group_id"
+  end
+
   create_table "topics", force: :cascade do |t|
     t.string "title"
     t.string "topic_code", null: false
@@ -133,5 +142,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_14_144956) do
   add_foreign_key "groups_users", "users"
   add_foreign_key "lecturer_defenses", "defenses"
   add_foreign_key "lecturer_defenses", "users", column: "lecturer_id"
+  add_foreign_key "plans", "defenses"
+  add_foreign_key "plans", "groups"
   add_foreign_key "topics", "users", column: "lecturer_id"
 end
