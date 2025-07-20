@@ -86,12 +86,35 @@ module Api
       # Removed check_time method entirely (now belongs to PlansController)
 
       def show
-        render json: @defense.to_json(include: {
-          groups: {
-            include: [:lecturer, :students]
+        render json: @defense.as_json(
+          only: [:id, :name, :defense_code, :status, :created_at, :updated_at],
+          include: {
+            lecturer_defenses: {
+              only: [:id, :point, :comment],
+              include: {
+                lecturer: {
+                  only: [:id, :name, :email, :lecturer_code, :faculty]
+                }
+              }
+            },
+            groups: {
+              only: [:id, :name, :group_code, :status, :description],
+              include: {
+                lecturer: {
+                  only: [:id, :name, :email, :faculty]
+                },
+                students: {
+                  only: [:id, :name, :email, :student_code, :class_name]
+                },
+                topics: {
+                  only: [:id, :title, :topic_code]
+                }
+              }
+            }
           }
-        })
+        ), status: :ok
       end
+
 
       def create
         @defense = Defense.new(defense_params.except(:lecturer_ids))

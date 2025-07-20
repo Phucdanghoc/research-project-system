@@ -10,11 +10,31 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        plans = Plan
-                  .includes(:group, :defense)
-                  .order(date: :asc, start_time: :asc)
-                  .page(page)
-                  .per(per_page)
+        plans = Plan.includes(:group, :defense)
+
+        # Filter theo ngày
+        if params[:date].present?
+          begin
+            date = Date.parse(params[:date])
+            plans = plans.where(date: date)
+          rescue ArgumentError
+            return render json: { error: "Invalid date format. Use YYYY-MM-DD." }, status: :bad_request
+          end
+        end
+
+        # Filter theo khoảng thời gian bắt đầu (trong ngày)
+        if params[:start_time].present? && params[:end_time].present?
+          begin
+            start_time = Time.parse(params[:start_time])
+            end_time = Time.parse(params[:end_time])
+            plans = plans.where(start_time: start_time..end_time)
+          rescue ArgumentError
+            return render json: { error: "Invalid time format. Use HH:MM." }, status: :bad_request
+          end
+        end
+
+        plans = plans.order(date: :asc, start_time: :asc)
+                    .page(page).per(per_page)
 
         render json: {
           plans: plans.as_json(include: {
@@ -29,10 +49,30 @@ module Api
 
       # GET /plans/:id
       def show
-        render json: @plan.as_json(include: {
-          group: { only: [:id, :name] },
-          defense: { only: [:id, :name, :defense_code] }
-        }, only: [:id, :date, :start_time, :end_time]), status: :ok
+        render json: @plan.as_json(
+          only: [:id, :date, :start_time, :end_time],
+          include: {
+            group: {
+              only: [:id, :name, :group_code, :description],
+              include: {
+                lecturer: { only: [:id, :name, :email, :faculty] },
+                students: { only: [:id, :name, :email, :student_code] },
+                topics: { only: [:id, :title, :topic_code] }
+              }
+            },
+            defense: {
+              only: [:id, :name, :defense_code],
+              include: {
+                lecturer_defenses: {
+                  include: {
+                    lecturer: { only: [:id, :name, :email, :lecturer_code] }
+                  },
+                  only: [:id, :point, :comment]
+                }
+              }
+            }
+          }
+        ), status: :ok
       end
 
       # POST /plans
