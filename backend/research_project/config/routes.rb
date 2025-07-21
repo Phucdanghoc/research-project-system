@@ -1,7 +1,6 @@
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
-      
       # Devise routes under /api/v1/users
       devise_for :users,
                   path: 'users',
@@ -17,7 +16,7 @@ Rails.application.routes.draw do
 
       # User routes
       get 'users/profile', to: 'users#profile'
-      
+      get 'users/lecturer/plans/me', to: 'users#plans_me'
       resources :users do
         collection do
           post :import_csv

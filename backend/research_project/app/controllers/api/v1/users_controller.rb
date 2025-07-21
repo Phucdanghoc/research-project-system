@@ -12,6 +12,44 @@ module Api
       ]
       before_action :set_user, only: [:show, :update]
 
+      def plans_me
+        unless current_user.lecturer?
+          return render json: { error: "Only lecturers can access their plans." }, status: :forbidden
+        end
+
+        page = params[:page] || 1
+        per_page = params[:per_page] || 10
+        search_date = params[:date]
+        search_start_time = params[:start_time]
+        search_end_time = params[:end_time]
+
+        plans = Plan.joins(:group)
+                    .includes(:group, :defense)
+                    .where(groups: { lecturer_id: current_user.id })
+
+        plans = plans.where(date: search_date) if search_date.present?
+        plans = plans.where(start_time: search_start_time) if search_start_time.present?
+        plans = plans.where(end_time: search_end_time) if search_end_time.present?
+
+        plans = plans.order(date: :asc, start_time: :asc)
+                    .page(page).per(per_page)
+
+        render json: {
+          plans: plans.as_json(include: {
+            group: {
+              only: [:id, :name, :group_code],
+              include: {
+                students: { only: [:id, :name, :student_code, :email] }
+              }
+            },
+            defense: { only: [:id, :name, :defense_code] }
+          }),
+          current_page: plans.current_page,
+          total_pages: plans.total_pages,
+          total_count: plans.total_count
+        }, status: :ok
+      end
+
       def me
         render json: current_user.as_json(include: [:groups, :lecture_groups]), status: :ok
       end
