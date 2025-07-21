@@ -99,6 +99,7 @@ const ManagerGroup = () => {
             onViewGroup={handleViewGroup}
             onEditGroup={handleEditGroup}
             onDeleteGroup={handleDeleteGroup}
+            isAdmin={true}
           />
           <Pagination
             total={total}

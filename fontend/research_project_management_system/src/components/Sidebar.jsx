@@ -12,9 +12,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { link: '/admin/manage-students', name: 'Danh sách sinh viên', icon: FaUsers },
             { link: '/admin/manage-lecturers', name: 'Danh sách giảng viên', icon: FaUsers },
             { link: '/admin/manage-groups', name: 'Danh sách nhóm', icon: FaLayerGroup },
-            { link: '/admin/manage-plan', name: 'Kế hoạch khung', icon: FaClipboardList },
             { link: '/admin/manage-topics', name: 'Danh sách đề tài', icon: FaBook },
-            { link: '/admin/setup-committee', name: 'Hội đồng', icon: FaUsers },
+            { link: '/admin/manage-defenses', name: 'Danh sách hội đồng', icon: FaUsers },
         ],
   
         lecturer: [

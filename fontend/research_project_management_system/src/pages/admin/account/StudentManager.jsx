@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../../store/index';
 import TableAdmin from './components/Table';
 import AddEditUserModal from './components/AddEditUserModal';
 import ViewUserModal from './components/ViewUserModal';
-import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import { FacultyMajors } from '../../../types/enum';
 import {
   fetchStudentsAsync,
@@ -228,31 +228,17 @@ const ManageStudents = () => {
     }
   };
 
-  const handleCsvUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
 
-    try {
-      await dispatch(importStudentsFromExcel(file)).unwrap();
-      dispatch(fetchStudentsAsync({ page: 1, per_page: studentsPerPage }));
-      setCurrentPage(1);
-    } catch (error) {
-      console.error('CSV import failed:', error);
-      alert('Có lỗi khi nhập sinh viên từ CSV. Vui lòng thử lại.');
-    }
-
-    e.target.value = null;
-  };
 
   const tableColumns = [
     {
       header: 'Tên',
       key: 'name',
-      render: (item) => <span className="font-bold">{item.name}</span>,
+      render: (item) => <span className="font-semibold">{item.name}</span>,
     },
     { header: 'Email', key: 'email' },
     { header: 'Mã sinh viên', key: 'student_code' },
-    { header: 'Lớp', key: 'class_name' },
+    // { header: 'Lớp', key: 'class_name' },
     {
       header: 'Khoa',
       key: 'faculty',
@@ -383,7 +369,7 @@ const ManageStudents = () => {
           { name: 'email', label: 'Email', type: 'email', required: true },
           { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
           { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
-          { name: 'class_name', label: 'Lớp', type: 'text', required: true },
+          // { name: 'class_name', label: 'Lớp', type: 'text', required: true },
           {
             name: 'faculty',
             label: 'Khoa',
@@ -479,22 +465,13 @@ const ManageStudents = () => {
         ]}
       />
 
-      <ViewUserModal
-        isOpen={isViewModalOpen}
-        onClose={closeModal}
-        userId={selectedStudent?.id}
-      // user={selectedStudent}
-      // fields={[
-      //   { label: 'Tên', key: 'name' },
-      //   { label: 'Email', key: 'email' },
-      //   { label: 'Mã sinh viên', key: 'student_code' },
-      //   { label: 'Lớp', key: 'class_name' },
-      //   { label: 'Khoa', key: 'faculty' },
-      //   { label: 'Chuyên ngành', key: 'major' },
-      //   { label: 'Số điện thoại', key: 'phone' },
-      //   { label: 'Giới tính', key: 'gender' },
-      // ]}
-      />
+      {selectedStudent && (
+        <ViewUserModal
+          isOpen={isViewModalOpen}
+          onClose={closeModal}
+          userId={selectedStudent?.id}
+        />
+      )}
 
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
@@ -502,7 +479,8 @@ const ManageStudents = () => {
         onConfirm={handleConfirmDelete}
         itemName={selectedStudent?.name || ''}
       />
-      <ImportCsvModal
+      {isImportModalOpen && (
+         <ImportCsvModal
         isOpen={isImportModalOpen}
         onClose={() => {
           setIsImportModalOpen(false);
@@ -510,6 +488,7 @@ const ManageStudents = () => {
           setCurrentPage(1);
         }}
       />
+      )}
     </div>
   );
 };

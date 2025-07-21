@@ -114,7 +114,7 @@ const ManageTopics = () => {
 
   const handleEditTopic = useCallback((topic) => {
     setSelectedTopic(topic);
-    
+
     setFormData({
       title: topic.title || '',
       topic_code: topic.topic_code || '',
@@ -133,7 +133,7 @@ const ManageTopics = () => {
   }, []);
 
   const handleViewTopic = useCallback((topic) => {
-    
+
     setSelectedTopic(topic);
     setIsViewModalOpen(true);
   }, []);
@@ -296,8 +296,8 @@ const ManageTopics = () => {
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1 || loading}
             className={`px-3 py-1 rounded ${currentPage === 1 || loading
-                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             aria-label="Trang trước"
           >
@@ -309,8 +309,8 @@ const ManageTopics = () => {
               onClick={() => handlePageChange(index + 1)}
               disabled={loading}
               className={`px-3 py-1 rounded ${currentPage === index + 1
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 } ${loading ? 'cursor-not-allowed' : ''}`}
               aria-label={`Trang ${index + 1}`}
             >
@@ -321,8 +321,8 @@ const ManageTopics = () => {
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === total_pages || loading}
             className={`px-3 py-1 rounded ${currentPage === total_pages || loading
-                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             aria-label="Trang sau"
           >
@@ -330,47 +330,55 @@ const ManageTopics = () => {
           </button>
         </nav>
       )}
+      {isAddModalOpen && (
+        <AddEditTopicModal
+          isOpen={isAddModalOpen}
+          onClose={resetFormAndClose}
+          onSubmit={(e) => handleSubmitTopic(e, false)}
+          formData={formData}
+          onInputChange={handleInputChange}
+          statuses={STATUSES}
+          isEdit={false}
+          facultyMajors={FacultyMajors}
+          availableMajors={availableMajors}
+        />
+      )}
+      {isEditModalOpen && (
+        <AddEditTopicModal
+          isOpen={isEditModalOpen}
+          onClose={resetFormAndClose}
+          onSubmit={(e) => handleSubmitTopic(e, true)}
+          formData={formData}
+          onInputChange={handleInputChange}
+          statuses={STATUSES}
+          isEdit={true}
+          facultyMajors={FacultyMajors}
+          availableMajors={availableMajors}
+        />
+      )}
 
-      <AddEditTopicModal
-        isOpen={isAddModalOpen}
-        onClose={resetFormAndClose}
-        onSubmit={(e) => handleSubmitTopic(e, false)}
-        formData={formData}
-        onInputChange={handleInputChange}
-        statuses={STATUSES}
-        isEdit={false}
-        facultyMajors={FacultyMajors}
-        availableMajors={availableMajors}
-      />
-      <AddEditTopicModal
-        isOpen={isEditModalOpen}
-        onClose={resetFormAndClose}
-        onSubmit={(e) => handleSubmitTopic(e, true)}
-        formData={formData}
-        onInputChange={handleInputChange}
-        statuses={STATUSES}
-        isEdit={true}
-        facultyMajors={FacultyMajors}
-        availableMajors={availableMajors}
-      />
-      <AddMultipleTopicsModal
-        isOpen={isAddMultipleModalOpen}
-        onClose={() => setIsAddMultipleModalOpen(false)}
-        onSubmit={handleSubmitMultipleTopics}
-      />
-      <ViewTopicModal
-        topicId={selectedTopic?.id}
-        isOpen={isViewModalOpen}
-        onClose={resetFormAndClose}
-        // topic={selectedTopic}
-        facultyMajors={FacultyMajors}
-      />
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={resetFormAndClose}
-        onConfirm={handleConfirmDelete}
-        itemName={selectedTopic?.title || ''}
-      />
+      {isAddMultipleModalOpen && (
+        <AddMultipleTopicsModal
+          isOpen={isAddMultipleModalOpen}
+          onClose={() => setIsAddMultipleModalOpen(false)}
+          onSubmit={handleSubmitMultipleTopics}
+        />
+      )}
+      {isViewModalOpen && (
+        <ViewTopicModal
+          isOpen={isViewModalOpen}
+          onClose={resetFormAndClose}
+          topic={selectedTopic}
+        />
+      )}
+      {isDeleteModalOpen && (
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleConfirmDelete}
+          itemName={selectedTopic?.title || ''}
+        />
+      )}
     </div>
   );
 };

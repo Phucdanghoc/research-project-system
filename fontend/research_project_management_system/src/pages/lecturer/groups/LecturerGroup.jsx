@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../../store';
-import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupByMeAsync, updateGroupStatusAsync } from '../../../store/slices/groupSlice';
+import { createGroupAsync, updateGroupAsync, deleteGroupAsync, fetchGroupByMeAsync, updateGroupStatusAsync, updateGroupDefenseStatusByMeAsync } from '../../../store/slices/groupSlice';
 import FilterBar from '../../components/students/FilterBar';
 import TableView from '../../components/groups/TableView';
 import AddEditGroupModal from '../../components/groups/AddEditGroupModal';
@@ -65,7 +65,14 @@ const LecturerGroup = () => {
     });
   };
 
+  const handleChangeDefenseStatus = (id, status) => {
+    dispatch(updateGroupDefenseStatusByMeAsync({ id, status })).then(() => {
+      toast.success('Cập nhật trạng thái bảo vệ thành công');
+    });
+  };
+
   const handleViewGroup = (group) => {
+    
     setSelectedGroup(group);
     setIsViewModalOpen(true);
   };
@@ -112,6 +119,8 @@ const LecturerGroup = () => {
             onEditGroup={handleEditGroup}
             onDeleteGroup={handleDeleteGroup}
             onStatusChange={handleChangeStatus}
+            onDefenseStatusChange={handleChangeDefenseStatus}
+            isAdmin={false}
           />
           <Pagination
             total={total}

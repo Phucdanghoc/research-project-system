@@ -3,10 +3,22 @@ import axios from 'axios';
 import type { Topic, TopicGeneral } from '../../types/topic';
 import { TokenService } from '../../services/token';
 
+
 const api = axios.create({
   baseURL: 'http://localhost:3000/api/v1',
-  headers: { Authorization: `Bearer ${TokenService.getToken()}` },
 });
+
+
+api.interceptors.request.use(
+  (config) => {
+    const token = TokenService.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export const fetchTopicsAsync = createAsyncThunk(
   'topics/fetchTopicsAsync',

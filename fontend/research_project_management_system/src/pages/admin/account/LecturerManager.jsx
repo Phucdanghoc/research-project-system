@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../../store/index';
 import TableAdmin from './components/Table';
 import AddEditUserModal from './components/AddEditUserModal';
 import ViewUserModal from './components/ViewUserModal';
-import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
 import ImportCsvModal from '../../../components/ImportCsvModal';
 import { FacultyMajors } from '../../../types/enum';
 import {
@@ -236,8 +236,8 @@ const ManageLecturers = () => {
           item.gender?.toLowerCase() === 'male'
             ? 'Nam'
             : item.gender?.toLowerCase() === 'female'
-            ? 'Nữ'
-            : 'Không có',
+              ? 'Nữ'
+              : 'Không có',
       },
     ],
     []
@@ -284,190 +284,169 @@ const ManageLecturers = () => {
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-[calc(100vh-4rem)]">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-          <h1 className="text-2xl font-bold text-blue-600">Quản lý giảng viên</h1>
-          <div className="flex space-x-3">
-            <button
-              onClick={handleAddLecturer}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition transform hover:scale-105"
-            >
-              <FaPlus /> Thêm giảng viên
-            </button>
-            <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition transform hover:scale-105"
-            >
-              <FaFileCsv /> Tải lên CSV
-            </button>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            Lỗi: {error}
-          </div>
-        )}
-
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên, email hoặc mã giảng viên..."
-            onChange={handleSearchChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 transition"
-          />
-        </div>
-
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <TableAdmin
-            columns={tableColumns}
-            data={lecturers}
-            actions={tableActions}
-            emptyMessage={
-              loading ? (
-                <div className="text-center py-8 text-gray-600 animate-pulse">Đang tải...</div>
-              ) : (
-                <div className="text-center py-8 text-gray-600">
-                  Không tìm thấy giảng viên nào.
-                </div>
-              )
-            }
-          />
-        </div>
-
-        {total_pages > 1 && (
-          <div className="flex justify-center mt-6 space-x-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1 || loading}
-              className={`px-4 py-2 rounded-lg ${
-                currentPage === 1 || loading
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              } transition`}
-            >
-              Trước
-            </button>
-            {[...Array(total_pages)].map((_, index) => (
-              <button
-                key={index + 1}
-                onClick={() => handlePageChange(index + 1)}
-                disabled={loading}
-                className={`px-4 py-2 rounded-lg ${
-                  currentPage === index + 1
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                } transition`}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === total_pages || loading}
-              className={`px-4 py-2 rounded-lg ${
-                currentPage === total_pages || loading
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              } transition`}
-            >
-              Sau
-            </button>
-          </div>
-        )}
-
-        <AddEditUserModal
-          isOpen={isAddModalOpen}
-          onClose={closeModal}
-          onSubmit={handleSubmitAdd}
-          formData={formData}
-          onInputChange={handleInputChange}
-          isEdit={false}
-          fields={[
-            { name: 'name', label: 'Tên', type: 'text', required: true },
-            { name: 'email', label: 'Email', type: 'email', required: true },
-            { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
-            { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
-            {
-              name: 'faculty',
-              label: 'Khoa',
-              type: 'select',
-              required: true,
-              options: [
-                { value: '', label: 'Chọn khoa' },
-                ...Object.keys(FacultyMajors).map((key) => ({
-                  value: key,
-                  label: FacultyMajors[key].name,
-                })),
-              ],
-            },
-            { name: 'phone', label: 'Số điện thoại', type: 'text' },
-            {
-              name: 'gender',
-              label: 'Giới tính',
-              type: 'select',
-              options: [
-                { value: '', label: 'Chọn giới tính' },
-                { value: 'Male', label: 'Nam' },
-                { value: 'Female', label: 'Nữ' },
-              ],
-            },
-          ]}
+    <div className="p-6 bg-white">
+      <h1 className="text-2xl font-bold text-blue-600 mb-4">Quản lý giảng viên</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tên, email hoặc mã giảng viên..."
+          onChange={handleSearchChange}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 mb-2 sm:mb-0"
         />
-
-        <AddEditUserModal
-          isOpen={isEditModalOpen}
-          onClose={closeModal}
-          onSubmit={handleSubmitEdit}
-          formData={formData}
-          onInputChange={handleInputChange}
-          isEdit={true}
-          fields={[
-            { name: 'name', label: 'Tên', type: 'text', required: true },
-            { name: 'email', label: 'Email', type: 'email', required: true },
-            { name: 'password', label: 'Mật khẩu (để trống nếu không đổi)', type: 'password' },
-            { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
-            {
-              name: 'faculty',
-              label: 'Khoa',
-              type: 'select',
-              required: true,
-              options: [
-                { value: '', label: 'Chọn khoa' },
-                ...Object.keys(FacultyMajors).map((key) => ({
-                  value: key,
-                  label: FacultyMajors[key].name,
-                })),
-              ],
-            },
-            { name: 'phone', label: 'Số điện thoại', type: 'text' },
-            {
-              name: 'gender',
-              label: 'Giới tính',
-              type: 'select',
-              options: [
-                { value: '', label: 'Chọn giới tính' },
-                { value: 'Male', label: 'Nam' },
-                { value: 'Female', label: 'Nữ' },
-              ],
-            },
-          ]}
+        <button
+          onClick={handleAddLecturer}
+          className="w-full sm:w-48 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors mb-2 sm:mb-0"
+        >
+          Thêm giảng viên
+        </button>
+        <button
+          onClick={() => setIsImportModalOpen(true)}
+          className="w-full sm:w-48 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors text-center"
+        >
+          Tải lên CSV
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <TableAdmin
+          columns={tableColumns}
+          data={lecturers}
+          actions={tableActions}
+          emptyMessage={loading ? 'Đang tải...' : 'Không tìm thấy giảng viên nào.'}
         />
+      </div>
+      {total_pages > 1 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || loading}
+            className={`px-3 py-1 rounded ${currentPage === 1 || loading
+              ? 'bg-gray-200 text-gray-500'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+          >
+            Trước
+          </button>
+          {[...Array(total_pages)].map((_, index) => (
+            <button
+              key={index + 1}
+              onClick={() => handlePageChange(index + 1)}
+              disabled={loading}
+              className={`px-3 py-1 rounded ${currentPage === index + 1
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === total_pages || loading}
+            className={`px-3 py-1 rounded ${currentPage === total_pages || loading
+              ? 'bg-gray-200 text-gray-500'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+          >
+            Sau
+          </button>
+        </div>
+      )}
 
+      <AddEditUserModal
+        isOpen={isAddModalOpen}
+        onClose={closeModal}
+        onSubmit={handleSubmitAdd}
+        formData={formData}
+        onInputChange={handleInputChange}
+        isEdit={false}
+        fields={[
+          { name: 'name', label: 'Tên', type: 'text', required: true },
+          { name: 'email', label: 'Email', type: 'email', required: true },
+          { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
+          { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
+          {
+            name: 'faculty',
+            label: 'Khoa',
+            type: 'select',
+            required: true,
+            options: [
+              { value: '', label: 'Chọn khoa' },
+              ...Object.keys(FacultyMajors).map((key) => ({
+                value: key,
+                label: FacultyMajors[key].name,
+              })),
+            ],
+          },
+          { name: 'phone', label: 'Số điện thoại', type: 'text' },
+          {
+            name: 'gender',
+            label: 'Giới tính',
+            type: 'select',
+            options: [
+              { value: '', label: 'Chọn giới tính' },
+              { value: 'Male', label: 'Nam' },
+              { value: 'Female', label: 'Nữ' },
+            ],
+          },
+        ]}
+      />
+
+      <AddEditUserModal
+        isOpen={isEditModalOpen}
+        onClose={closeModal}
+        onSubmit={handleSubmitEdit}
+        formData={formData}
+        onInputChange={handleInputChange}
+        isEdit={true}
+        fields={[
+          { name: 'name', label: 'Tên', type: 'text', required: true },
+          { name: 'email', label: 'Email', type: 'email', required: true },
+          { name: 'password', label: 'Mật khẩu (để trống nếu không đổi)', type: 'password' },
+          { name: 'lecturer_code', label: 'Mã giảng viên', type: 'text', required: true },
+          {
+            name: 'faculty',
+            label: 'Khoa',
+            type: 'select',
+            required: true,
+            options: [
+              { value: '', label: 'Chọn khoa' },
+              ...Object.keys(FacultyMajors).map((key) => ({
+                value: key,
+                label: FacultyMajors[key].name,
+              })),
+            ],
+          },
+          { name: 'phone', label: 'Số điện thoại', type: 'text' },
+          {
+            name: 'gender',
+            label: 'Giới tính',
+            type: 'select',
+            options: [
+              { value: '', label: 'Chọn giới tính' },
+              { value: 'Male', label: 'Nam' },
+              { value: 'Female', label: 'Nữ' },
+            ],
+          },
+        ]}
+      />
+      {isViewModalOpen && (
         <ViewUserModal
           isOpen={isViewModalOpen}
           onClose={closeModal}
           userId={selectedLecturer?.id}
         />
+      )}
 
-        <DeleteConfirmationModal
-          isOpen={isDeleteModalOpen}
-          onClose={closeModal}
-          onConfirm={handleConfirmDelete}
-          itemName={selectedLecturer?.name || ''}
-        />
 
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeModal}
+        onConfirm={handleConfirmDelete}
+        itemName={selectedLecturer?.name || ''}
+      />
+
+      {isImportModalOpen && (
         <ImportCsvModal
           isOpen={isImportModalOpen}
           onClose={() => {
@@ -477,7 +456,7 @@ const ManageLecturers = () => {
           }}
           onUpload={handleCsvUpload}
         />
-      </div>
+      )}
     </div>
   );
 };

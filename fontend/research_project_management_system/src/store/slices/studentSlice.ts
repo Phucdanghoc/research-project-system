@@ -23,8 +23,17 @@ interface PaginationParams {
 
 const api = axios.create({
   baseURL: 'http://localhost:3000/api/v1/users',
-  headers: { Authorization: `Bearer ${TokenService.getToken()}` },
 });
+api.interceptors.request.use(
+  (config) => {
+    const token = TokenService.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 const handleApiError = (error: any): string =>
   error.response?.data?.message || 'Operation failed';

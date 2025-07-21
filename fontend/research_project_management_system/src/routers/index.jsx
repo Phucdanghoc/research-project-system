@@ -22,6 +22,7 @@ import StudentLayout from '../pages/student/layout';
 import ProtectedStudent from './ProtectedStudent';
 import StudentTopic from '../pages/student/topic/TopicStudent';
 import ManagerGroup from '../pages/admin/group/ManagerGroup';
+import DefenseManager from '../pages/admin/defense/ManagerDefense';
 
 const router = createBrowserRouter([
   {
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
       { path: 'manage-lecturers', element: <ManagerLecturers /> },
       { path: 'manage-topics', element: <ManageTopics /> },
       { path: 'manage-groups', element: <ManagerGroup /> },
+      { path: 'manage-defenses', element: <DefenseManager /> },
       { path: 'setup-areas', element: <ManagerStudents /> },
     ],
   },

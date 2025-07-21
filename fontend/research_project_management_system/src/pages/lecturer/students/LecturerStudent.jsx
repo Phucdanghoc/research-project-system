@@ -59,11 +59,13 @@ const LecturerStudent = () => {
                     />
                 </>
             )}
-            <ViewStudentModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                student={selectedStudent}
-            />
+            {isModalOpen && (
+                <ViewStudentModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    student={selectedStudent}
+                />
+            )}
         </div>
     );
 };

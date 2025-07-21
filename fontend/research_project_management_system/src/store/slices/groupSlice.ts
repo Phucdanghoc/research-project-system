@@ -1,259 +1,239 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import type { Group, GroupDetail, GroupForm } from '../../types/group';
 import { TokenService } from '../../services/token';
 
+// Types
+interface GroupState {
+    groups: Group[];
+    group: GroupDetail | null;
+    loading: boolean;
+    current_page: number;
+    total_pages: number;
+    error: string | null;
+}
+
+interface PaginationParams {
+    page?: number;
+    per_page?: number;
+    keyword?: string;
+    status?: string;
+}
+
 const api = axios.create({
     baseURL: 'http://localhost:3000/api/v1',
-    headers: { Authorization: `Bearer ${TokenService.getToken()}` },
 });
 
+// Add request interceptor to set Authorization header dynamically
+api.interceptors.request.use(
+    (config) => {
+        const token = TokenService.getToken();
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
 
-export const createGroupAsync = createAsyncThunk(
+const handleApiError = (error: unknown): string =>
+    axios.isAxiosError(error) && error.response?.data?.message
+        ? error.response.data.message
+        : 'Operation failed';
+
+// Define thunk configuration
+interface ThunkConfig {
+    rejectValue: string;
+}
+
+const createGroupThunk = <T, Arg>(
+    actionType: string,
+    apiCall: (params: Arg) => Promise<any>
+) =>
+    createAsyncThunk<T, Arg, ThunkConfig>(actionType, async (params, { rejectWithValue }) => {
+        try {
+            const response = await apiCall(params);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(handleApiError(error));
+        }
+    });
+
+// Thunks
+export const createGroupAsync = createGroupThunk<{ group: Group }, GroupForm>(
     'groups/createGroupAsync',
-    async (groupForm: GroupForm, { rejectWithValue }) => {
-        try {
-            const response = await api.post('/groups', { 
-                name: groupForm.name,
-                topic_id: groupForm.topic_id,
-                student_ids: groupForm.student_ids
-             });
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Tạo nhóm thất bại');
-        }
-    }
+    ({ name, topic_id, student_ids }) =>
+        api.post('/groups', { name, topic_id, student_ids })
 );
 
-export const fetchGroupsAsync = createAsyncThunk(
+export const fetchGroupsAsync = createGroupThunk<
+    { groups: Group[]; current_page: number; total_pages: number },
+    PaginationParams
+>(
     'groups/fetchGroupsAsync',
-    async ({ page = 1, per_page = 10, keyword = '', status = '' }: { page: number; per_page: number; keyword: string; status: string }, { rejectWithValue }) => {
-        try {
-            const response = await api.get('/groups', { params: { page, per_page, keyword, status } });
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Lấy danh sách nhóm thất bại');
-        }
-    }
+    ({ page = 1, per_page = 10, keyword = '', status = '' }) =>
+        api.get('/groups', { params: { page, per_page, keyword, status } })
 );
 
-export const updateGroupStatusAsync = createAsyncThunk(
+export const updateGroupStatusAsync = createGroupThunk<{ group: Group }, { id: number; status: string }>(
     'groups/updateGroupStatusAsync',
-    async (groupForm: any, { rejectWithValue }) => {
-        try {
-            console.log(`groupForm`, groupForm  );
-            const response = await api.patch(`/groups/${groupForm.id}`, { group: {
-                status: groupForm.status
-            } });
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Cập nhật nhóm thất bại');
-        }
-    }
+    ({ id, status }) => api.patch(`/groups/${id}`, { group: { status } })
+);
+export const updateGroupDefenseStatusByMeAsync = createGroupThunk<{ group: Group }, { id: number; status: string }>(
+    'groups/updateGroupDefenseStatusByMeAsync',
+    ({ id, status }) => api.patch(`/groups/${id}`, { group: { def_status: status } })
 );
 
-export const updateGroupAsync = createAsyncThunk(
+export const updateGroupAsync = createGroupThunk<{ group: Group }, { id: number; groupData: GroupForm }>(
     'groups/updateGroupAsync',
-    async (groupForm: any, { rejectWithValue }) => {
-        try {
-            console.log(`groupForm`, groupForm  );
-            
-            const response = await api.put(`/groups/${groupForm.id}`, { group  : {
-                name: groupForm.groupData.name,
-                student_ids: groupForm.groupData.student_ids,
-                student_lead_id: parseInt(groupForm.groupData.student_lead_id),
-                description: groupForm.groupData.description,
-            } });
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Cập nhật nhóm thất bại');
-        }
-    }
-)
-export const deleteGroupAsync = createAsyncThunk(
-    'groups/deleteGroupAsync',
-    async (id: number, { rejectWithValue }) => {
-        try {
-            await api.delete(`/groups/${id}`);
-            return id;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Xóa nhóm thất bại');
-        }
-    }
-)
-export const getGroupAsync = createAsyncThunk(
-    'groups/getGroupAsync',
-    async (id: number, { rejectWithValue }) => {
-        try {
-            const response = await api.get(`/groups/${id}`);
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Lấy nhóm thất bại');
-        }
-    }
-)
-export const fetchGroupByMeAsync = createAsyncThunk(
-    'groups/fetchGroupByMeAsync',
-    async ({ page = 1, per_page = 10 , status = '', keyword  = '' }: { page: number; per_page: number , status : string, keyword : string }, { rejectWithValue }) => {
-        try {
-            const response = await api.get('users/groups/me', { params: { page, per_page , status, keyword} });
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Lọc theo giảng viên thất bại');
-        }
-    }
-)
-
-export const searchGroupsAsync = createAsyncThunk(
-    'groups/searchGroupsAsync',
-    async (keyword: string, { rejectWithValue }) => {
-        try {
-            const response = await api.get('/groups/search', { params: { keyword } });
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.message || 'Tìm kiếm nhóm thất bại');
-        }
-    }
+    ({ id, groupData }) =>
+        api.put(`/groups/${id}`, {
+            group: {
+                name: groupData.name,
+                student_ids: groupData.student_ids,
+                student_lead_id: parseInt(groupData.student_lead_id as unknown as string),
+                description: groupData.description,
+            },
+        })
 );
 
+export const deleteGroupAsync = createGroupThunk<number, number>(
+    'groups/deleteGroupAsync',
+    (id) => api.delete(`/groups/${id}`)
+);
+
+export const getGroupAsync = createGroupThunk<GroupDetail, number>(
+    'groups/getGroupAsync',
+    (id) => api.get(`/groups/${id}`)
+);
+
+export const fetchGroupByMeAsync = createGroupThunk<
+    { groups: Group[]; current_page: number; total_pages: number },
+    PaginationParams
+>(
+    'groups/fetchGroupByMeAsync',
+    ({ page = 1, per_page = 10, status = '', keyword = '' }) =>
+        api.get('/users/groups/me', { params: { page, per_page, status, keyword } })
+);
+
+export const searchGroupsAsync = createGroupThunk<
+    { groups: Group[]; current_page: number; total_pages: number },
+    string
+>(
+    'groups/searchGroupsAsync',
+    (keyword) => api.get('/groups/search', { params: { keyword } })
+);
+
+// Slice
 const groupSlice = createSlice({
     name: 'groups',
     initialState: {
-        groups: [] as Group[],
-        group: {} as GroupDetail,
+        groups: [],
+        group: null,
         loading: false,
-        total_pages: 0,
         current_page: 1,
-        error: null as string | null,
-    },
+        total_pages: 0,
+        error: null,
+    } as GroupState,
     reducers: {
         clearError: (state) => {
             state.error = null;
         },
     },
     extraReducers: (builder) => {
-        builder
-            .addCase(fetchGroupsAsync.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchGroupsAsync.fulfilled, (state, action) => {
-                state.loading = false;
-                state.groups = action.payload.groups || [];
-                state.total_pages = action.payload.total_pages;
-                state.current_page = action.payload.current_page;
-                state.error = null;
-            })
-            .addCase(fetchGroupsAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
-        builder
-            .addCase(fetchGroupByMeAsync.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchGroupByMeAsync.fulfilled, (state, action) => {
-                state.loading = false;
-                state.groups = action.payload.groups || [];
-                state.total_pages = action.payload.total_pages;
-                state.current_page = action.payload.current_page;
-                state.error = null;
-            })
-            .addCase(fetchGroupByMeAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
+        const handlePending = (state: GroupState) => {
+            state.loading = true;
+            state.error = null;
+        };
+
+        const handleRejected = (state: GroupState, action: PayloadAction<any>) => {
+            state.loading = false;
+            state.error = action.payload;
+        };
+
+        const handleListFulfilled = (
+            state: GroupState,
+            action: PayloadAction<{ groups: Group[]; current_page: number; total_pages: number }>
+        ) => {
+            state.loading = false;
+            state.groups = action.payload.groups || [];
+            state.current_page = action.payload.current_page || 1;
+            state.total_pages = action.payload.total_pages || 0;
+            state.error = null;
+        };
+
+        [fetchGroupsAsync, fetchGroupByMeAsync, searchGroupsAsync].forEach((thunk) => {
+            builder
+                .addCase(thunk.pending, handlePending)
+                .addCase(thunk.fulfilled, handleListFulfilled)
+                .addCase(thunk.rejected, handleRejected);
+        });
 
         builder
-            .addCase(getGroupAsync.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(getGroupAsync.fulfilled, (state, action) => {
-                state.loading = false;
-                state.group = action.payload || {};
-                state.error = null;
-            })
-            .addCase(getGroupAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
-
-        builder
-            .addCase(createGroupAsync.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(createGroupAsync.fulfilled, (state, action) => {
+            .addCase(createGroupAsync.pending, handlePending)
+            .addCase(createGroupAsync.fulfilled, (state, action: PayloadAction<{ group: Group }>) => {
                 state.loading = false;
                 state.groups.push(action.payload.group);
                 state.error = null;
             })
-            .addCase(createGroupAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
+            .addCase(createGroupAsync.rejected, handleRejected);
 
         builder
-            .addCase(updateGroupAsync.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(updateGroupAsync.fulfilled, (state, action) => {
-                state.loading = false;
-                state.groups = state.groups.map((group) => group.id === action.payload.group.id ? action.payload.group : group);
-                state.error = null;
-            })
-            .addCase(updateGroupAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
+            .addCase(updateGroupStatusAsync.pending, handlePending)
+            .addCase(
+                updateGroupStatusAsync.fulfilled,
+                (state, action: PayloadAction<{ group: Group }>) => {
+                    state.loading = false;
+                    state.groups = state.groups.map((group) =>
+                        group.id === action.payload.group.id ? action.payload.group : group
+                    );
+                    state.error = null;
+                }
+            )
+            .addCase(updateGroupStatusAsync.rejected, handleRejected);
+        builder
+            .addCase(updateGroupDefenseStatusByMeAsync.pending, handlePending)
+            .addCase(
+                updateGroupDefenseStatusByMeAsync.fulfilled,
+                (state, action: PayloadAction<{ group: Group }>) => {
+                    state.loading = false;
+                    state.groups = state.groups.map((group) =>
+                        group.id === action.payload.group.id ? action.payload.group : group
+                    );
+                    state.error = null;
+                }
+            )
+            .addCase(updateGroupDefenseStatusByMeAsync.rejected, handleRejected);
+
 
         builder
-            .addCase(deleteGroupAsync.pending, (state) => {
-                state.loading = true;
+            .addCase(updateGroupAsync.pending, handlePending)
+            .addCase(updateGroupAsync.fulfilled, (state, action: PayloadAction<{ group: Group }>) => {
+                state.loading = false;
+                state.groups = state.groups.map((group) =>
+                    group.id === action.payload.group.id ? action.payload.group : group
+                );
                 state.error = null;
             })
-            .addCase(deleteGroupAsync.fulfilled, (state, action) => {
-                state.loading = false;
-                state.groups  = state.groups.filter((group) => group.id !== action.payload);
-                state.error = null;
-            })
-            .addCase(deleteGroupAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
-        builder.addCase(updateGroupStatusAsync.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        })
-        .addCase(updateGroupStatusAsync.fulfilled, (state, action) => {
-            state.loading = false;
-            state.groups = state.groups.map((group) => group.id === action.payload.group.id ? action.payload.group : group);
-            state.error = null;
-        })
-        .addCase(updateGroupStatusAsync.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
+            .addCase(updateGroupAsync.rejected, handleRejected);
 
         builder
-            .addCase(searchGroupsAsync.pending, (state) => {
-                state.loading = true;
+            .addCase(deleteGroupAsync.pending, handlePending)
+            .addCase(deleteGroupAsync.fulfilled, (state, action: PayloadAction<number>) => {
+                state.loading = false;
+                state.groups = state.groups.filter((group) => group.id !== action.payload);
                 state.error = null;
             })
-            .addCase(searchGroupsAsync.fulfilled, (state, action) => {
+            .addCase(deleteGroupAsync.rejected, handleRejected);
+
+        builder
+            .addCase(getGroupAsync.pending, handlePending)
+            .addCase(getGroupAsync.fulfilled, (state, action: PayloadAction<GroupDetail>) => {
                 state.loading = false;
-                state.groups = action.payload.groups || [];
-                state.total_pages = action.payload.total_pages;
-                state.current_page = action.payload.current_page;
+                state.group = action.payload;
                 state.error = null;
             })
-            .addCase(searchGroupsAsync.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            });
+            .addCase(getGroupAsync.rejected, handleRejected);
     },
 });
 

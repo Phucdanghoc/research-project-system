@@ -27,6 +27,7 @@ export interface GroupDetail {
 }
 
 export interface GroupForm {
+  [x: string]: unknown;
   name: string;
   topic_id: number;
   student_ids:  number[];

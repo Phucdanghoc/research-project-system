@@ -6,19 +6,40 @@ import { TimeService } from '../../../utils/time';
 import DOMPurify from 'dompurify';
 import { StudentCard } from '../../../components/cards/StudentCard';
 import { TopicCategory } from '../../../types/enum';
+import { FaCheckCircle, FaTimesCircle, FaClock, FaRegCircle } from 'react-icons/fa';
 
 const TabButton = ({ label, icon, isActive, onClick }) => (
   <button
-    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-      isActive ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-500' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-    }`}
+    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${isActive ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-500' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
     onClick={onClick}
   >
     {icon}
     {label}
   </button>
 );
-
+const statusDefenseConfig = {
+  not_defended: {
+    icon: <FaRegCircle className="text-gray-500 mr-1" />,
+    label: 'Chưa bảo vệ',
+    border: 'border-gray-500',
+  },
+  waiting_defense: {
+    icon: <FaClock className="text-yellow-600 mr-1" />,
+    label: 'Đăng kí bảo vệ',
+    border: 'border-yellow-600',
+  },
+  approved: {
+    icon: <FaCheckCircle className="text-green-600 mr-1" />,
+    label: 'Đã duyệt',
+    border: 'border-green-600',
+  },
+  rejected: {
+    icon: <FaTimesCircle className="text-red-600 mr-1" />,
+    label: 'Không duyệt',
+    border: 'border-red-600',
+  },
+};
 const TabContent = ({ children }) => (
   <div className="p-5 bg-white rounded-b-lg border border-gray-200">{children}</div>
 );
@@ -91,33 +112,38 @@ const ViewGroupModal = ({ isOpen, onClose, groupId }) => {
                     <p className="text-gray-600">
                       <span className="font-medium text-gray-800">Trạng thái:</span>{' '}
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                          group.status === 'pending'
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${group.status === 'pending'
                             ? 'bg-yellow-100 text-yellow-700'
                             : group.status === 'accepted'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
                       >
                         {group.status === 'pending'
                           ? 'Đang chờ duyệt'
                           : group.status === 'accepted'
-                          ? 'Đã duyệt'
-                          : group.status === 'denied'
-                          ? 'Đã từ chối'
-                          : group.status || 'Không xác định'}
+                            ? 'Đã duyệt'
+                            : group.status === 'denied'
+                              ? 'Đã từ chối'
+                              : group.status || 'Không xác định'}
                       </span>
                     </p>
                     <p className="text-gray-600">
                       <span className="font-medium text-gray-800">Trạng thái bảo vệ:</span>{' '}
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                          group.defense_id ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${group.def_status === 'approved'
+                            ? 'bg-green-100 text-green-700'
+                            : group.def_status === 'rejected'
+                              ? 'bg-red-100 text-red-700'
+                              : group.def_status === 'waiting_defense'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-gray-100 text-gray-700'
+                          }`}
                       >
-                        {group.defense_id ? 'Đã đăng ký bảo vệ' : 'Chưa đăng ký bảo vệ'}
+                        {statusDefenseConfig[group.def_status]?.label || 'Không xác định'}
                       </span>
                     </p>
+
                     <p className="text-gray-600">
                       <span className="font-medium text-gray-800">Ngày tạo:</span>{' '}
                       {TimeService.convertDateStringToDDMMYYYY(group.created_at)}
@@ -144,19 +170,18 @@ const ViewGroupModal = ({ isOpen, onClose, groupId }) => {
                     <p className="text-gray-600">
                       <span className="font-medium text-gray-800">Trạng thái:</span>{' '}
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                          topic.status === 'pending'
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${topic.status === 'pending'
                             ? 'bg-yellow-100 text-yellow-700'
                             : topic.status === 'open'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
                       >
                         {topic.status === 'pending'
                           ? 'Đang chờ'
                           : topic.status === 'open'
-                          ? 'Đang mở'
-                          : topic.status || 'Không xác định'}
+                            ? 'Đang mở'
+                            : topic.status || 'Không xác định'}
                       </span>
                     </p>
                     <p className="text-gray-600">
