@@ -60,6 +60,8 @@ Rails.application.routes.draw do
           get :me
         end
       end
+      get 'plans/me', to: 'plans#me'      
+      get 'plans/check_time', to: 'plans#check_time'
       resources :plans do
         collection do
           get :me
