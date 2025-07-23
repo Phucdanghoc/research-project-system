@@ -39,6 +39,8 @@ module Api
       def create
         plan = Plan.new(plan_params)
         if plan.save
+          plan.group.update(def_status: :approved) if plan.group.present?
+
           render json: { message: "Plan created successfully.", plan: plan }, status: :created
         else
           render json: { errors: plan.errors.full_messages }, status: :unprocessable_entity
