@@ -11,7 +11,7 @@ module Api
 
         plans = Plan.includes(:group, :defense)
 
-        # Filter theo ngày
+        date = nil
         if params[:date].present?
           begin
             date = Date.parse(params[:date])
@@ -22,14 +22,20 @@ module Api
           end
         end
 
-        # Filter theo khoảng thời gian bắt đầu (trong ngày)
-        if params[:start_time].present? && params[:end_time].present?
+        if params[:start_time].present? && date
           begin
-            start_time = Time.parse(params[:start_time])
-            end_time = Time.parse(params[:end_time])
-            plans = plans.where(start_time: start_time..end_time)
-          rescue ArgumentError
-            return render json: { error: "Invalid time format. Use HH:MM." }, status: :bad_request
+            start_time_str = "#{params[:date]} #{params[:start_time]}"
+            local_start = Time.zone.parse(start_time_str)
+            utc_start = local_start&.utc&.strftime("%H:%M:%S")
+            if utc_start
+              plans = plans.where("CAST(start_time AS time) >= ?", utc_start)
+            else
+              Rails.logger.error "Parsed start_time is nil from input: #{start_time_str}"
+              return render json: { error: "Invalid start_time format." }, status: :bad_request
+            end
+          rescue ArgumentError => e
+            Rails.logger.error "Invalid start_time: #{params[:start_time]} | Error: #{e.message}"
+            return render json: { error: "Invalid start_time format. Use HH:MM." }, status: :bad_request
           end
         end
 
@@ -140,6 +146,7 @@ module Api
 
 
 
+
       # GET /plans/:id
       def show
         render json: @plan.as_json(
@@ -237,6 +244,7 @@ module Api
           render json: { conflict: false }, status: :ok
         end
       end
+
 
 
       private
