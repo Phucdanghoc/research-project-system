@@ -2,7 +2,7 @@ module Api
   module V1
     class PlansController < ApplicationController
       before_action :authenticate_api_user!
-      before_action :authorize_admin!
+      before_action :authorize_admin!, only: [:create, :update, :destroy]
       before_action :set_plan, only: [:show, :update, :destroy]
 
       # GET /plans
@@ -12,24 +12,25 @@ module Api
 
         plans = Plan.includes(:group, :defense)
 
-        # Filter theo ngày
-        if params[:date].present?
+        # Filter by date or start_time/end_time datetime
+        if params[:start_time].present? && params[:end_time].present?
+          begin
+            parsed_start = Time.parse(params[:start_time])
+            parsed_end = Time.parse(params[:end_time])
+            date = parsed_start.to_date
+
+            plans = plans.where(date: date)
+                        .where("(plans.start_time, plans.end_time) OVERLAPS (?::time, ?::time)",
+                                parsed_start.strftime("%H:%M:%S"), parsed_end.strftime("%H:%M:%S"))
+          rescue ArgumentError
+            return render json: { error: "Invalid start_time or end_time format. Use ISO 8601." }, status: :bad_request
+          end
+        elsif params[:date].present?
           begin
             date = Date.parse(params[:date])
             plans = plans.where(date: date)
           rescue ArgumentError
             return render json: { error: "Invalid date format. Use YYYY-MM-DD." }, status: :bad_request
-          end
-        end
-
-        # Filter theo khoảng thời gian bắt đầu (trong ngày)
-        if params[:start_time].present? && params[:end_time].present?
-          begin
-            start_time = Time.parse(params[:start_time])
-            end_time = Time.parse(params[:end_time])
-            plans = plans.where(start_time: start_time..end_time)
-          rescue ArgumentError
-            return render json: { error: "Invalid time format. Use HH:MM." }, status: :bad_request
           end
         end
 
@@ -44,6 +45,74 @@ module Api
           current_page: plans.current_page,
           total_pages: plans.total_pages,
           total_count: plans.total_count
+        }, status: :ok
+      end
+
+      # GET /plans/me
+      def me
+        user = current_user
+
+        if user.student?
+          plans = Plan.joins(group: :students)
+                      .where(users: { id: user.id })
+                      .includes(:group, :defense)
+                      .order(date: :asc, start_time: :asc)
+        elsif user.lecturer?
+          plans = Plan.joins(group: :lecturer)
+                      .where(groups: { lecturer_id: user.id })
+                      .includes(:group, :defense)
+                      .order(date: :asc, start_time: :asc)
+
+          # Filter by defense key
+          if params[:key].present?
+            key = params[:key]
+            if key.to_i.to_s == key
+              plans = plans.where(defense_id: key.to_i)
+            else
+              plans = plans.joins(:defense).where(
+                "defenses.name ILIKE ? OR defenses.defense_code ILIKE ?", "%#{key}%", "%#{key}%"
+              )
+            end
+          end
+
+          # Filter by start_time and end_time (ISO8601)
+          if params[:start_time].present? && params[:end_time].present?
+            begin
+              parsed_start = Time.parse(params[:start_time])
+              parsed_end = Time.parse(params[:end_time])
+
+              plans = plans.where(
+                "(plans.date + plans.start_time)::timestamp, (plans.date + plans.end_time)::timestamp OVERLAPS (?, ?)",
+                parsed_start, parsed_end
+              )
+            rescue ArgumentError
+              return render json: { error: "Invalid time format." }, status: :bad_request
+            end
+          elsif params[:date].present?
+            begin
+              date = Date.parse(params[:date])
+              plans = plans.where(date: date)
+            rescue ArgumentError
+              return render json: { error: "Invalid date format. Use YYYY-MM-DD." }, status: :bad_request
+            end
+          end
+
+          # Pagination
+          page = params[:page] || 1
+          per_page = params[:per_page] || 10
+          plans = plans.page(page).per(per_page)
+        else
+          return render json: { error: "Only students and lecturers can access this resource." }, status: :forbidden
+        end
+
+        render json: {
+          plans: plans.as_json(include: {
+            group: { only: [:id, :name] },
+            defense: { only: [:id, :name, :defense_code] }
+          }, only: [:id, :date, :start_time, :end_time]),
+          current_page: plans.respond_to?(:current_page) ? plans.current_page : nil,
+          total_pages: plans.respond_to?(:total_pages) ? plans.total_pages : nil,
+          total_count: plans.respond_to?(:total_count) ? plans.total_count : plans.size
         }, status: :ok
       end
 
@@ -78,8 +147,11 @@ module Api
       # POST /plans
       def create
         plan = Plan.new(plan_params)
+        
         if plan.save
-          plan.group.update(def_status: :approved) if plan.group.present?
+          if plan.group.present?
+            plan.group.update(defense_id: plan.defense_id, def_status: :approved)
+          end
 
           render json: { message: "Plan created successfully.", plan: plan }, status: :created
         else

@@ -1,5 +1,6 @@
 class Defense < ApplicationRecord
   # Associations
+  has_many :plans, dependent: :destroy
   has_many :groups
   has_many :lecturer_defenses, dependent: :destroy
   has_many :lecturer_users, through: :lecturer_defenses, source: :lecturer
