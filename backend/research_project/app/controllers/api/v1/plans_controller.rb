@@ -79,6 +79,8 @@ module Api
       def create
         plan = Plan.new(plan_params)
         if plan.save
+          plan.group.update(def_status: :approved) if plan.group.present?
+
           render json: { message: "Plan created successfully.", plan: plan }, status: :created
         else
           render json: { errors: plan.errors.full_messages }, status: :unprocessable_entity
@@ -122,7 +124,7 @@ module Api
         overlapping_plans = Plan
           .joins(group: :lecturer)
           .where(groups: { lecturer_id: lecturer_id }, date: parsed_date)
-          .where("(plans.start_time, plans.end_time) OVERLAPS (?, ?)", parsed_start, parsed_end)
+          .where("(plans.start_time, plans.end_time) OVERLAPS (?::time, ?::time)", parsed_start.strftime("%H:%M:%S"), parsed_end.strftime("%H:%M:%S"))
 
         if overlapping_plans.exists?
           render json: {
