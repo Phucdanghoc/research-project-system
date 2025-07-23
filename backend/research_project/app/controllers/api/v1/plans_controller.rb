@@ -84,7 +84,7 @@ module Api
         overlapping_plans = Plan
           .joins(group: :lecturer)
           .where(groups: { lecturer_id: lecturer_id }, date: parsed_date)
-          .where("(plans.start_time, plans.end_time) OVERLAPS (?, ?)", parsed_start, parsed_end)
+          .where("(plans.start_time, plans.end_time) OVERLAPS (?::time, ?::time)", parsed_start.strftime("%H:%M:%S"), parsed_end.strftime("%H:%M:%S"))
 
         if overlapping_plans.exists?
           render json: {
