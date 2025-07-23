@@ -62,6 +62,7 @@ Rails.application.routes.draw do
       end
       resources :plans do
         collection do
+          get :me
           get :check_time
         end
       end
@@ -72,7 +73,11 @@ Rails.application.routes.draw do
           get :search
         end
       end
-      resources :lecturer_defenses, only: [:index, :show, :create, :update, :destroy]
+      resources :lecturer_defenses do
+        collection do
+          get :me
+        end
+      end
     end
   end
 
