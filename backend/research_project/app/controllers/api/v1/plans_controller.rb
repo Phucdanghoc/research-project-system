@@ -2,38 +2,55 @@ module Api
   module V1
     class PlansController < ApplicationController
       before_action :authenticate_api_user!
-      before_action :authorize_admin!, only: [:create, :update, :destroy]
+      before_action :authorize_admin!, only: [:create, :update, :check_time, :destroy]
       before_action :set_plan, only: [:show, :update, :destroy]
 
-      # GET /plans
       def index
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
         plans = Plan.includes(:group, :defense)
 
-        # Filter by date or start_time/end_time datetime
-        if params[:start_time].present? && params[:end_time].present?
-          begin
-            parsed_start = Time.parse(params[:start_time])
-            parsed_end = Time.parse(params[:end_time])
-            date = parsed_start.to_date
-
-            plans = plans.where(date: date)
-                        .where("(plans.start_time, plans.end_time) OVERLAPS (?::time, ?::time)",
-                                parsed_start.strftime("%H:%M:%S"), parsed_end.strftime("%H:%M:%S"))
-          rescue ArgumentError
-            return render json: { error: "Invalid start_time or end_time format. Use ISO 8601." }, status: :bad_request
-          end
-        elsif params[:date].present?
+        date = nil
+        if params[:date].present?
           begin
             date = Date.parse(params[:date])
             plans = plans.where(date: date)
-          rescue ArgumentError
+          rescue ArgumentError => e
+            Rails.logger.error "Invalid date: #{params[:date]} | Error: #{e.message}"
             return render json: { error: "Invalid date format. Use YYYY-MM-DD." }, status: :bad_request
           end
         end
 
+        if params[:start_time].present? && date
+          begin
+            start_time_str = "#{params[:date]} #{params[:start_time]}"
+            local_start = Time.zone.parse(start_time_str)
+            utc_start = local_start&.utc&.strftime("%H:%M:%S")
+            if utc_start
+              plans = plans.where("CAST(start_time AS time) >= ?", utc_start)
+            else
+              Rails.logger.error "Parsed start_time is nil from input: #{start_time_str}"
+              return render json: { error: "Invalid start_time format." }, status: :bad_request
+            end
+          rescue ArgumentError => e
+            Rails.logger.error "Invalid start_time: #{params[:start_time]} | Error: #{e.message}"
+            return render json: { error: "Invalid start_time format. Use HH:MM." }, status: :bad_request
+          end
+        end
+
+        if params[:end_time].present? && date
+          begin
+            end_time_str = "#{params[:date]} #{params[:end_time]}"
+            local_end = Time.strptime(end_time_str, "%Y-%m-%d %H:%M").in_time_zone("Asia/Ho_Chi_Minh")
+            utc_end = local_end.utc.strftime("%H:%M:%S")
+
+            plans = plans.where("CAST(end_time AS time) <= ?", utc_end)
+          rescue ArgumentError => e
+            Rails.logger.error "Invalid end_time: #{params[:end_time]} | Error: #{e.message}"
+            return render json: { error: "Invalid end_time format. Use HH:MM." }, status: :bad_request
+          end
+        end
         plans = plans.order(date: :asc, start_time: :asc)
                     .page(page).per(per_page)
 
@@ -48,6 +65,7 @@ module Api
         }, status: :ok
       end
 
+
       # GET /plans/me
       def me
         user = current_user
@@ -56,12 +74,10 @@ module Api
           plans = Plan.joins(group: :students)
                       .where(users: { id: user.id })
                       .includes(:group, :defense)
-                      .order(date: :asc, start_time: :asc)
         elsif user.lecturer?
           plans = Plan.joins(group: :lecturer)
                       .where(groups: { lecturer_id: user.id })
                       .includes(:group, :defense)
-                      .order(date: :asc, start_time: :asc)
 
           # Filter by defense key
           if params[:key].present?
@@ -75,46 +91,61 @@ module Api
             end
           end
 
-          # Filter by start_time and end_time (ISO8601)
-          if params[:start_time].present? && params[:end_time].present?
-            begin
-              parsed_start = Time.parse(params[:start_time])
-              parsed_end = Time.parse(params[:end_time])
-
-              plans = plans.where(
-                "(plans.date + plans.start_time)::timestamp, (plans.date + plans.end_time)::timestamp OVERLAPS (?, ?)",
-                parsed_start, parsed_end
-              )
-            rescue ArgumentError
-              return render json: { error: "Invalid time format." }, status: :bad_request
-            end
-          elsif params[:date].present?
+          # Filter by date
+          date = nil
+          if params[:date].present?
             begin
               date = Date.parse(params[:date])
               plans = plans.where(date: date)
-            rescue ArgumentError
+            rescue ArgumentError => e
+              Rails.logger.error "Invalid date: #{params[:date]} | Error: #{e.message}"
               return render json: { error: "Invalid date format. Use YYYY-MM-DD." }, status: :bad_request
             end
           end
 
-          # Pagination
-          page = params[:page] || 1
-          per_page = params[:per_page] || 10
-          plans = plans.page(page).per(per_page)
+          # Filter by time
+          if params[:start_time].present? && date
+            begin
+              local_start = Time.zone.parse("#{params[:date]} #{params[:start_time]}")
+              utc_start = local_start.utc.strftime("%H:%M:%S")
+              plans = plans.where("CAST(start_time AS time) >= ?", utc_start)
+            rescue ArgumentError => e
+              Rails.logger.error "Invalid start_time: #{params[:start_time]} | Error: #{e.message}"
+              return render json: { error: "Invalid start_time format. Use HH:MM." }, status: :bad_request
+            end
+          end
+
+          if params[:end_time].present? && date
+            begin
+              local_end = Time.zone.parse("#{params[:date]} #{params[:end_time]}")
+              utc_end = local_end.utc.strftime("%H:%M:%S")
+              plans = plans.where("CAST(end_time AS time) <= ?", utc_end)
+            rescue ArgumentError => e
+              Rails.logger.error "Invalid end_time: #{params[:end_time]} | Error: #{e.message}"
+              return render json: { error: "Invalid end_time format. Use HH:MM." }, status: :bad_request
+            end
+          end
         else
           return render json: { error: "Only students and lecturers can access this resource." }, status: :forbidden
         end
+
+        plans = plans.order(date: :asc, start_time: :asc)
+                    .page(params[:page] || 1).per(params[:per_page] || 10)
 
         render json: {
           plans: plans.as_json(include: {
             group: { only: [:id, :name] },
             defense: { only: [:id, :name, :defense_code] }
           }, only: [:id, :date, :start_time, :end_time]),
-          current_page: plans.respond_to?(:current_page) ? plans.current_page : nil,
-          total_pages: plans.respond_to?(:total_pages) ? plans.total_pages : nil,
-          total_count: plans.respond_to?(:total_count) ? plans.total_count : plans.size
+          current_page: plans.current_page,
+          total_pages: plans.total_pages,
+          total_count: plans.total_count
         }, status: :ok
       end
+
+
+
+
 
       # GET /plans/:id
       def show
@@ -177,26 +208,29 @@ module Api
       # GET /plans/check_time
       def check_time
         lecturer_id = params[:lecturer_id]
-        start_time = params[:start_time]
-        end_time = params[:end_time]
-        date = params[:date]
+        date_str = params[:date]
+        start_str = params[:start_time]
+        end_str = params[:end_time]
 
-        if lecturer_id.blank? || start_time.blank? || end_time.blank? || date.blank?
+        if lecturer_id.blank? || start_str.blank? || end_str.blank? || date_str.blank?
           return render json: { error: "lecturer_id, start_time, end_time, and date are required." }, status: :bad_request
         end
 
         begin
-          parsed_start = Time.parse(start_time)
-          parsed_end = Time.parse(end_time)
-          parsed_date = Date.parse(date)
-        rescue ArgumentError
+          date = Date.parse(date_str)
+          local_start = Time.zone.parse("#{date_str} #{start_str}")
+          local_end = Time.zone.parse("#{date_str} #{end_str}")
+          utc_start = local_start.utc.strftime("%H:%M:%S")
+          utc_end = local_end.utc.strftime("%H:%M:%S")
+        rescue ArgumentError => e
+          Rails.logger.error "Invalid input in check_time | Error: #{e.message}"
           return render json: { error: "Invalid time or date format." }, status: :bad_request
         end
 
         overlapping_plans = Plan
           .joins(group: :lecturer)
-          .where(groups: { lecturer_id: lecturer_id }, date: parsed_date)
-          .where("(plans.start_time, plans.end_time) OVERLAPS (?::time, ?::time)", parsed_start.strftime("%H:%M:%S"), parsed_end.strftime("%H:%M:%S"))
+          .where(groups: { lecturer_id: lecturer_id }, date: date)
+          .where("(start_time, end_time) OVERLAPS (?::time, ?::time)", utc_start, utc_end)
 
         if overlapping_plans.exists?
           render json: {
@@ -210,6 +244,8 @@ module Api
           render json: { conflict: false }, status: :ok
         end
       end
+
+
 
       private
 
