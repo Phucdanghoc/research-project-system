@@ -2,38 +2,56 @@ module Api
   module V1
     class LecturerDefensesController < ApplicationController
       before_action :authenticate_api_user!
-      before_action :authorize_admin!, only: [:create, :update, :destroy]
-      before_action :set_lecturer_defense, only: [:show, :update, :destroy]
+      before_action :authorize_lecturer_or_admin!
+      before_action :set_lecturer_defense, only: [:create, :update, :destroy]
 
-      # GET /lecturer_defenses/me
-      def me
-        unless current_user.lecturer?
-          return render json: { error: "Only lecturers can access their defenses." }, status: :forbidden
-        end
-
+      # GET /lecturer_defenses
+      def index
         page = params[:page] || 1
         per_page = params[:per_page] || 10
         key = params[:key]
 
-        lecturer_defenses = LecturerDefense
-                              .includes(:defense)
-                              .where(lecturer_id: current_user.id)
+        defenses = LecturerDefense.includes(:lecturer, :defense, :group)
 
-        if key.present?
-          if key.to_i.to_s == key # key là số nguyên
-            lecturer_defenses = lecturer_defenses.where(defense_id: key.to_i)
-          else
-            lecturer_defenses = lecturer_defenses.joins(:defense).where("defenses.name ILIKE ?", "%#{key}%")
+        # Filter by defense_id
+        defenses = defenses.where(defense_id: params[:defense_id]) if params[:defense_id].present?
+
+        # Filter by date
+        defenses = defenses.where(date: params[:date]) if params[:date].present?
+
+        # Filter by start_time
+        if params[:start_time].present?
+          begin
+            start_time = Time.parse(params[:start_time])
+            defenses = defenses.where(start_time: start_time)
+          rescue ArgumentError
+            return render json: { error: "Invalid start_time format. Use HH:MM" }, status: :bad_request
           end
         end
 
-        paginated = lecturer_defenses.page(page).per(per_page)
+        # Filter by end_time
+        if params[:end_time].present?
+          begin
+            end_time = Time.parse(params[:end_time])
+            defenses = defenses.where(end_time: end_time)
+          rescue ArgumentError
+            return render json: { error: "Invalid end_time format. Use HH:MM" }, status: :bad_request
+          end
+        end
+
+        # Filter by key in defense name
+        if key.present?
+          defenses = defenses.joins(:defense).where("defenses.name ILIKE ?", "%#{key}%")
+        end
+
+        paginated = defenses.order(created_at: :desc).page(page).per(per_page)
 
         render json: {
           lecturer_defenses: paginated.as_json(
             include: {
-              defense: {
-              }
+              lecturer: { only: [:id, :name, :email] },
+              defense: { only: [:id, :name, :defense_code] },
+              group: { only: [:id, :name, :group_code] }
             }
           ),
           current_page: paginated.current_page,
@@ -41,33 +59,59 @@ module Api
           total_count: paginated.total_count
         }, status: :ok
       end
-      # GET /lecturer_defenses
-      def index
-        if params[:defense_id]
-          @lecturer_defenses = LecturerDefense.includes(:lecturer).where(defense_id: params[:defense_id])
-        else
-          @lecturer_defenses = LecturerDefense.includes(:lecturer, :defense).all
-        end
-
-        render json: @lecturer_defenses.as_json(
-          include: { lecturer: { only: [:id, :name, :email] }, defense: { only: [:id, :name, :defense_code] } }
-        )
-      end
-
-      # GET /lecturer_defenses/:id
-      def show
-        render json: @lecturer_defense.as_json(
-          include: { lecturer: { only: [:id, :name, :email] }, defense: { only: [:id, :name, :defense_code] } }
-        )
-      end
 
       # POST /lecturer_defenses
       def create
         @lecturer_defense = LecturerDefense.new(lecturer_defense_params)
+        group = @lecturer_defense.group
+
+        # Prevent assigning defense if group is already linked to another defense
+        if group && group.defense_id.present? && group.defense_id != @lecturer_defense.defense_id
+          return render json: { error: "Group is already linked to a different defense." }, status: :conflict
+        end
+
         if @lecturer_defense.save
-          render json: { message: "Lecturer assigned to defense successfully.", lecturer_defense: @lecturer_defense }, status: :created
+          # Auto-link group to defense if not set
+          if group && group.defense_id.nil?
+            group.update(defense_id: @lecturer_defense.defense_id)
+          end
+
+          render json: {
+            message: "Lecturer assigned to defense successfully.",
+            lecturer_defense: @lecturer_defense
+          }, status: :created
         else
           render json: { errors: @lecturer_defense.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+      
+      # PATCH /lecturer_defenses/update_score_by_group
+      def update_score_by_group
+        unless current_user.lecturer?
+          return render json: { error: "Only lecturers can update their scores." }, status: :forbidden
+        end
+
+        group_id = params[:group_id]
+        point = params[:point]
+        comment = params[:comment]
+
+        if group_id.blank?
+          return render json: { error: "group_id is required" }, status: :bad_request
+        end
+
+        lec_def = LecturerDefense.find_by(lecturer_id: current_user.id, group_id: group_id)
+
+        unless lec_def
+          return render json: { error: "No record found for current lecturer and group" }, status: :not_found
+        end
+
+        if lec_def.update(point: point, comment: comment)
+          render json: {
+            message: "Score updated successfully",
+            lecturer_defense: lec_def.as_json(only: [:id, :group_id, :point, :comment])
+          }, status: :ok
+        else
+          render json: { errors: lec_def.errors.full_messages }, status: :unprocessable_entity
         end
       end
 
@@ -89,17 +133,22 @@ module Api
       private
 
       def set_lecturer_defense
-        @lecturer_defense = LecturerDefense.find(params[:id])
-      rescue ActiveRecord::RecordNotFound
-        render json: { error: "LecturerDefense not found." }, status: :not_found
+        @lecturer_defense = LecturerDefense.find_by(id: params[:id])
+        render json: { error: "LecturerDefense not found." }, status: :not_found unless @lecturer_defense
       end
 
       def lecturer_defense_params
-        params.require(:lecturer_defense).permit(:defense_id, :lecturer_id, :point, :comment)
+        params.require(:lecturer_defense).permit(
+          :lecturer_id, :defense_id, :group_id,
+          :point, :comment,
+          :date, :start_time, :end_time
+        )
       end
 
-      def authorize_admin!
-        render json: { error: "Not authorized" }, status: :forbidden unless current_user.admin?
+      def authorize_lecturer_or_admin!
+        unless current_user.admin? || current_user.lecturer?
+          render json: { error: "Not authorized" }, status: :forbidden
+        end
       end
     end
   end
