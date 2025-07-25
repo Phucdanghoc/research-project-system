@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_16_102733) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_25_032344) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_102733) do
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["group_id", "user_id"], name: "index_group_users_on_group_id_and_user_id", unique: true
     t.index ["group_id"], name: "index_group_users_on_group_id"
     t.index ["user_id"], name: "index_group_users_on_user_id"
   end
@@ -57,16 +58,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_102733) do
     t.index ["lecturer_id"], name: "index_groups_on_lecturer_id"
   end
 
-  create_table "groups_users", force: :cascade do |t|
-    t.bigint "group_id", null: false
-    t.bigint "user_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["group_id", "user_id"], name: "index_groups_users_on_group_id_and_user_id", unique: true
-    t.index ["group_id"], name: "index_groups_users_on_group_id"
-    t.index ["user_id"], name: "index_groups_users_on_user_id"
-  end
-
   create_table "lecturer_defenses", force: :cascade do |t|
     t.bigint "lecturer_id", null: false
     t.bigint "defense_id", null: false
@@ -74,21 +65,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_102733) do
     t.text "comment"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["defense_id"], name: "index_lecturer_defenses_on_defense_id"
-    t.index ["lecturer_id", "defense_id"], name: "index_lecturer_defenses_on_lecturer_id_and_defense_id", unique: true
-    t.index ["lecturer_id"], name: "index_lecturer_defenses_on_lecturer_id"
-  end
-
-  create_table "plans", force: :cascade do |t|
+    t.bigint "group_id"
     t.time "start_time"
     t.time "end_time"
     t.date "date"
-    t.bigint "group_id", null: false
-    t.bigint "defense_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["defense_id"], name: "index_plans_on_defense_id"
-    t.index ["group_id"], name: "index_plans_on_group_id"
+    t.index ["defense_id"], name: "index_lecturer_defenses_on_defense_id"
+    t.index ["group_id"], name: "index_lecturer_defenses_on_group_id"
+    t.index ["lecturer_id", "defense_id"], name: "index_lecturer_defenses_on_lecturer_id_and_defense_id", unique: true
+    t.index ["lecturer_id"], name: "index_lecturer_defenses_on_lecturer_id"
   end
 
   create_table "topics", force: :cascade do |t|
@@ -138,11 +122,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_16_102733) do
   add_foreign_key "groups", "defenses"
   add_foreign_key "groups", "users", column: "lecturer_id"
   add_foreign_key "groups", "users", column: "student_lead_id"
-  add_foreign_key "groups_users", "groups"
-  add_foreign_key "groups_users", "users"
   add_foreign_key "lecturer_defenses", "defenses"
+  add_foreign_key "lecturer_defenses", "groups"
   add_foreign_key "lecturer_defenses", "users", column: "lecturer_id"
-  add_foreign_key "plans", "defenses"
-  add_foreign_key "plans", "groups"
   add_foreign_key "topics", "users", column: "lecturer_id"
 end

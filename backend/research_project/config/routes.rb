@@ -60,24 +60,17 @@ Rails.application.routes.draw do
           get :me
         end
       end
-      get 'plans/me', to: 'plans#me'      
-      get 'plans/check_time', to: 'plans#check_time'
-      resources :plans do
-        collection do
-          get :me
-          get :check_time
-        end
-      end
-      get 'defenses/me', to: 'defenses#my_defense'
-      get 'defenses/check-time', to: 'defenses#check_time'
       resources :defenses do
         collection do
           get :search
+          get :check_time_conflict
+          get :my_schedule
+          get :me
         end
       end
       resources :lecturer_defenses do
         collection do
-          get :me
+          patch :update_score_by_group
         end
       end
     end
