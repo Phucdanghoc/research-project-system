@@ -5,7 +5,6 @@ module Api
       before_action :set_defense, only: [:show, :update, :destroy]
       before_action :authorize_admin!, only: [:create, :update, :destroy]
 
-      # GET /defenses
       def index
         page = params[:page] || 1
         per_page = params[:per_page] || 10
@@ -20,7 +19,7 @@ module Api
 
         render json: {
           defenses: paginated.as_json(include: {
-            groups: { only: [:id, :name, :group_code] }
+            groups: { }
           }),
           current_page: paginated.current_page,
           total_pages: paginated.total_pages,
@@ -28,7 +27,6 @@ module Api
         }, status: :ok
       end
 
-      # GET /defenses/:id
       def show
         render json: @defense.as_json(include: {
           groups: { only: [:id, :name, :group_code] },
@@ -42,7 +40,6 @@ module Api
         })
       end
 
-      # ✅ GET /defenses/me
       def me
         user = current_user
 
@@ -91,11 +88,6 @@ module Api
         rescue ArgumentError
           return render json: { error: "Invalid time or date format. Use YYYY-MM-DD and HH:MM" }, status: :bad_request
         end
-
-        unless parsed_start.min == 0 && parsed_start.sec == 0 && parsed_end.min == 0 && parsed_end.sec == 0
-          return render json: { error: "Start and end times must be on the hour (e.g., 09:00)" }, status: :unprocessable_entity
-        end
-
         conflicts = Defense.where(date: parsed_date)
           .where.not("start_time >= ? OR end_time <= ?", parsed_end, parsed_start)
 
@@ -118,7 +110,9 @@ module Api
           if params[:defense][:group_ids].present?
             params[:defense][:group_ids].each do |gid|
               group = Group.find_by(id: gid)
-              group.update(defense_id: @defense.id) if group
+              if group
+                group.update(defense_id: @defense.id, status: :accepted)  # 👈 cập nhật thêm status accepted
+              end
             end
           end
 
