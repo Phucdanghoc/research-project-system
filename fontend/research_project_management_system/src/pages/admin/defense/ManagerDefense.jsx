@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../../store';
 import { useSelector } from 'react-redux';
-import { fetchDefensesAsync, searchDefensesAsync, deleteDefenseAsync, addDefenseAsync, updateDefenseAsync } from '../../../store/slices/defencesSlice';
+import { fetchDefensesAsync, searchDefensesAsync, deleteDefenseAsync, addDefenseAsync, updateDefenseAsync } from '../../../store/slices/defensesSlice';
 import FilterBar from '../../components/students/FilterBar';
 import TableView from '../../components/defenses/DefenseTableView';
-import AddDefenseModal from '../../components/defenses/AddEditDefenses';
+import AddEditDefenseModal from '../../components/defenses/AddEditDefenses';
 import ViewDefenseModal from '../../components/defenses/ViewDefenseModal';
 import Pagination from '../../components/students/Pagination';
 import { toast } from 'react-toastify';
@@ -54,6 +54,8 @@ const DefenseManager = () => {
   };
 
   const handleEditDefense = (defense) => {
+    console.log(`Editing defense:`, defense);
+    
     setSelectedDefense(defense);
     setIsEdit(true);
     setIsAddEditModalOpen(true);
@@ -116,6 +118,7 @@ const DefenseManager = () => {
             onViewDefense={handleViewDefense}
             onEditDefense={handleEditDefense}
             onDeleteDefense={showModalDelete}
+            onDefenseStatusChange={handleEditDefense}
             isAdmin={true}
           />
           <Pagination
@@ -127,11 +130,12 @@ const DefenseManager = () => {
         </>
       )}
       {isAddEditModalOpen && (
-        <AddDefenseModal
+        <AddEditDefenseModal
           isOpen={isAddEditModalOpen}
           onClose={() => setIsAddEditModalOpen(false)}
           onSubmit={handleSubmitDefense}
-          defense={selectedDefense}
+          defense={selectedDefense? selectedDefense : null}
+
           isEdit={isEdit}
         />
       )}
@@ -150,6 +154,7 @@ const DefenseManager = () => {
           itemName={selectedDefense?.name || ''}
         />
       )}
+
     </div>
   );
 };

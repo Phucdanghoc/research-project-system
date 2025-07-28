@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FaTimes, FaUserCircle, FaUniversity, FaClock } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { getDefenseByIdAsync } from '../../../store/slices/defencesSlice';
+import { getDefenseByIdAsync } from '../../../store/slices/defensesSlice';
 import { TimeService } from '../../../utils/time';
 import { FaCheckCircle, FaTimesCircle, FaRegCircle } from 'react-icons/fa';
 import { useAppDispatch } from '../../../store';

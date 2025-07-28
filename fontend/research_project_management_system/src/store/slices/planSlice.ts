@@ -11,13 +11,17 @@ interface PlanState {
   current_page: number;
   total_pages: number;
   total_count: number;
+  check_time: boolean;
   error: string | null;
 }
 
 interface PaginationParams {
   page?: number;
   per_page?: number;
+  start_time?: string;
+  end_time?: string;
 }
+
 
 interface SearchParams extends PaginationParams {
   keyword?: string;
@@ -73,8 +77,8 @@ export const getPlanByIdAsync = createPlanThunk(
   (id: number) => api.get(`/${id}`)
 );
 
-export const addPlanAsync = createPlanThunk(
-  'plans/addPlanAsync',
+export const createPlanAsync = createPlanThunk(
+  'plans/createPlanAsync',
   (plan: Omit<Plan, 'id'>) => api.post('', { plan })
 );
 
@@ -82,6 +86,37 @@ export const updatePlanAsync = createPlanThunk(
   'plans/updatePlanAsync',
   (plan: Partial<Plan> & { id: number }) => api.patch(`/${plan.id}`, { plan })
 );
+export const fetchPlansByMeAsync = createPlanThunk(
+  'plans/fetchPlansByMeAsync',
+  (params: PaginationParams) => api.get('/me', { params })
+);
+
+export const checkPlanTimeAsync = createAsyncThunk(
+  'defense/checkTime',
+  async ({ lecturerIds, startTime, endTime , date }: {
+    lecturerIds: number[];
+    startTime: string;
+    endTime: string;
+    date: string;
+  }, { rejectWithValue }) => {
+    try {
+      for (const lecturerId of lecturerIds) {
+        const response = await api.get('/check_time', {
+          params: { lecturer_id: lecturerId, start_time: startTime, end_time: endTime , date },
+        });
+        if (!response.data) {
+          return false; // Có người không rảnh
+        }
+      }
+      return true; 
+    } catch (error: any) {
+      console.log(error);
+      
+      return rejectWithValue(error?.response?.data?.message || 'Lỗi kiểm tra thời gian giảng viên');
+    }
+  }
+);
+
 
 export const deletePlanAsync = createPlanThunk(
   'plans/deletePlanAsync',
@@ -95,6 +130,7 @@ const planSlice = createSlice({
     plan: null,
     loading: false,
     current_page: 1,
+    check_time: false,
     total_pages: 1,
     total_count: 0,
     error: null,
@@ -129,6 +165,7 @@ const planSlice = createSlice({
     [
       fetchPlansAsync,
       searchPlansAsync,
+      fetchPlansByMeAsync,
     ].forEach((thunk) => {
       builder
         .addCase(thunk.pending, handlePending)
@@ -137,11 +174,12 @@ const planSlice = createSlice({
     });
 
     builder
-      .addCase(addPlanAsync.fulfilled, (state, action) => {
+      .addCase(createPlanAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.plans.push(action.payload.plan);
         state.error = null;
       })
+      .addCase(createPlanAsync.rejected, handleRejected)
       .addCase(updatePlanAsync.fulfilled, (state, action) => {
         state.loading = false;
         const updatedPlan = action.payload.plan;
@@ -159,7 +197,13 @@ const planSlice = createSlice({
         state.plan = action.payload;
         state.loading = false;
         state.error = null;
-      });
+      })
+      .addCase(checkPlanTimeAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        state.check_time = action.payload as boolean;
+        state.error = null;
+      })
+      .addCase(checkPlanTimeAsync.rejected, handleRejected);
   },
 });
 

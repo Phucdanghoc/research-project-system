@@ -48,7 +48,7 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
   });
 
   const debouncedSearch = useCallback(
-    debounce((query) => dispatch(getStudentInFacultyAsync({ page: 1, per_page: 100, search: query })), 300),
+    debounce((query) => dispatch(getStudentInFacultyAsync({ page: 1, per_page: 3, search: query })), 300),
     [dispatch]
   );
 

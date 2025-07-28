@@ -143,7 +143,6 @@ const ViewGroupModal = ({ isOpen, onClose, groupId }) => {
                         {statusDefenseConfig[group.def_status]?.label || 'Không xác định'}
                       </span>
                     </p>
-
                     <p className="text-gray-600">
                       <span className="font-medium text-gray-800">Ngày tạo:</span>{' '}
                       {TimeService.convertDateStringToDDMMYYYY(group.created_at)}
@@ -152,7 +151,14 @@ const ViewGroupModal = ({ isOpen, onClose, groupId }) => {
                       <span className="font-medium text-gray-800">Ngày cập nhật:</span>{' '}
                       {TimeService.convertDateStringToDDMMYYYY(group.updated_at)}
                     </p>
+                    {group.description && (
+                      <div className="text-gray-600 col-span-1 sm:col-span-2">
+                        <span className="font-medium text-gray-800 block mb-1">Mô tả:</span>
+                        <div dangerouslySetInnerHTML={{ __html: group.description }} />
+                      </div>
+                    )}
                   </div>
+
                 )}
 
                 {activeTab === 'topicInfo' && topic && (
@@ -171,10 +177,10 @@ const ViewGroupModal = ({ isOpen, onClose, groupId }) => {
                       <span className="font-medium text-gray-800">Trạng thái:</span>{' '}
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${topic.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : topic.status === 'open'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : topic.status === 'open'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
                           }`}
                       >
                         {topic.status === 'pending'

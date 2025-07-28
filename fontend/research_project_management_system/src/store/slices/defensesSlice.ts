@@ -12,7 +12,7 @@ interface DefenseState {
   total_pages: number;
   total_count: number;
   error: string | null;
-  timeCheck: { available: boolean } | null;
+  timeCheck: { conflict: boolean; details?: any[] } | null;
 }
 
 interface PaginationParams {
@@ -21,14 +21,13 @@ interface PaginationParams {
 }
 
 interface SearchParams extends PaginationParams {
-  keyword?: string;
-  defense_code?: string;
-  start_time?: string;
-  end_time?: string;
+  key?: string;
+  status?: number;
 }
 
 interface TimeCheckParams {
   lecturer_id: number;
+  date: string;
   start_time: string;
   end_time: string;
 }
@@ -72,17 +71,17 @@ export const fetchDefensesAsync = createDefenseThunk(
 
 export const searchDefensesAsync = createDefenseThunk(
   'defenses/searchDefensesAsync',
-  (params: SearchParams) => api.get('/search', { params })
+  (params: SearchParams) => api.get('', { params })
 );
 
 export const getMyDefensesAsync = createDefenseThunk(
   'defenses/getMyDefensesAsync',
-  () => api.get('/my_defense')
+  (params: PaginationParams) => api.get('/me', { params })
 );
 
 export const checkDefenseTimeAsync = createDefenseThunk(
   'defenses/checkDefenseTimeAsync',
-  (params: TimeCheckParams) => api.get('/check_time', { params })
+  (params: TimeCheckParams) => api.get('/check_time_conflict', { params })
 );
 
 export const getDefenseByIdAsync = createDefenseThunk(
@@ -97,7 +96,7 @@ export const addDefenseAsync = createDefenseThunk(
 
 export const updateDefenseAsync = createDefenseThunk(
   'defenses/updateDefenseAsync',
-  (defense: Partial<Defense> & { id: number }) => api.patch(`/${defense.id}`, { defense })
+  (defense: Partial<Defense> & { id: number }) => api.put(`/${defense.id}`, { defense })
 );
 
 export const deleteDefenseAsync = createDefenseThunk(
@@ -141,9 +140,9 @@ const defenseSlice = createSlice({
     const handleListFulfilled = (state: DefenseState, action: PayloadAction<any>) => {
       state.loading = false;
       state.defenses = action.payload.defenses || [];
-      state.current_page = action.payload.current_page || 1;
-      state.total_pages = action.payload.total_pages || 1;
-      state.total_count = action.payload.total_count || 0;
+      state.current_page = action.payload.meta?.page || 1;
+      state.total_pages = action.payload.meta?.total_pages || 1;
+      state.total_count = action.payload.meta?.total || 0;
       state.error = null;
     };
 
@@ -161,12 +160,12 @@ const defenseSlice = createSlice({
     builder
       .addCase(addDefenseAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.defenses.push(action.payload.defense);
+        state.defenses.push(action.payload);
         state.error = null;
       })
       .addCase(updateDefenseAsync.fulfilled, (state, action) => {
         state.loading = false;
-        const updatedDefense = action.payload.defense;
+        const updatedDefense = action.payload;
         state.defenses = state.defenses.map((defense) =>
           defense.id === updatedDefense.id ? updatedDefense : defense
         );
@@ -174,7 +173,7 @@ const defenseSlice = createSlice({
       })
       .addCase(deleteDefenseAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.defenses = state.defenses.filter((defense) => defense.id !== action.payload);
+        state.defenses = state.defenses.filter((defense) => defense.id !== action.meta.arg);
         state.error = null;
       })
       .addCase(getDefenseByIdAsync.fulfilled, (state, action) => {

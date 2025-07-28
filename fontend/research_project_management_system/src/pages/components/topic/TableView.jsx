@@ -69,7 +69,7 @@ const TableView = ({
                 </td>
                 <td className="py-2 px-4 border-b">
                   <div className="relative inline-block" ref={(el) => (dropdownRefs.current[topic.id] = el)}>
-                    {isAdmin ? (
+                    {!isAdmin ? (
                       <>
                         <button
                           onClick={() => setOpenDropdownId(openDropdownId === topic.id ? null : topic.id)}

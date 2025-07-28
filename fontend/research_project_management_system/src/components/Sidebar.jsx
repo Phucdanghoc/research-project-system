@@ -14,6 +14,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { link: '/admin/manage-groups', name: 'Danh sách nhóm', icon: FaLayerGroup },
             { link: '/admin/manage-topics', name: 'Danh sách đề tài', icon: FaBook },
             { link: '/admin/manage-defenses', name: 'Danh sách hội đồng', icon: FaUsers },
+            // { link : '/admin/manage-plans', name: 'Danh sách buổi bảo về', icon: FaObjectGroup },
         ],
   
         lecturer: [
@@ -21,6 +22,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             // { link: '/lecturer/register-defense', name: 'Đăng ký bảo vệ', icon: FaBook },
             { link: '/lecturer/manage-groups', name: 'Danh sách nhóm', icon: FaLayerGroup },
             { link: '/lecturer/manage-students', name: 'Xem sinh viên', icon: FaUsers },
+            // { link: '/lecturer/manage-plans', name: 'Danh sách buổi bảo vệ', icon: FaObjectGroup },
             { link: '/lecturer/profile', name: 'Tài khoản', icon: FaUserAlt },
         ],
         student: [

@@ -104,93 +104,114 @@ const ProfilePage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-gray-50 p-4 sm:p-6">
-      <div className="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-2xl flex flex-col items-center transform transition-all duration-300 hover:shadow-3xl">
-        <div className="relative w-32 h-32 mb-6">
-          <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-            {getInitials(profile.name)}
+      <div className="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 w-full max-w-4xl flex flex-col transform transition-all duration-300 hover:shadow-3xl">
+        {/* Header Section */}
+        <div className="flex flex-col items-center mb-6 sm:mb-8">
+          <div className="relative w-24 h-24 sm:w-32 sm:h-32 mb-4">
+            <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow-lg">
+              {getInitials(profile.name)}
+            </div>
+            <span className={`absolute bottom-0 right-0 px-2 sm:px-3 py-1 text-xs font-semibold text-white rounded-full ${isLecturer ? 'bg-green-500' : 'bg-blue-500'}`}>
+              {isLecturer ? 'Giảng viên' : 'Sinh viên'}
+            </span>
           </div>
-          <span className={`absolute bottom-0 right-0 px-3 py-1 text-xs font-semibold text-white rounded-full ${isLecturer ? 'bg-green-500' : 'bg-blue-500'}`}>
-            {isLecturer ? 'Giảng viên' : 'Sinh viên'}
-          </span>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{profile.name}</h2>
+          <p className="text-gray-500 text-sm">{profile.email}</p>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">{profile.name}</h2>
-        <p className="text-gray-500 text-sm mb-6">{profile.email}</p>
-        <div className="w-full space-y-4">
-          <h3 className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2">Thông tin cá nhân</h3>
-          <div className="grid grid-cols-1 gap-y-3">
-            <Info label="Email" value={profile.email} />
-            <Info label="Số điện thoại" value={profile.phone || 'Không có'} />
-            <Info
-              label="Giới tính"
-              value={profile.gender === 'Female' ? 'Nữ' : profile.gender === 'Male' ? 'Nam' : 'Không có'}
-            />
-            <Info label="Ngày sinh" value={formatDate(profile.birth)} />
-            {!isLecturer && <Info label="Mã sinh viên" value={profile.student_code || 'Không có'} />}
-            {!isLecturer && <Info label="Lớp" value={profile.class_name || 'Không có'} />}
-            <Info label="Khoa" value={FacultyMajors[profile.faculty]?.name || 'Không có'} />
-            {!isLecturer && (
+        {/* Two-Column Section with Vertical Divider */}
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+          {/* Left Section: Personal Information */}
+          <div className="flex-1 sm:border-r sm:border-gray-200 pr-0 sm:pr-8">
+            <h3 className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">Thông tin cá nhân</h3>
+            <div className="space-y-3">
+              <Info label="Email" value={profile.email} />
+              <Info label="Số điện thoại" value={profile.phone || 'Không có'} />
               <Info
-                label="Chuyên ngành"
-                value={
-                  FacultyMajors[profile.faculty]?.majors?.find((m) => m.code === profile.major)?.name ||
-                  'Không có'
-                }
+                label="Giới tính"
+                value={profile.gender === 'Female' ? 'Nữ' : profile.gender === 'Male' ? 'Nam' : 'Không có'}
               />
-            )}
-            {isLecturer && <Info label="Mã giảng viên" value={profile.lecturer_code || 'Không có'} />}
-            {!isLecturer && (
-              <Info
-                label="Nhóm"
-                value={
-                  profile.groups?.length > 0 ? (
-                    <div className="flex gap-2 flex-wrap">
-                      {profile.groups.map((group, index) => (
-                        <div
-                          key={index}
-                          className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold"
-                          title={group.name}
-                        >
-                          {group.name.charAt(0)}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-red-500 text-white text-xs font-medium">
-                      Chưa có
-                    </span>
-                  )
-                }
-
-              />
-            )}
+              <Info label="Ngày sinh" value={formatDate(profile.birth)} />
+            </div>
           </div>
-          {isLecturer && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">Nhóm đăng ký ({profile.lecture_groups?.length || 0})</h3>
-              {profile.lecture_groups?.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
-                  {profile.lecture_groups.map((group) => (
-                    <div
-                      key={group.id}
-                      className={`w-10 h-10 rounded-full ${getRandomColor()} flex items-center justify-center text-white text-sm font-bold shadow-md hover:scale-105 transition-transform`}
-                      title={group.name}
-                    >
-                      {getInitials(group.name)}
-                    </div>
-                  ))}
-                </div>
+
+          {/* Right Section: Role-Specific Information */}
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-2 mb-4">
+              Thông tin {isLecturer ? 'giảng viên' : 'sinh viên'}
+            </h3>
+            <div className="space-y-3">
+              {isLecturer ? (
+                <>
+                  <Info label="Mã giảng viên" value={profile.lecturer_code || 'Không có'} />
+                  <Info label="Khoa" value={FacultyMajors[profile.faculty]?.name || 'Không có'} />
+                  <Info
+                    label="Nhóm đăng ký"
+                    value={
+                      profile.lecture_groups?.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
+                          {profile.lecture_groups.map((group) => (
+                            <div
+                              key={group.id}
+                              className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${getRandomColor()} flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-md hover:scale-105 transition-transform`}
+                              title={group.name}
+                            >
+                              {getInitials(group.name)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full bg-red-500 text-white text-xs sm:text-sm font-medium">
+                          Chưa có
+                        </span>
+                      )
+                    }
+                  />
+                </>
               ) : (
-                <p className="text-gray-500 text-sm">Chưa có nhóm nào</p>
+                <>
+                  <Info label="Mã sinh viên" value={profile.student_code || 'Không có'} />
+                  <Info label="Lớp" value={profile.class_name || 'Không có'} />
+                  <Info label="Khoa" value={FacultyMajors[profile.faculty]?.name || 'Không có'} />
+                  <Info
+                    label="Chuyên ngành"
+                    value={
+                      FacultyMajors[profile.faculty]?.majors?.find((m) => m.code === profile.major)?.name ||
+                      'Không có'
+                    }
+                  />
+                  <Info
+                    label="Nhóm"
+                    value={
+                      profile.groups?.length > 0 ? (
+                        <div className="flex gap-2 flex-wrap">
+                          {profile.groups.map((group, index) => (
+                            <div
+                              key={index}
+                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs sm:text-sm font-semibold"
+                              title={group.name}
+                            >
+                              {group.name.charAt(0)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full bg-red-500 text-white text-xs sm:text-sm font-medium">
+                          Chưa có
+                        </span>
+                      )
+                    }
+                  />
+                </>
               )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Action Button */}
         <button
           onClick={handleOpenModal}
-          className="mt-8 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium shadow-md hover:shadow-lg"
+          className="mt-6 sm:mt-8 bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition font-medium shadow-md hover:shadow-lg self-center"
         >
           Đổi mật khẩu
         </button>
@@ -199,15 +220,15 @@ const ProfilePage = () => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative transform transition-all duration-300 scale-100">
+          <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-md sm:max-w-lg relative transform transition-all duration-300 scale-100">
             <button
               onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl font-bold"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-lg sm:text-xl font-bold"
               aria-label="Đóng"
             >
               ×
             </button>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Đổi mật khẩu</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">Đổi mật khẩu</h2>
             <div className="flex items-center gap-3 mb-6">
               <Step active>1</Step>
               <span className="text-gray-400">→</span>
@@ -222,7 +243,7 @@ const ProfilePage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   required
                   autoFocus
                 />
@@ -233,7 +254,7 @@ const ProfilePage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   required
                 />
               </div>
@@ -243,7 +264,7 @@ const ProfilePage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   required
                 />
               </div>
@@ -264,14 +285,14 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+                  className="px-4 sm:px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:bg-blue-400"
+                  className="px-4 sm:px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium disabled:bg-blue-400"
                 >
                   {loading ? 'Đang xử lý...' : 'Lưu'}
                 </button>
@@ -287,9 +308,9 @@ const ProfilePage = () => {
 // Info row component
 function Info({ label, value }) {
   return (
-    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-2 border-b border-gray-100">
       <span className="text-sm font-medium text-gray-700">{label}</span>
-      <span className="text-sm text-gray-800">{value}</span>
+      <span className="text-sm text-gray-800 mt-1 sm:mt-0">{value}</span>
     </div>
   );
 }
@@ -298,7 +319,7 @@ function Info({ label, value }) {
 function Step({ active, children }) {
   return (
     <span
-      className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold ${active ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+      className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-sm font-bold ${active ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
         } transition`}
     >
       {children}

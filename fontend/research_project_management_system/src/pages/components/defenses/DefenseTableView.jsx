@@ -1,37 +1,21 @@
 import { FaEye, FaEdit, FaTrash, FaChevronDown } from 'react-icons/fa';
-import { TimeService } from '../../../utils/time';
-import { FaCheckCircle, FaTimesCircle, FaClock, FaRegCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaClock } from 'react-icons/fa';
 import { useRef, useState } from 'react';
 
 const statusDefenseConfig = {
-  not_defended: {
-    icon: <FaRegCircle className="text-gray-500 mr-1" />,
-    label: 'Chưa bảo vệ',
-    border: 'border-gray-500',
-  },
-  waiting_defense: {
-    icon: <FaClock className="text-yellow-600 mr-1" />,
-    label: 'Đăng kí bảo vệ',
-    border: 'border-yellow-600',
-  },
   waiting: {
     icon: <FaClock className="text-yellow-600 mr-1" />,
-    label: 'Đăng kí bảo vệ',
+    label: 'Chưa hoạt động',
     border: 'border-yellow-600',
   },
-  approved: {
+  done: {
     icon: <FaCheckCircle className="text-green-600 mr-1" />,
-    label: 'Đã duyệt',
+    label: 'Đang hoạt động',
     border: 'border-green-600',
-  },
-  rejected: {
-    icon: <FaTimesCircle className="text-red-600 mr-1" />,
-    label: 'Không duyệt',
-    border: 'border-red-600',
   },
 };
 
-const defenseStatuses = ['not_defended', 'waiting_defense',  'approved', 'rejected'];
+const defenseStatuses = ['waiting', 'done'];
 
 const DefenseTableView = ({ defenses, onViewDefense, onEditDefense, onDeleteDefense, onDefenseStatusChange, isAdmin = false }) => {
   const [openDropdownDefenseId, setOpenDropdownDefenseId] = useState(null);
@@ -42,7 +26,14 @@ const DefenseTableView = ({ defenses, onViewDefense, onEditDefense, onDeleteDefe
     setOpenDropdownDefenseId(null);
   };
 
-
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
 
   return (
     <div>
@@ -51,7 +42,7 @@ const DefenseTableView = ({ defenses, onViewDefense, onEditDefense, onDeleteDefe
           <tr className="bg-blue-400 text-white">
             <th className="py-2 px-4">Mã buổi bảo vệ</th>
             <th className="py-2 px-4">Tên buổi bảo vệ</th>
-
+            <th className="py-2 px-4">Ngày tạo</th>
             <th className="py-2 px-4">Trạng thái</th>
             <th className="py-2 px-4">Hành động</th>
           </tr>
@@ -62,6 +53,7 @@ const DefenseTableView = ({ defenses, onViewDefense, onEditDefense, onDeleteDefe
               <tr key={defense.id} className="hover:bg-blue-100">
                 <td className="py-2 px-4 border-b">{defense.defense_code || '-'}</td>
                 <td className="py-2 px-4 border-b font-bold">{defense.name}</td>
+                <td className="py-2 px-4 border-b">{formatDate(defense.created_at) || '-'}</td>
                 <td className="py-2 px-4 border-b">
                   <div className="relative inline-block" ref={(el) => (dropdownRefs.current[defense.id] = el)}>
                     {isAdmin ? (

@@ -23,6 +23,9 @@ import ProtectedStudent from './ProtectedStudent';
 import StudentTopic from '../pages/student/topic/TopicStudent';
 import ManagerGroup from '../pages/admin/group/ManagerGroup';
 import DefenseManager from '../pages/admin/defense/ManagerDefense';
+import PlanManager from '../pages/admin/plan/ManagerPlan';
+import CalendarViewPlan from '../pages/components/plans/CalendarViewPlan';
+import LecturerPlansPage from '../pages/lecturer/plan/LecturerPlan';
 
 const router = createBrowserRouter([
   {
@@ -54,8 +57,11 @@ const router = createBrowserRouter([
       { path: 'manage-lecturers', element: <ManagerLecturers /> },
       { path: 'manage-topics', element: <ManageTopics /> },
       { path: 'manage-groups', element: <ManagerGroup /> },
+      { path: 'manage-plans', element: <PlanManager /> },
       { path: 'manage-defenses', element: <DefenseManager /> },
       { path: 'setup-areas', element: <ManagerStudents /> },
+      { path: 'test', element: <CalendarViewPlan /> },
+
     ],
   },
   {
@@ -71,8 +77,8 @@ const router = createBrowserRouter([
       { path: 'manage-topics', element: <LecturerTopics /> },
       { path: 'manage-students', element: <LecturerStudent /> },
       { path: 'manage-groups', element: <LecturerGroup /> },
+      { path: 'manage-plans', element: <LecturerPlansPage /> },
       { path: 'profile', element: <ProfilePage /> },
-      { path: 'test', element: <Test /> },
     ],
   },
   {

@@ -156,11 +156,11 @@ const LecturerTopic = () => {
   }, []);
 
   const handleSubmitForApproval = useCallback(
-    async (topicId) => {
+    async (topicId , status) => {
       const topic = topics.find((t) => t.id === topicId);
       if (topic) {
         try {
-          await dispatch(updateTopicAsync({ ...topic, status: 'pending' })).unwrap();
+          await dispatch(updateTopicAsync({ ...topic, status: status })).unwrap();
           toast.success('Gửi duyệt đề tài thành công!');
           dispatch(getTopicByMeAsync({ page: currentPage, per_page: TOPICS_PER_PAGE }));
         } catch (error) {

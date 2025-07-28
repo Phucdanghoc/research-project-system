@@ -6,7 +6,9 @@ import topicReducer from './slices/topicSlice';
 import lectureReducer from './slices/lecturerSlice';
 import groupReducer from './slices/groupSlice';
 import userReducer from './slices/userSlice';
-import defenseReducer from './slices/defencesSlice';
+import defenseReducer from './slices/defensesSlice';
+import planReducer from './slices/planSlice';
+import lectureDef from './slices/lecturerDefenseSlice';
 const store = configureStore({
     reducer: {
         auth: authReducer,
@@ -16,6 +18,8 @@ const store = configureStore({
         groups : groupReducer,
         users : userReducer,
         defenses: defenseReducer,
+        plans : planReducer,
+        lecturerDefenses: lectureDef,
     },
 });
 

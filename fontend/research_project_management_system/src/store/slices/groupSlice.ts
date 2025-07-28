@@ -106,6 +106,15 @@ export const getGroupAsync = createGroupThunk<GroupDetail, number>(
     'groups/getGroupAsync',
     (id) => api.get(`/groups/${id}`)
 );
+export const patchGroupAsync = createGroupThunk<{ group: Group }, { id: number; def_status: string }>(
+    'groups/patchGroupAsync',
+    ({ id, def_status }) =>
+        api.patch(`/groups/${id}`, {
+            group: {
+                def_status: def_status,
+            },
+        })
+);
 
 export const fetchGroupByMeAsync = createGroupThunk<
     { groups: Group[]; current_page: number; total_pages: number },
@@ -234,6 +243,15 @@ const groupSlice = createSlice({
                 state.error = null;
             })
             .addCase(getGroupAsync.rejected, handleRejected);
+        builder.addCase(patchGroupAsync.pending, handlePending)
+            .addCase(patchGroupAsync.fulfilled, (state, action: PayloadAction<{ group: Group }>) => {
+                state.loading = false;
+                state.groups = state.groups.map((group) =>
+                    group.id === action.payload.group.id ? action.payload.group : group
+                );
+                state.error = null;
+            })
+            .addCase(patchGroupAsync.rejected, handleRejected);
     },
 });
 

@@ -20,7 +20,7 @@ const FilterBar = ({ onFilterChange }) => {
           type="text"
           value={searchTerm}
           onChange={handleInputChange}
-          placeholder="Nhập tên hoặc mã sinh viên"
+          placeholder="Nhập từ khóa tìm kiếm..."
           className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 bg-gray-50 text-gray-800"
         />
       </div>
