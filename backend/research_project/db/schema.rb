@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_25_032344) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_25_095948) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,6 +20,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_25_032344) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "defense_code"
+    t.time "start_time"
+    t.time "end_time"
+    t.date "date"
     t.index ["defense_code"], name: "index_defenses_on_defense_code", unique: true
   end
 
@@ -66,9 +69,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_25_032344) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "group_id"
-    t.time "start_time"
-    t.time "end_time"
-    t.date "date"
     t.index ["defense_id"], name: "index_lecturer_defenses_on_defense_id"
     t.index ["group_id"], name: "index_lecturer_defenses_on_group_id"
     t.index ["lecturer_id", "defense_id"], name: "index_lecturer_defenses_on_lecturer_id_and_defense_id", unique: true

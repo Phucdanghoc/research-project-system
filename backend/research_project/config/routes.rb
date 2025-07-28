@@ -64,7 +64,6 @@ Rails.application.routes.draw do
         collection do
           get :search
           get :check_time_conflict
-          get :my_schedule
           get :me
         end
       end
