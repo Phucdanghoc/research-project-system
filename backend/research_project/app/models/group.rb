@@ -11,7 +11,7 @@ class Group < ApplicationRecord
   # Group memberships (students)
   has_many :group_users, dependent: :destroy
   has_many :students, through: :group_users, source: :user
-  
+  has_many :lecturer_defenses, dependent: :destroy
   # Group-topic relationships
   has_many :group_topics, dependent: :destroy
   has_many :topics, through: :group_topics
