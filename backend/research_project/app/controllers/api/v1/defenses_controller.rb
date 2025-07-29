@@ -111,7 +111,8 @@ module Api
             params[:defense][:group_ids].each do |gid|
               group = Group.find_by(id: gid)
               if group
-                group.update(defense_id: @defense.id, status: :accepted)  # 👈 cập nhật thêm status accepted
+                group.update(defense_id: @defense.id, status: :accepted)
+                group.update(defense_id: @defense.id, def_status: :approved)  
               end
             end
           end
