@@ -325,7 +325,7 @@ export const GroupStudent = () => {
             >
               <FaUsers className="mr-2" /> Sinh viên ({groupStudents.length})
             </button>
-            {isLeader && (
+            {isLeader && group.defense_id === null && (
               <button
                 onClick={() => setActiveTab('inviteMembers')}
                 className={`px-4 py-2 text-sm font-medium flex items-center ${
@@ -382,7 +382,7 @@ export const GroupStudent = () => {
                             className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
                               group.status === 'pending'
                                 ? 'bg-yellow-100 text-yellow-700'
-                                : group.status === 'approved'
+                                : group.status === 'accepted'
                                 ? 'bg-green-100 text-green-700'
                                 : group.status === 'denied'
                                 ? 'bg-red-100 text-red-700'
@@ -391,7 +391,7 @@ export const GroupStudent = () => {
                           >
                             {group.status === 'pending'
                               ? 'Đang chờ'
-                              : group.status === 'approved'
+                              : group.status === 'accepted'
                               ? 'Đã duyệt'
                               : group.status === 'denied'
                               ? 'Không duyệt'
@@ -584,7 +584,7 @@ export const GroupStudent = () => {
                 </div>
               )}
 
-              {activeTab === 'inviteMembers' && isLeader && (
+              {activeTab === 'inviteMembers' && isLeader && group.defense_id === null &&  (
                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm sinh viên</label>

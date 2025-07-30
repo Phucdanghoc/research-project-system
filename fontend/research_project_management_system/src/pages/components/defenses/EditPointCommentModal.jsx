@@ -14,7 +14,6 @@ const EditPointCommentModal = ({ isOpen, onClose, lecturerDefense, defense, onSu
       [name]: name === 'point' ? (value === '' ? null : Number(value)) : value,
     }));
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.point !== null && (formData.point < 0 || formData.point > 10)) {
@@ -50,6 +49,7 @@ const EditPointCommentModal = ({ isOpen, onClose, lecturerDefense, defense, onSu
               className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               min="0"
               max="10"
+              step={0.1}
               placeholder="Nhập điểm"
             />
           </div>

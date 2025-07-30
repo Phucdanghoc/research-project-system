@@ -101,8 +101,10 @@ export const createLecturerDefenseAsync = createLecturerDefenseThunk(
 
 export const updateLecturerDefenseAsync = createLecturerDefenseThunk(
   'lecturerDefenses/updateLecturerDefenseAsync',
-  (lecturerDefense: Partial<LecturerDefense> & { id: number }) =>
-    api.patch(`/${lecturerDefense.id}`, { lecturer_defense: lecturerDefense })
+  (payload: { id: number; lecturerDefense: Partial<LecturerDefense> }) =>
+    api.patch(`/${payload.id}`, {
+      lecturer_defense: payload.lecturerDefense,
+    })
 );
 
 export const deleteLecturerDefenseAsync = createLecturerDefenseThunk(
@@ -176,7 +178,7 @@ const lecturerDefenseSlice = createSlice({
       .addCase(updateLecturerDefenseAsync.rejected, handleRejected)
       .addCase(deleteLecturerDefenseAsync.fulfilled, (state, action) => {
         state.loading = false;
-        state.lecturerDefenses = state.lecturerDefenses.filter((ld) => ld.id !== action.payload);
+        state.lecturerDefenses = state.lecturerDefenses.filter((ld) => ld.id !== action.payload.lecturer_defense.id);
         state.error = null;
       })
       .addCase(deleteLecturerDefenseAsync.rejected, handleRejected)

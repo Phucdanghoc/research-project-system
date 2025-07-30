@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FaHome, FaClipboardList, FaBook, FaUsers, FaBars, FaTimes, FaLayerGroup, FaObjectGroup, FaUserAlt } from 'react-icons/fa';
 import { IoMdLogOut } from 'react-icons/io';
+import { TokenService } from '../services/token';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
     const { user } = useSelector((state) => state.auth);
@@ -22,7 +23,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             // { link: '/lecturer/register-defense', name: 'Đăng ký bảo vệ', icon: FaBook },
             { link: '/lecturer/manage-groups', name: 'Danh sách nhóm', icon: FaLayerGroup },
             { link: '/lecturer/manage-students', name: 'Xem sinh viên', icon: FaUsers },
-            // { link: '/lecturer/manage-plans', name: 'Danh sách buổi bảo vệ', icon: FaObjectGroup },
+            { link: '/lecturer/manage-defenses', name: 'Danh sách buổi bảo vệ', icon: FaObjectGroup },
             { link: '/lecturer/profile', name: 'Tài khoản', icon: FaUserAlt },
         ],
         student: [
@@ -73,7 +74,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     <li key={getNavLinks(user?.role).length + 1} className='list-none!'>
                         <Link
                             onClick={() => {
-                                localStorage.removeItem('token');
+                                TokenService.removeToken();
                                 window.location.replace('/login');
                             }}
                             className="flex items-center p-2 hover:bg-red-400/50 rounded transition-colors duration-200 hover:scale-105 " 

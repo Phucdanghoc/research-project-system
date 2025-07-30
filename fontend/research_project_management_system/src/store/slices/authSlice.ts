@@ -105,6 +105,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
+        TokenService.setUser(action.payload.user);
         TokenService.setToken(action.payload.token);
       })
       .addCase(loginAsync.rejected, (state, action) => {
@@ -118,6 +119,7 @@ const authSlice = createSlice({
       .addCase(verifyTokenAsync.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
+        TokenService.setUser(action.payload.user);
         state.isAuthenticated = true;
         state.error = null;
       })

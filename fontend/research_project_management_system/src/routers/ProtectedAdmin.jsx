@@ -13,32 +13,22 @@ const ProtectedAdmin = ({ children }) => {
 
   useEffect(() => {
     const token = TokenService.getToken();
-    console.log('ProtectedAdmin - Checking token', { token, isAuthenticated, loading, isVerifying });
 
     if (token && !isAuthenticated && !loading && !isVerifying) {
-      console.log('ProtectedAdmin - Dispatching verifyTokenAsync');
       setIsVerifying(true);
       dispatch(verifyTokenAsync())
         .unwrap()
         .then(() => {
-          console.log('ProtectedAdmin - Token verification successful');
           setIsVerifying(false);
         })
         .catch((error) => {
-          console.log('ProtectedAdmin - Token verification failed', error);
           setIsVerifying(false);
           TokenService.removeToken();
         });
     }
   }, [dispatch, isAuthenticated, loading, isVerifying]);
 
-  console.log('ProtectedAdmin - Current state', {
-    isAuthenticated,
-    user,
-    loading,
-    isVerifying,
-    location: location.pathname,
-  });
+  
 
   if (loading || isVerifying) {
     return <Loading message="Đang xác minh quyền admin..." />;

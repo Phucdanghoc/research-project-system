@@ -13,32 +13,22 @@ const ProtectedLecturer = ({ children }) => {
 
   useEffect(() => {
     const token = TokenService.getToken();
-    console.log('ProtectedLecturer - Checking token', { token, isAuthenticated, loading, isVerifying });
 
     if (token && !isAuthenticated && !loading && !isVerifying) {
-      console.log('ProtectedLecturer - Dispatching verifyTokenAsync');
       setIsVerifying(true);
       dispatch(verifyTokenAsync())
         .unwrap()
         .then(() => {
-          console.log('ProtectedLecturer - Token verification successful');
           setIsVerifying(false);
         })
         .catch((error) => {
-          console.log('ProtectedLecturer - Token verification failed', error);
           setIsVerifying(false);
           TokenService.removeToken();
         });
     }
   }, [dispatch, isAuthenticated, loading, isVerifying]);
 
-  console.log('ProtectedLecturer - Current state', {
-    isAuthenticated,
-    user,
-    loading,
-    isVerifying,
-    location: location.pathname,
-  });
+
 
   if (loading || isVerifying) {
     return <Loading message="Đang xác minh quyền admin..." />;

@@ -6,6 +6,14 @@ export class TokenService {
         localStorage.setItem('token', token);
     }
     static removeToken() {
+        localStorage.removeItem('user_data');
         localStorage.removeItem('token');
+    }
+    static setUser(user: any) {
+        localStorage.setItem('user_data', JSON.stringify(user));
+    }
+    static getUser(): any {
+        const user = localStorage.getItem('user_data');
+        return user ? JSON.parse(user) : null;
     }
 }

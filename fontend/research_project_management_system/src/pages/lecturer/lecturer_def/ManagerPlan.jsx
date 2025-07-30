@@ -3,13 +3,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   updateLecturerDefenseAsync,
   clearError,
-} from '../../../store/slices/lecturerDefenseSlice'; // Adjust path as needed
-import { getMyDefensesAsync } from '../../../store/slices/defensesSlice'; // Adjust path as needed
+} from '../../../store/slices/lecturerDefenseSlice';
+import { getMyDefensesAsync } from '../../../store/slices/defensesSlice';
 import { toast } from 'react-toastify';
 import { FaEdit } from 'react-icons/fa';
-import Pagination from '../../components/students/Pagination'; // Adjust path as needed
+import Pagination from '../../components/students/Pagination';
 import { motion, AnimatePresence } from 'framer-motion';
-import EditPointCommentModal from '../../components/defenses/EditPointCommentModal'; // Adjust path as needed
+import EditPointCommentModal from '../../components/defenses/EditPointCommentModal';
+import ViewGroupModal from '../../components/groups/ViewGroupModal';
+import { TokenService } from '../../../services/token';
 
 const MyDefensesView = () => {
   const dispatch = useDispatch();
@@ -32,12 +34,15 @@ const MyDefensesView = () => {
   const [selectedDefense, setSelectedDefense] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [tableLoading, setTableLoading] = useState(false);
+  const [isShowGroupDetail, setIsShowGroupDetail] = useState(false);
   const lastFetchedPage = useRef(null);
   const per_page = 10;
 
   const fetchMyDefenses = async () => {
     const pageKey = `${currentPage}_${per_page}`;
-    if (lastFetchedPage.current === pageKey) return;
+    console.log('Fetching defenses for page:', pageKey);
+    
+    // if (lastFetchedPage.current === pageKey) return;
 
     setTableLoading(true);
     try {
@@ -67,16 +72,24 @@ const MyDefensesView = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (id, formData) => {
-    dispatch(updateLecturerDefenseAsync({ id, lecturerDefense: formData }))
-      .then(() => {
-        toast.success('Cập nhật điểm và nhận xét thành công');
-        fetchMyDefenses(); // Refresh data to reflect changes
-      })
-      .catch(() => {
-        toast.error('Có lỗi xảy ra khi cập nhật');
-      });
+  const handleSave = async (id, formData) => {
+    try {
+      await dispatch(updateLecturerDefenseAsync({
+        id: id,
+        lecturerDefense: {
+          point: formData.point,
+          comment: formData.comment,
+        },
+      })).unwrap(); // ⬅️ bắt lỗi chính xác
+
+      await fetchMyDefenses(); // ⬅️ fetch sau khi cập nhật thành công
+      toast.success('Cập nhật điểm và nhận xét thành công');
+      setIsModalOpen(false); // đóng modal sau khi thành công
+    } catch (err) {
+      toast.error('Có lỗi xảy ra khi cập nhật');
+    }
   };
+
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -103,6 +116,15 @@ const MyDefensesView = () => {
     const currentTime = new Date();
     const endDateTime = new Date(endTime);
     return currentTime > endDateTime;
+  };
+
+  const handleViewGroupDetail = (lecturerDefense) => {
+    setSelectedLecturerDefense(lecturerDefense);
+    setIsShowGroupDetail(true);
+  };
+
+  const getFirstLetter = (name) => {
+    return name ? name.charAt(0).toUpperCase() : '';
   };
 
   return (
@@ -138,51 +160,77 @@ const MyDefensesView = () => {
                     <th className="py-2 px-4">Ngày bảo vệ</th>
                     <th className="py-2 px-4">Thời gian bắt đầu</th>
                     <th className="py-2 px-4">Thời gian kết thúc</th>
+                    <th className="py-2 px-4">Hội đồng bảo vệ</th>
                     <th className="py-2 px-4">Điểm</th>
-                    <th className="py-2 px-4">Nhận xét</th>
                     <th className="py-2 px-4">Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
                   {defenses.length > 0 ? (
-                    defenses.flatMap((defense) =>
-                      defense.lecturer_defenses.map((ld) => {
-                        const isDone = isDefenseDone(defense.end_time);
-                        const isPointMissing = isDone && ld.point === null;
-                        const isCommentMissing = isDone && !ld.comment;
-                        return (
-                          <tr
-                            key={ld.id}
-                            className={`hover:bg-blue-100 ${isDone ? 'bg-green-100' : ''}`}
+                    defenses.map((defense) => {
+                      const group = defense.groups?.[0];
+                      const isDone = isDefenseDone(defense.end_time);
+                      const currentUser = TokenService.getUser();
+                      const myLecturerDefense = defense.lecturer_defenses.find(
+                        (ld) => ld.lecturer_id === currentUser?.id
+                      );
+
+                      return (
+                        <tr
+                          key={defense.id}
+                          className={`hover:bg-blue-100 ${isDone ? '' : ''}`}
+                        >
+                          <td className="py-2 px-4 border-b">{defense.defense_code || '-'}</td>
+                          <td className="py-2 px-4 border-b font-bold">{defense.name}</td>
+                          <td
+                            className="py-2 px-4 border-b font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+                            onClick={() => handleViewGroupDetail(defense.lecturer_defenses[0])}
                           >
-                            <td className="py-2 px-4 border-b">{defense.defense_code || '-'}</td>
-                            <td className="py-2 px-4 border-b font-bold">{defense.name}</td>
-                            <td className="py-2 px-4 border-b">{ld.group.name} ({ld.group.group_code})</td>
-                            <td className="py-2 px-4 border-b">{formatDate(defense.date)}</td>
-                            <td className="py-2 px-4 border-b">{formatTime(defense.start_time)}</td>
-                            <td className="py-2 px-4 border-b">{formatTime(defense.end_time)}</td>
-                            <td className={`py-2 px-4 border-b ${isPointMissing ? 'bg-red-100' : ''}`}>
-                              {ld.point ?? '-'}
-                            </td>
-                            <td className={`py-2 px-4 border-b ${isCommentMissing ? 'bg-red-100' : ''}`}>
-                              {ld.comment || '-'}
-                            </td>
-                            <td className="py-2 px-4 border-b space-x-2 flex justify-center">
+                            {group?.name || '-'}
+                          </td>
+                          <td className="py-2 px-4 border-b">{formatDate(defense.date)}</td>
+                          <td className="py-2 px-4 border-b">{formatTime(defense.start_time)}</td>
+                          <td className="py-2 px-4 border-b">{formatTime(defense.end_time)}</td>
+                          <td className="py-2 px-4 border-b">
+                            <div className="flex justify-center space-x-2">
+                              {defense.lecturer_defenses.map((ld) => (
+                                <div
+                                  key={ld.id}
+                                  className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold"
+                                  title={ld.lecturer.name} // Tooltip mặc định
+                                >
+                                  {getFirstLetter(ld.lecturer.name)}
+                                </div>
+                              ))}
+                            </div>
+
+                          </td>
+                          <td className="py-2 px-4 border-b">
+                            {myLecturerDefense && (
+                              <div key={myLecturerDefense.id}>
+                                <span className="font-medium text-blue-600">{myLecturerDefense.point}</span>
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="py-2 px-4 border-b space-x-2 justify-center">
+                            {myLecturerDefense && (
                               <button
-                                onClick={() => handleEditClick(ld, defense)}
+                                onClick={() => handleEditClick(myLecturerDefense, defense)}
                                 className="text-blue-600 hover:text-blue-800"
                                 title="Chỉnh sửa"
                               >
                                 <FaEdit />
                               </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )
+                            )}
+                          </td>
+
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan="9" className="py-4 text-center text-gray-600">
+                      <td colSpan="8" className="py-4 text-center text-gray-600">
                         Không tìm thấy buổi bảo vệ nào.
                       </td>
                     </tr>
@@ -207,6 +255,14 @@ const MyDefensesView = () => {
           lecturerDefense={selectedLecturerDefense}
           defense={selectedDefense}
           onSubmit={handleSave}
+        />
+      )}
+
+      {isShowGroupDetail && selectedLecturerDefense && (
+        <ViewGroupModal
+          isOpen={isShowGroupDetail}
+          onClose={() => setIsShowGroupDetail(false)}
+          groupId={selectedLecturerDefense.group?.id}
         />
       )}
     </div>

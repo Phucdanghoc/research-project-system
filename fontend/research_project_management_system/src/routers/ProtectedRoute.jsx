@@ -40,10 +40,8 @@ const ProtectedRoute = ({ allowedRoles }) => {
   if (!isAuthenticated || !user || error) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  console.log(location);
   
   if (location.pathname === '/') {
-    console.log(`User role: ${user.role}`);
     
     return <Navigate to={roleBasedRedirect(user.role)} replace />;
   }
