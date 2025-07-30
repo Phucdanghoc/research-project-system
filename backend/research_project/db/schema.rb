@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_25_095948) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_30_024912) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -119,7 +119,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_25_095948) do
   add_foreign_key "group_topics", "topics"
   add_foreign_key "group_users", "groups"
   add_foreign_key "group_users", "users"
-  add_foreign_key "groups", "defenses"
+  add_foreign_key "groups", "defenses", on_delete: :nullify
   add_foreign_key "groups", "users", column: "lecturer_id"
   add_foreign_key "groups", "users", column: "student_lead_id"
   add_foreign_key "lecturer_defenses", "defenses"

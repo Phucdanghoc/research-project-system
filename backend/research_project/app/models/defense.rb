@@ -1,12 +1,10 @@
 class Defense < ApplicationRecord
-  # Associations
-  has_many :groups, dependent: :destroy
+  has_many :groups, dependent: :nullify # ❗important change
   has_many :lecturer_defenses, dependent: :destroy
   has_many :lecturer_users, through: :lecturer_defenses, source: :lecturer
 
-  # Enum for status
   enum :status, { waiting: 0, done: 1 }
-  # Callbacks
+
   before_create :generate_unique_defense_code
 
   private
