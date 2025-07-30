@@ -49,7 +49,7 @@ module Api
           elsif user.lecturer?
             Defense
               .left_outer_joins(:groups, :lecturer_defenses)
-              .where("groups.lecturer_id = :id OR lecturer_defenses.lecturer_id = :id", id: user.id).distinct
+              .where("lecturer_defenses.lecturer_id = :id", id: user.id).distinct
           else
             Defense.none
           end
