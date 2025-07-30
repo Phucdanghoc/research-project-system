@@ -14,7 +14,6 @@ import LecturerTopics from '../pages/lecturer/topics/LecturerTopic';
 import LecturerStudent from '../pages/lecturer/students/LecturerStudent';
 import LecturerGroup from '../pages/lecturer/groups/LecturerGroup';
 import ProfilePage from '../pages/profile/ProfilePage';
-import Test from '../pages/lecturer/topics/Test';
 import NotFoundPage from '../pages/404';
 import DashboardStudent from '../pages/student/dashboard/DashboardStudent';
 import { GroupStudent } from '../pages/student/group/GroupStudent';
@@ -23,9 +22,10 @@ import ProtectedStudent from './ProtectedStudent';
 import StudentTopic from '../pages/student/topic/TopicStudent';
 import ManagerGroup from '../pages/admin/group/ManagerGroup';
 import DefenseManager from '../pages/admin/defense/ManagerDefense';
-import PlanManager from '../pages/admin/plan/ManagerPlan';
-import CalendarViewPlan from '../pages/components/plans/CalendarViewPlan';
-import LecturerPlansPage from '../pages/lecturer/plan/LecturerPlan';
+import PlanManager from '../pages/lecturer/lecturer_def/ManagerPlan';
+// import CalendarViewPlan from '../pages/components/plans/CalendarViewPlan';
+import CalendarViewDefense from '../pages/components/defenses/CalendarViewDefense';
+import MyDefensesView from '../pages/lecturer/lecturer_def/ManagerPlan';
 
 const router = createBrowserRouter([
   {
@@ -60,7 +60,6 @@ const router = createBrowserRouter([
       { path: 'manage-plans', element: <PlanManager /> },
       { path: 'manage-defenses', element: <DefenseManager /> },
       { path: 'setup-areas', element: <ManagerStudents /> },
-      { path: 'test', element: <CalendarViewPlan /> },
 
     ],
   },
@@ -77,8 +76,10 @@ const router = createBrowserRouter([
       { path: 'manage-topics', element: <LecturerTopics /> },
       { path: 'manage-students', element: <LecturerStudent /> },
       { path: 'manage-groups', element: <LecturerGroup /> },
-      { path: 'manage-plans', element: <LecturerPlansPage /> },
+      // { path: 'manage-plans', element: <LecturerPlansPage /> },
       { path: 'profile', element: <ProfilePage /> },
+      { path: 'test', element: <MyDefensesView /> },
+
     ],
   },
   {

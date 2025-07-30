@@ -294,7 +294,7 @@ const TableView = ({
                         </button>
                         
                         {/* Add Defense button for waiting_defense groups without defense */}
-                        {group.def_status === 'waiting_defense' && !group.has_defense && (
+                        {/* {group.def_status === 'waiting_defense' && !group.has_defense && (
                           <button
                             onClick={() => onAddDefense(group)}
                             className="text-green-600 hover:text-green-800"
@@ -302,7 +302,7 @@ const TableView = ({
                           >
                             <FaPlus />
                           </button>
-                        )}
+                        )} */}
                         
                         {/* Approve defense button for groups with waiting defense status and existing defense */}
                         {group.def_status === 'waiting_defense' && group.has_defense && (

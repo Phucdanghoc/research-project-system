@@ -69,6 +69,7 @@ const StudentTopic = () => {
 
   const handleSubmitGroup = useCallback(
     async (formData) => {
+      console.log('formData', formData);
       try {
         await dispatch(createGroupAsync(formData)).unwrap().then((res) => {
           if (res) {

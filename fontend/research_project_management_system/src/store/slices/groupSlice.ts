@@ -62,8 +62,8 @@ const createGroupThunk = <T, Arg>(
 // Thunks
 export const createGroupAsync = createGroupThunk<{ group: Group }, GroupForm>(
     'groups/createGroupAsync',
-    ({ name, topic_id, student_ids }) =>
-        api.post('/groups', { name, topic_id, student_ids })
+    ({ name, topic_id, student_ids , description }) =>
+        api.post('/groups', { name, topic_id, student_ids , description })
 );
 
 export const fetchGroupsAsync = createGroupThunk<

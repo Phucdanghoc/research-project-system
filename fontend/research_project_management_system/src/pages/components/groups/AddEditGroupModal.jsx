@@ -14,20 +14,6 @@ import EditorToolbar from '../../../components/EditorWithToolbar';
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 
-const editorConfig = {
-  extensions: [
-    StarterKit.configure({ heading: { levels: [1, 2, 3] }, bulletList: {}, orderedList: {}, blockquote: {} }),
-    ListItem,
-    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    Color,
-    TextStyle,
-    Image.configure({ HTMLAttributes: { class: 'rounded-md max-w-full max-h-[500px] object-contain mx-auto' } }),
-    Link.configure({ openOnClick: false }),
-  ],
-  editorProps: {
-    attributes: { class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none' },
-  },
-};
 
 const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic, currentStudentId }) => {
   const dispatch = useAppDispatch();
@@ -40,6 +26,20 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
     student_lead_id: currentStudentId?.toString() || '',
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const editorConfig = {
+    extensions: [
+      StarterKit.configure({ heading: { levels: [1, 2, 3] }, bulletList: {}, orderedList: {}, blockquote: {} }),
+      ListItem,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TextStyle,
+      Color,
+      Image.configure({ HTMLAttributes: { class: 'rounded-md max-w-full max-h-[500px] object-contain mx-auto' } }),
+      Link.configure({ openOnClick: false }),
+    ],
+    editorProps: {
+      attributes: { class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none' },
+    },
+  };
 
   const descriptionEditor = useEditor({
     ...editorConfig,

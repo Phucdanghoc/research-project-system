@@ -2,14 +2,14 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../store';
 import { FaTimes, FaPlus, FaTrash } from 'react-icons/fa';
-import { searchLecturersAsync } from '../../../store/slices/lecturerSlice';
+import { searchLecturersAsync } from '../../../store/slices/lecturerSlice'; // Assume searchGroupsAsync exists
 import { getLecturerDefenseByIdAsync } from '../../../store/slices/lecturerDefenseSlice';
-import { checkDefenseTimeAsync, addDefenseAsync, updateDefenseAsync } from '../../../store/slices/defensesSlice';
+import { checkDefenseTimeAsync, addDefenseAsync, updateDefenseAsync, fetchDefensesAsync } from '../../../store/slices/defensesSlice';
 import { useDebouncedCallback } from 'use-debounce';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
+import { fetchGroupsAsync } from '../../../store/slices/groupSlice';
 
-// Predefined time blocks
 const timeBlocks = [
   { start: '07:00', end: '09:00' },
   { start: '09:30', end: '11:30' },
@@ -17,22 +17,14 @@ const timeBlocks = [
   { start: '15:30', end: '17:30' },
 ];
 
-const toUTCISOPlus7 = (localDateTime) => {
-  if (!localDateTime) return '';
-  const date = new Date(localDateTime);
-  const offset = 7 * 60; // +7 hours in minutes
-  const utcDate = new Date(date.getTime() + offset * 60 * 1000);
-  return utcDate.toISOString();
-};
-
 const statusOptions = [
   { value: 'waiting', label: 'Chờ bảo vệ' },
   { value: 'done', label: 'Đã bảo vệ xong' },
 ];
 
-const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
+const AddEditDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
   const dispatch = useAppDispatch();
-  const { lecturers, loading: lecturersLoading } = useSelector((state) => state.lecturers);
+  const { lecturers, groups, loading: lecturersLoading, groupLoading: groupsLoading } = useSelector((state) => state.lecturers);
   const { lecturerDefenses, loading: lecturerDefensesLoading, error: lecturerDefensesError } = useSelector(
     (state) => state.lecturerDefenses
   );
@@ -42,9 +34,10 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
   const [formData, setFormData] = useState({
     name: defense?.name || '',
     date: defense?.date || '',
-    start_time: defense?.start_time || '',
-    end_time: defense?.end_time || '',
-    lecturer_ids: defense?.lecturer_ids || [],
+    start_time: defense?.start_time ? new Date(defense.start_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
+    end_time: defense?.end_time ? new Date(defense.end_time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
+    lecturer_ids: [],
+    group_ids: [],
     status: defense?.status || 'waiting',
   });
   const [errors, setErrors] = useState({
@@ -52,45 +45,63 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     date: '',
     time_block: '',
     lecturer_ids: '',
+    group_ids: '',
     general: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [groupSearchQuery, setGroupSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
   const [preExistingLecturers, setPreExistingLecturers] = useState([]);
+  const [preExistingGroups, setPreExistingGroups] = useState([]);
   const [blockAvailability, setBlockAvailability] = useState({});
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const searchInputRef = useRef(null);
+  const groupSearchInputRef = useRef(null);
   const dropdownRef = useRef(null);
+  const groupDropdownRef = useRef(null);
   const modalRef = useRef(null);
 
-  // Fetch pre-existing lecturers for edit mode
   useEffect(() => {
     if (isOpen && defense?.id) {
       dispatch(getLecturerDefenseByIdAsync(defense.id))
         .unwrap()
         .then((data) => {
-          const lecturerIds = data.map((item) => item.lecturer_id);
-          const lecturersData = data.map((item) => ({
+
+          const lecturerIds = [...new Set(data.lecturer_defenses.map((item) => item.lecturer_id))];
+          const groupIds = [...new Set(data.lecturer_defenses.map((item) => item.group_id))];
+          const lecturersData = data.lecturer_defenses.map((item) => ({
             id: item.lecturer_id,
             name: item.lecturer.name,
             lecturer_code: item.lecturer.email,
           }));
-          setFormData((prev) => ({ ...prev, lecturer_ids: lecturerIds }));
-          setPreExistingLecturers(lecturersData);
+          const groupsData = data.lecturer_defenses
+            .filter((item) => item.group)
+            .map((item) => ({
+              id: item.group.id,
+              name: item.group.name,
+              group_code: item.group.group_code,
+            }));
+          setFormData((prev) => ({
+            ...prev,
+            lecturer_ids: lecturerIds,
+            group_ids: groupIds,
+          }));
+          setPreExistingLecturers([...new Set(lecturersData.map(JSON.stringify))].map(JSON.parse));
+          setPreExistingGroups([...new Set(groupsData.map(JSON.stringify))].map(JSON.parse));
         })
         .catch((error) => {
           setErrors((prev) => ({
             ...prev,
-            general: error.message || 'Không thể tải danh sách giảng viên hiện tại',
+            general: error.message || 'Không thể tải danh sách giảng viên hoặc nhóm hiện tại',
           }));
         });
     }
   }, [isOpen, defense?.id, dispatch]);
 
-  // Check availability for each time block
   useEffect(() => {
     const checkAvailability = async () => {
-      if (!formData.date || formData.lecturer_ids.length === 0) {
+      if (!formData.date || formData.lecturer_ids.length === 0 || formData.group_ids.length === 0) {
         setBlockAvailability({});
         return;
       }
@@ -99,11 +110,15 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
       const availability = {};
 
       for (const block of timeBlocks) {
-
         try {
+          if (isEditMode && formData.start_time == block.start && formData.end_time == block.end && formData.date == defense.date) {
+            availability[`${block.start}-${block.end}`] = true;
+            continue;
+          }
           const result = await dispatch(
             checkDefenseTimeAsync({
               lecturer_id: formData.lecturer_ids,
+              group_ids: formData.group_ids,
               date: formData.date,
               start_time: block.start,
               end_time: block.end,
@@ -120,9 +135,8 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     };
 
     checkAvailability();
-  }, [formData.date, formData.lecturer_ids, dispatch]);
+  }, [formData.date, formData.lecturer_ids, formData.group_ids, dispatch]);
 
-  // Handle clicks outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -134,12 +148,20 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
       ) {
         setIsDropdownOpen(false);
       }
+      if (
+        isGroupDropdownOpen &&
+        groupSearchInputRef.current &&
+        groupDropdownRef.current &&
+        !groupSearchInputRef.current.contains(event.target) &&
+        !groupDropdownRef.current.contains(event.target)
+      ) {
+        setIsGroupDropdownOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, isGroupDropdownOpen]);
 
-  // Focus modal on open
   useEffect(() => {
     if (isOpen && modalRef.current) {
       modalRef.current.focus();
@@ -157,27 +179,46 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     );
   }, 300);
 
-  // Handle input changes
+  const debouncedGroupSearch = useDebouncedCallback((query) => {
+    dispatch(
+      fetchGroupsAsync({
+        page: 1,
+        per_page: 10,
+        keyword: query,
+      })
+    );
+  }, 300);
+
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   }, []);
 
-  // Handle lecturer selection toggle
   const handleLecturerToggle = useCallback((lecturerId) => {
     setFormData((prev) => {
       const lecturerIds = prev.lecturer_ids.includes(lecturerId)
         ? prev.lecturer_ids.filter((id) => id !== lecturerId)
         : prev.lecturer_ids.length >= 3
-        ? prev.lecturer_ids
-        : [...prev.lecturer_ids, lecturerId];
+          ? prev.lecturer_ids
+          : [...prev.lecturer_ids, lecturerId];
       return { ...prev, lecturer_ids: lecturerIds };
     });
     setErrors((prev) => ({ ...prev, lecturer_ids: '' }));
   }, []);
 
-  // Handle time block selection
+  const handleGroupToggle = useCallback((groupId) => {
+    setFormData((prev) => {
+      const groupIds = prev.group_ids.includes(groupId)
+        ? prev.group_ids.filter((id) => id !== groupId)
+        : prev.group_ids.length >= 3
+          ? prev.group_ids
+          : [...prev.group_ids, groupId];
+      return { ...prev, group_ids: groupIds };
+    });
+    setErrors((prev) => ({ ...prev, group_ids: '' }));
+  }, []);
+
   const handleSelectBlock = useCallback(
     (block) => {
       const key = `${block.start}-${block.end}`;
@@ -193,17 +234,20 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     [blockAvailability]
   );
 
-  // Form validation
   const validateForm = useCallback(() => {
     const newErrors = {
       name: formData.name ? '' : 'Tên hội đồng bảo vệ là bắt buộc',
       date: formData.date ? '' : 'Ngày là bắt buộc',
       time_block: formData.start_time && formData.end_time ? '' : 'Vui lòng chọn một khối thời gian',
       lecturer_ids: formData.lecturer_ids.length > 0 ? '' : 'Chọn ít nhất một giảng viên',
+      group_ids: formData.group_ids.length > 0 ? '' : 'Chọn ít nhất một nhóm',
       general: '',
     };
     if (formData.lecturer_ids.length > 3) {
       newErrors.lecturer_ids = 'Chỉ được chọn tối đa 3 giảng viên';
+    }
+    if (formData.group_ids.length > 3) {
+      newErrors.group_ids = 'Chỉ được chọn tối đa 3 nhóm';
     }
     if (formData.start_time && formData.end_time) {
       const key = `${formData.start_time}-${formData.end_time}`;
@@ -215,7 +259,6 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     return Object.values(newErrors).every((error) => !error);
   }, [formData, blockAvailability]);
 
-  // Handle form submission
   const handleSubmit = useCallback(
     (e) => {
       e.preventDefault();
@@ -227,15 +270,17 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
       const defenseData = {
         name: formData.name,
         date: formData.date,
-        start_time: toUTCISOPlus7(`${formData.date}T${formData.start_time}`),
-        end_time: toUTCISOPlus7(`${formData.date}T${formData.end_time}`),
+        start_time: formData.date ? `${formData.date}T${formData.start_time}:00+07:00` : '',
+        end_time: formData.date ? `${formData.date}T${formData.end_time}:00+07:00` : '',
         lecturer_ids: formData.lecturer_ids,
+        group_ids: formData.group_ids,
         status: formData.status,
       };
 
       const action = isEditMode
-        ? updateDefenseAsync({ id: defense.id, ...defenseData })
+        ? updateDefenseAsync({ id: defense.id, defenseData }) 
         : addDefenseAsync(defenseData);
+
 
       dispatch(action)
         .unwrap()
@@ -247,14 +292,19 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
             start_time: '',
             end_time: '',
             lecturer_ids: [],
+            group_ids: [],
             status: 'waiting',
           });
           setSearchQuery('');
+          setGroupSearchQuery('');
           setIsDropdownOpen(false);
+          setIsGroupDropdownOpen(false);
           setPreExistingLecturers([]);
+          setPreExistingGroups([]);
           setBlockAvailability({});
+          dispatch(fetchDefensesAsync({ page: 1, per_page: 10 })); // Refresh groups
           onClose();
-          onSubmit?.();
+          // onSubmit?.();
         })
         .catch((error) => {
           setErrors((prev) => ({
@@ -267,14 +317,18 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     [dispatch, formData, onClose, onSubmit, defense?.id, isEditMode]
   );
 
-  // Handle search input change
   const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);
     setIsDropdownOpen(true);
     debouncedSearch(e.target.value);
   }, [debouncedSearch]);
 
-  // Combine pre-existing and searched lecturers
+  const handleGroupSearchChange = useCallback((e) => {
+    setGroupSearchQuery(e.target.value);
+    setIsGroupDropdownOpen(true);
+    debouncedGroupSearch(e.target.value);
+  }, [debouncedGroupSearch]);
+
   const allLecturers = useMemo(() => {
     const lecturerMap = new Map();
     preExistingLecturers.forEach((lecturer) => lecturerMap.set(lecturer.id, lecturer));
@@ -286,10 +340,25 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
     return Array.from(lecturerMap.values());
   }, [lecturers, preExistingLecturers]);
 
-  // Filter selected lecturers
+  const allGroups = useMemo(() => {
+    const groupMap = new Map();
+    preExistingGroups.forEach((group) => groupMap.set(group.id, group));
+    // groups.forEach((group) => {
+    //   if (!groupMap.has(group.id)) {
+    //     groupMap.set(group.id, group);
+    //   }
+    // });
+    return Array.from(groupMap.values());
+  }, [groups, preExistingGroups]);
+
   const selectedLecturers = useMemo(
     () => allLecturers.filter((lecturer) => formData.lecturer_ids.includes(lecturer.id)),
     [allLecturers, formData.lecturer_ids]
+  );
+
+  const selectedGroups = useMemo(
+    () => allGroups.filter((group) => formData.group_ids.includes(group.id)),
+    [allGroups, formData.group_ids]
   );
 
   if (!isOpen) return null;
@@ -371,14 +440,14 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
                         key={key}
                         type="button"
                         onClick={() => handleSelectBlock(block)}
-                        disabled={!formData.date || !formData.lecturer_ids.length || !isAvailable || availabilityLoading}
+                        disabled={!formData.date || !formData.lecturer_ids.length || !formData.group_ids.length || !isAvailable || availabilityLoading}
                         className={`p-3 border rounded text-sm font-medium text-center
                           ${isSelected ? 'bg-blue-600 text-white border-blue-600' : isAvailable ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed'}
-                          ${availabilityLoading || !formData.date || !formData.lecturer_ids.length ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        whileHover={{ scale: isAvailable && !availabilityLoading && formData.date && formData.lecturer_ids.length ? 1.05 : 1 }}
-                        whileTap={{ scale: isAvailable && !availabilityLoading && formData.date && formData.lecturer_ids.length ? 0.95 : 1 }}
+                          ${availabilityLoading || !formData.date || !formData.lecturer_ids.length || !formData.group_ids.length ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        whileHover={{ scale: isAvailable && !availabilityLoading && formData.date && formData.lecturer_ids.length && formData.group_ids.length ? 1.05 : 1 }}
+                        whileTap={{ scale: isAvailable && !availabilityLoading && formData.date && formData.lecturer_ids.length && formData.group_ids.length ? 0.95 : 1 }}
                         aria-label={`Chọn khối thời gian ${block.start} - ${block.end}`}
-                        aria-disabled={!formData.date || !formData.lecturer_ids.length || !isAvailable || availabilityLoading}
+                        aria-disabled={!formData.date || !formData.lecturer_ids.length || !formData.group_ids.length || !isAvailable || availabilityLoading}
                       >
                         {block.start} - {block.end}
                         {isAvailable === false && <span className="block text-xs">Không khả dụng</span>}
@@ -388,9 +457,99 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
                 </div>
                 {!formData.date && <p className="text-gray-500 text-sm mt-1">Vui lòng chọn ngày trước</p>}
                 {!formData.lecturer_ids.length && <p className="text-gray-500 text-sm mt-1">Vui lòng chọn ít nhất một giảng viên trước</p>}
+                {!formData.group_ids.length && <p className="text-gray-500 text-sm mt-1">Vui lòng chọn ít nhất một nhóm trước</p>}
                 {errors.time_block && <p className="text-red-600 text-sm mt-1">{errors.time_block}</p>}
                 {availabilityLoading && <p className="text-gray-500 text-sm mt-1">Đang kiểm tra thời gian...</p>}
               </div>
+              <div className="relative">
+                <label htmlFor="search_groups" className="block text-sm font-medium text-gray-700">
+                  Tìm kiếm Nhóm <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="search_groups"
+                  type="text"
+                  value={groupSearchQuery}
+                  onChange={handleGroupSearchChange}
+                  onFocus={() => setIsGroupDropdownOpen(true)}
+                  className="mt-1 block w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Tìm kiếm theo tên hoặc mã nhóm"
+                  ref={groupSearchInputRef}
+                  aria-required="true"
+                />
+                <AnimatePresence>
+                  {isGroupDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-64 overflow-y-auto"
+                      ref={groupDropdownRef}
+                    >
+                      {groupsLoading ? (
+                        <p className="p-4 text-sm text-gray-500">Đang tải nhóm...</p>
+                      ) : allGroups.length > 0 ? (
+                        allGroups.map((group) => (
+                          <motion.div
+                            key={group.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={`p-3 flex justify-between items-center hover:bg-blue-50 cursor-pointer ${formData.group_ids.includes(group.id) ? 'bg-blue-100' : ''}`}
+                            onClick={() => handleGroupToggle(group.id)}
+                          >
+                            <div>
+                              <p className="font-medium">{group.name}</p>
+                              <p className="text-sm text-gray-500">{group.group_code || 'N/A'}</p>
+                            </div>
+                            {formData.group_ids.includes(group.id) ? (
+                              <FaTrash className="text-red-500" />
+                            ) : (
+                              <FaPlus
+                                className={`text-blue-500 ${formData.group_ids.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              />
+                            )}
+                          </motion.div>
+                        ))
+                      ) : (
+                        <p className="p-4 text-sm text-gray-500">Không tìm thấy nhóm.</p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                {errors.group_ids && <p className="text-red-600 text-sm mt-1">{errors.group_ids}</p>}
+              </div>
+              {selectedGroups.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-4 p-3 bg-gray-50 rounded border border-gray-200"
+                >
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Nhóm đã chọn ({selectedGroups.length}/3):
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <AnimatePresence>
+                      {selectedGroups.map((group) => (
+                        <motion.div
+                          key={group.id}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.8, opacity: 0 }}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm flex items-center"
+                        >
+                          {group.group_code} - {group.name}
+                          <button
+                            type="button"
+                            onClick={() => handleGroupToggle(group.id)}
+                            className="ml-2 text-red-600 hover:text-red-800"
+                          >
+                            <FaTrash size={12} />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
               <div className="relative">
                 <label htmlFor="search_lecturers" className="block text-sm font-medium text-gray-700">
                   Tìm kiếm Giảng viên <span className="text-red-500">*</span>
@@ -423,22 +582,23 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
                             key={lecturer.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className={`p-3 flex justify-between items-center hover:bg-blue-50 cursor-pointer ${
-                              formData.lecturer_ids.includes(lecturer.id) ? 'bg-blue-100' : ''
-                            }`}
+                            className={`p-3 flex justify-between items-center hover:bg-blue-50 cursor-pointer ${formData.lecturer_ids.includes(lecturer.id) ? 'bg-blue-100' : ''}`}
                             onClick={() => handleLecturerToggle(lecturer.id)}
                           >
                             <div>
                               <p className="font-medium">{lecturer.name}</p>
                               <p className="text-sm text-gray-500">{lecturer.lecturer_code || 'N/A'}</p>
+                              {lecturerDefenses.find((ld) => ld.lecturer_id === lecturer.id)?.group && (
+                                <p className="text-sm text-gray-500">
+                                  Nhóm: {lecturerDefenses.find((ld) => ld.lecturer_id === lecturer.id).group.group_code} - {lecturerDefenses.find((ld) => ld.lecturer_id === lecturer.id).group.name}
+                                </p>
+                              )}
                             </div>
                             {formData.lecturer_ids.includes(lecturer.id) ? (
                               <FaTrash className="text-red-500" />
                             ) : (
                               <FaPlus
-                                className={`text-blue-500 ${
-                                  formData.lecturer_ids.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`text-blue-500 ${formData.lecturer_ids.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
                               />
                             )}
                           </motion.div>
@@ -516,7 +676,7 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
               </button>
               <button
                 type="submit"
-                disabled={timeCheckLoading || availabilityLoading || !formData.date || !formData.start_time || !formData.end_time || !formData.lecturer_ids.length}
+                disabled={timeCheckLoading || availabilityLoading || !formData.date || !formData.start_time || !formData.end_time || !formData.lecturer_ids.length || !formData.group_ids.length}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
                 aria-label={isEditMode ? 'Cập nhật' : 'Thêm'}
               >
@@ -530,4 +690,4 @@ const AddDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
   );
 };
 
-export default AddDefenseModal;
+export default AddEditDefenseModal;

@@ -7,6 +7,7 @@ export interface Defense {
     date: string;
     end_time: string;
     status: string;
+    group_ids: number[];   
 }
 // "defense": {
 //     "name": "Council A",

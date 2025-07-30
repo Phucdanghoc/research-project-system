@@ -96,8 +96,10 @@ export const addDefenseAsync = createDefenseThunk(
 
 export const updateDefenseAsync = createDefenseThunk(
   'defenses/updateDefenseAsync',
-  (defense: Partial<Defense> & { id: number }) => api.put(`/${defense.id}`, { defense })
+  ({ id, defenseData }: { id: number; defenseData: Partial<Defense> }) =>
+    api.put(`/${id}`, { defense: defenseData }) 
 );
+
 
 export const deleteDefenseAsync = createDefenseThunk(
   'defenses/deleteDefenseAsync',
@@ -139,7 +141,7 @@ const defenseSlice = createSlice({
 
     const handleListFulfilled = (state: DefenseState, action: PayloadAction<any>) => {
       state.loading = false;
-      state.defenses = action.payload.defenses || [];
+      state.defenses = action.payload.defenses || action.payload ||[] ;
       state.current_page = action.payload.meta?.page || 1;
       state.total_pages = action.payload.meta?.total_pages || 1;
       state.total_count = action.payload.meta?.total || 0;

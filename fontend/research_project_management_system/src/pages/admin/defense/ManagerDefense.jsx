@@ -1,39 +1,65 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '../../../store';
 import { useSelector } from 'react-redux';
-import { fetchDefensesAsync, searchDefensesAsync, deleteDefenseAsync, addDefenseAsync, updateDefenseAsync } from '../../../store/slices/defensesSlice';
-import FilterBar from '../../components/students/FilterBar';
-import TableView from '../../components/defenses/DefenseTableView';
+import { fetchDefensesAsync, searchDefensesAsync, addDefenseAsync, updateDefenseAsync, deleteDefenseAsync } from '../../../store/slices/defensesSlice';
+import TableViewDefense from '../../components/defenses/DefenseTableView';
+import CalendarViewDefense from '../../components/defenses/CalendarViewDefense';
 import AddEditDefenseModal from '../../components/defenses/AddEditDefenses';
-import ViewDefenseModal from '../../components/defenses/ViewDefenseModal';
 import Pagination from '../../components/students/Pagination';
 import { toast } from 'react-toastify';
-import DeleteConfirmationModal from '../../../components/DeleteConfirmationModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import ViewDefenseModal from '../../components/defenses/ViewDefenseModal';
 
 const DefenseManager = () => {
   const dispatch = useAppDispatch();
-  const { defenses, total_count: total, current_page: page, total_pages, loading, error } = useSelector((state) => state.defenses);
-  const [faculty, setFaculty] = useState('');
+  const { defenses, total, page, per_page, loading, error } = useSelector((state) => state.defenses || { 
+    defenses: [], total: 0, page: 1, per_page: 10, loading: false, error: null 
+  });
+
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedDefense, setSelectedDefense] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [activeTab, setActiveTab] = useState('table');
+  const [tableLoading, setTableLoading] = useState(false);
+  const [isViewModalOpen , setIsViewModalOpen] = useState(false);
+  const lastFetchedPage = useRef(null);
 
-  const per_page = 10;
+  const fetchTableDefenses = async () => {
+    if (activeTab !== 'table') return;
+    
+    const pageKey = `${currentPage}_${per_page}`;
+    if (lastFetchedPage.current === pageKey) return;
 
-  useEffect(() => {
-    dispatch(fetchDefensesAsync({ faculty, page: currentPage, per_page }));
-  }, [currentPage, per_page, faculty, dispatch]);
-
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      dispatch(searchDefensesAsync({ keyword: searchTerm, page: currentPage, per_page }));
-      setCurrentPage(1);
+    setTableLoading(true);
+    try {
+      await dispatch(fetchDefensesAsync({ page: currentPage, per_page })).unwrap();
+      lastFetchedPage.current = pageKey;
+    } catch (err) {
+      console.error('Error fetching table defenses:', err);
+    } finally {
+      setTableLoading(false);
     }
-  }, [searchTerm, dispatch, per_page]);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'table') {
+      fetchTableDefenses();
+    }
+  }, [activeTab, currentPage, per_page]);
+
+  useEffect(() => {
+    if (activeTab === 'table' && searchTerm.trim()) {
+      setTableLoading(true);
+      dispatch(searchDefensesAsync(searchTerm)).then(() => {
+        setTableLoading(false);
+        setCurrentPage(1);
+      }).catch(() => {
+        setTableLoading(false);
+      });
+    }
+  }, [searchTerm, dispatch, activeTab]);
 
   useEffect(() => {
     if (error) {
@@ -41,9 +67,8 @@ const DefenseManager = () => {
     }
   }, [error]);
 
-  const handleFilterChange = ({ faculty, searchTerm }) => {
-    setFaculty(faculty);
-    setSearchTerm(searchTerm);
+  const handleFilterChange = ({ searchTerm: newSearchTerm }) => {
+    setSearchTerm(newSearchTerm);
     setCurrentPage(1);
   };
 
@@ -54,8 +79,6 @@ const DefenseManager = () => {
   };
 
   const handleEditDefense = (defense) => {
-    console.log(`Editing defense:`, defense);
-    
     setSelectedDefense(defense);
     setIsEdit(true);
     setIsAddEditModalOpen(true);
@@ -66,36 +89,45 @@ const DefenseManager = () => {
     setIsViewModalOpen(true);
   };
 
-  const handleDeleteDefense = (id) => {
-    dispatch(deleteDefenseAsync(id)).then(() => {
-      toast.success('Xóa buổi bảo vệ thành công');
-      setIsDeleteModalOpen(false);
-      if (searchTerm) {
-        dispatch(searchDefensesAsync({ keyword: searchTerm, page: currentPage, per_page }));
+  const handleDeleteDefense = async (id) => {
+    if (window.confirm('Bạn có chắc muốn xóa buổi bảo vệ này?')) {
+      try {
+        await dispatch(deleteDefenseAsync(id)).unwrap();
+        toast.success('Xóa buổi bảo vệ thành công');
+        if (activeTab === 'table') {
+          fetchTableDefenses();
+        }
+      } catch (err) {
+        toast.error('Lỗi khi xóa buổi bảo vệ');
       }
-      else {
-        dispatch(fetchDefensesAsync({ faculty, page: currentPage, per_page }));
-      }
-    });
-  };
-
-  const handleSubmitDefense = (formData) => {
-    if (isEdit) {
-      dispatch(updateDefenseAsync({ id: selectedDefense.id, defense: formData })).then(() => {
-        toast.success('Cập nhật buổi bảo vệ thành công');
-      });
-    } else {
-      console.log(`Adding defense with data:`, formData);
-      
-      dispatch(addDefenseAsync(formData)).then(() => {
-        toast.success('Thêm buổi bảo vệ thành công');
-      });
     }
   };
-  const showModalDelete = (defense) => {
-    setSelectedDefense(defense);
-    setIsDeleteModalOpen(true);
-  }
+
+  const handleSubmitDefense = async (formData) => {
+    try {
+      if (isEdit) {
+        await dispatch(updateDefenseAsync({ id: selectedDefense.id, defenseData: formData })).unwrap();
+        toast.success('Cập nhật buổi bảo vệ thành công');
+      } else {
+        await dispatch(addDefenseAsync(formData)).unwrap();
+        toast.success('Thêm buổi bảo vệ thành công');
+      }
+      
+      setIsAddEditModalOpen(false);
+      if (activeTab === 'table') {
+        fetchTableDefenses();
+      }
+    } catch (err) {
+      toast.error(`Lỗi khi ${isEdit ? 'cập nhật' : 'thêm'} buổi bảo vệ`);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'calendar') {
+      setSearchTerm('');
+    }
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -108,53 +140,114 @@ const DefenseManager = () => {
           Thêm buổi bảo vệ
         </button>
       </div>
-      <FilterBar onFilterChange={handleFilterChange} />
-      {loading ? (
-        <p className="text-center text-gray-600">Đang tải...</p>
-      ) : (
-        <>
-          <TableView
-            defenses={defenses}
-            onViewDefense={handleViewDefense}
-            onEditDefense={handleEditDefense}
-            onDeleteDefense={showModalDelete}
-            onDefenseStatusChange={handleEditDefense}
-            isAdmin={true}
-          />
-          <Pagination
-            total={total}
-            perPage={per_page}
-            currentPage={page}
-            onPageChange={setCurrentPage}
-          />
-        </>
-      )}
+
+      <div className="mb-4">
+        <div className="flex border-b border-gray-200" role="tablist">
+          <button
+            onClick={() => handleTabChange('table')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'table' 
+                ? 'border-b-2 border-blue-600 text-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+            role="tab"
+            aria-selected={activeTab === 'table'}
+            aria-controls="table-view"
+            id="table-tab"
+          >
+            Table View
+          </button>
+          <button
+            onClick={() => handleTabChange('calendar')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'calendar' 
+                ? 'border-b-2 border-blue-600 text-blue-600' 
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+            role="tab"
+            aria-selected={activeTab === 'calendar'}
+            aria-controls="calendar-view"
+            id="calendar-tab"
+          >
+            Xem lịch
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          id={activeTab === 'table' ? 'table-view' : 'calendar-view'}
+          role="tabpanel"
+          aria-labelledby={activeTab === 'table' ? 'table-tab' : 'calendar-tab'}
+        >
+          {activeTab === 'table' ? (
+            <>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm buổi bảo vệ..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {tableLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Đang tải...</span>
+                </div>
+              ) : (
+                <TableViewDefense
+                  defenses={defenses}
+                  onViewDefense={handleViewDefense}
+                  onEditDefense={handleEditDefense}
+                  onDeleteDefense={handleDeleteDefense}
+                  isAdmin={true}
+                />
+              )}
+
+              <Pagination
+                total={total}
+                perPage={per_page}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          ) : (
+            <CalendarViewDefense
+              onViewDefense={handleViewDefense}
+              onEditDefense={handleEditDefense}
+              onDeleteDefense={handleDeleteDefense}
+              dispatch={dispatch}
+              isAdmin={true}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+
       {isAddEditModalOpen && (
         <AddEditDefenseModal
           isOpen={isAddEditModalOpen}
           onClose={() => setIsAddEditModalOpen(false)}
-          onSubmit={handleSubmitDefense}
-          defense={selectedDefense? selectedDefense : null}
-
+          defense={selectedDefense}
           isEdit={isEdit}
+          onSubmit={handleSubmitDefense}
         />
       )}
-      {isViewModalOpen && (
+      {isViewModalOpen && selectedDefense && (
         <ViewDefenseModal
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
-          defense={selectedDefense}
+          defenseId={selectedDefense?.id}
         />
-      )}
-      {selectedDefense && (
-        <DeleteConfirmationModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={() => handleDeleteDefense(selectedDefense.id)}
-          itemName={selectedDefense?.name || ''}
-        />
-      )}
-
+      )
+      }
     </div>
   );
 };

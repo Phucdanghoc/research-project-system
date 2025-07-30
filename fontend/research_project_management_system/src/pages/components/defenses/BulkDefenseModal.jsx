@@ -31,7 +31,7 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
   const dispatch = useAppDispatch();
   const { lecturers, loading: lecturersLoading } = useSelector((state) => state.lecturers);
   const { loading: timeCheckLoading, error: timeCheckError } = useSelector((state) => state.defenses);
-  
+
   const [formData, setFormData] = useState({
     date: '',
     start_time: '',
@@ -54,7 +54,6 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
 
   const selectedGroups = groups.filter(group => selectedGroupIds.includes(group.id));
 
-  // Check availability for each time block
   useEffect(() => {
     const checkAvailability = async () => {
       if (!formData.date || formData.lecturer_ids.length === 0) {
@@ -69,7 +68,7 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
         try {
           const result = await dispatch(
             checkDefenseTimeAsync({
-              lecturer_id: formData.lecturer_ids,
+              lecturer_id: formData.lecturer_ids[0],
               date: formData.date,
               start_time: block.start,
               end_time: block.end,
@@ -145,8 +144,8 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
       const lecturerIds = prev.lecturer_ids.includes(lecturerId)
         ? prev.lecturer_ids.filter((id) => id !== lecturerId)
         : prev.lecturer_ids.length >= 3
-        ? prev.lecturer_ids
-        : [...prev.lecturer_ids, lecturerId];
+          ? prev.lecturer_ids
+          : [...prev.lecturer_ids, lecturerId];
       return { ...prev, lecturer_ids: lecturerIds };
     });
     setErrors((prev) => ({ ...prev, lecturer_ids: '' }));
@@ -165,11 +164,11 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
       lecturer_ids: formData.lecturer_ids.length > 0 ? '' : 'Chọn ít nhất một giảng viên',
       general: '',
     };
-    
+
     if (formData.lecturer_ids.length > 3) {
       newErrors.lecturer_ids = 'Chỉ được chọn tối đa 3 giảng viên';
     }
-    
+
     if (formData.start_time && formData.end_time) {
       const key = `${formData.start_time}-${formData.end_time}`;
       if (!blockAvailability[key]) {
@@ -183,31 +182,32 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.info('Vui lòng điền đầy đủ và đúng các trường bắt buộc.');
       return;
     }
 
     try {
-      const promises = selectedGroups.map((group) => {
-        const defenseData = {
-          name: `Hội đồng bảo vệ - ${group.name}`,
-          date: formData.date,
-          start_time: toUTCISOPlus7(`${formData.date}T${formData.start_time}`),
-          end_time: toUTCISOPlus7(`${formData.date}T${formData.end_time}`),
-          lecturer_ids: formData.lecturer_ids,
-          status: 'waiting',
-          group_id: group.id,
-        };
+      const defenseData = {
+        name: formData.name,
+        date: formData.date,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        lecturer_ids: formData.lecturer_ids,
+        status: 'waiting',
+        group_ids: selectedGroups.map((g) => g.id), 
+      };
 
-        return dispatch(addDefenseAsync(defenseData)).unwrap();
-      });
+      dispatch(addDefenseAsync(defenseData))
+        .unwrap()
+        .then((res) => console.log('Success:', res))
+        .catch((err) => console.error('Error:', err));
 
-      await Promise.all(promises);
-      
+
+
       toast.success(`Tạo thành công ${selectedGroups.length} hội đồng bảo vệ`);
-      
+
       setFormData({
         date: '',
         start_time: '',
@@ -273,7 +273,7 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
                   key={group.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm"
+                  className="bg-blue-100 text-blue-800 px-3 py-1 w-fit rounded text-sm"
                 >
                   {group.group_code} - {group.name}
                 </motion.div>

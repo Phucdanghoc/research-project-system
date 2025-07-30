@@ -86,6 +86,8 @@ const LecturerGroup = () => {
   };
 
   const handleSubmitGroup = (formData) => {
+    console.log('formData', formData);
+    
     if (isEdit) {
       dispatch(updateGroupAsync({ id: selectedGroup.id, groupData: formData })).then(() => {
         toast.success('Cập nhật nhóm thành công');
@@ -130,23 +132,22 @@ const LecturerGroup = () => {
           />
         </>
       )}
-      <AddEditGroupModal
-        isOpen={isAddEditModalOpen}
-        onClose={() => {
-          setIsAddEditModalOpen(false);
-          setSelectedGroup(null);
-          setIsEdit(false);
-        }}
-        onSubmit={handleSubmitGroup}
-        groupData={selectedGroup}
-        isEdit={isEdit}
-      />
-      <ViewGroupModal
-        isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
-        groupId={selectedGroup ? selectedGroup.id : null}
-        dispatch={dispatch}
-      />
+      {isAddEditModalOpen && (
+        <AddEditGroupModal
+          isOpen={isAddEditModalOpen}
+          onClose={() => setIsAddEditModalOpen(false)}
+          group={selectedGroup}
+          isEdit={isEdit}
+          onSubmit={handleSubmitGroup}
+        />
+      )}
+      {isViewModalOpen && selectedGroup && (
+        <ViewGroupModal
+          isOpen={isViewModalOpen}
+          onClose={() => setIsViewModalOpen(false)}
+          groupId={selectedGroup.id}
+        />
+      )}
     </div>
   );
 };
