@@ -45,7 +45,7 @@ module Api
 
         defenses =
           if user.student?
-            Defense.joins(groups: :students).where(groups: { students: { id: user.id } }).distinct
+            Defense.joins(groups: :students).where(groups: { users: { id: user.id } }).distinct
           elsif user.lecturer?
             Defense
               .left_outer_joins(:groups, :lecturer_defenses)
