@@ -15,7 +15,7 @@ import LecturerStudent from '../pages/lecturer/students/LecturerStudent';
 import LecturerGroup from '../pages/lecturer/groups/LecturerGroup';
 import ProfilePage from '../pages/profile/ProfilePage';
 import NotFoundPage from '../pages/404';
-import DashboardStudent from '../pages/student/dashboard/DashboardStudent';
+import DashboardStudent from '../pages/student/dashboard/StudentDefenseView';
 import { GroupStudent } from '../pages/student/group/GroupStudent';
 import StudentLayout from '../pages/student/layout';
 import ProtectedStudent from './ProtectedStudent';

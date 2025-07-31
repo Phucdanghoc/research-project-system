@@ -233,7 +233,7 @@ export const GroupStudent = () => {
   const studentChips = useMemo(
     () =>
       groupStudents.map((student) => (
-       <StudentCard  student={student} />
+        <StudentCard student={student} />
       )),
     [groupStudents, currentStudentId, group]
   );
@@ -283,22 +283,20 @@ export const GroupStudent = () => {
           <nav className="flex space-x-2 p-4 overflow-x-auto">
             <button
               onClick={() => setActiveTab('groupInfo')}
-              className={`px-4 py-2 text-sm font-medium flex items-center ${
-                activeTab === 'groupInfo'
+              className={`px-4 py-2 text-sm font-medium flex items-center ${activeTab === 'groupInfo'
                   ? 'border-b-2 border-blue-600 text-blue-600'
                   : 'text-gray-600 hover:text-blue-600'
-              }`}
+                }`}
             >
               <FaUsers className="mr-2" /> Thông tin nhóm
             </button>
             {groupTopics.length > 0 && (
               <button
                 onClick={() => setActiveTab('topicInfo')}
-                className={`px-4 py-2 text-sm font-medium flex items-center ${
-                  activeTab === 'topicInfo'
+                className={`px-4 py-2 text-sm font-medium flex items-center ${activeTab === 'topicInfo'
                     ? 'border-b-2 border-blue-600 text-blue-600'
                     : 'text-gray-600 hover:text-blue-600'
-                }`}
+                  }`}
               >
                 <FaBook className="mr-2" /> Thông tin đề tài
               </button>
@@ -306,33 +304,30 @@ export const GroupStudent = () => {
             {groupLecturer && (
               <button
                 onClick={() => setActiveTab('lecturerInfo')}
-                className={`px-4 py-2 text-sm font-medium flex items-center ${
-                  activeTab === 'lecturerInfo'
+                className={`px-4 py-2 text-sm font-medium flex items-center ${activeTab === 'lecturerInfo'
                     ? 'border-b-2 border-blue-600 text-blue-600'
                     : 'text-gray-600 hover:text-blue-600'
-                }`}
+                  }`}
               >
                 <FaUserCircle className="mr-2" /> Giảng viên
               </button>
             )}
             <button
               onClick={() => setActiveTab('studentList')}
-              className={`px-4 py-2 text-sm font-medium flex items-center ${
-                activeTab === 'studentList'
+              className={`px-4 py-2 text-sm font-medium flex items-center ${activeTab === 'studentList'
                   ? 'border-b-2 border-blue-600 text-blue-600'
                   : 'text-gray-600 hover:text-blue-600'
-              }`}
+                }`}
             >
               <FaUsers className="mr-2" /> Sinh viên ({groupStudents.length})
             </button>
             {isLeader && group.defense_id === null && (
               <button
                 onClick={() => setActiveTab('inviteMembers')}
-                className={`px-4 py-2 text-sm font-medium flex items-center ${
-                  activeTab === 'inviteMembers'
+                className={`px-4 py-2 text-sm font-medium flex items-center ${activeTab === 'inviteMembers'
                     ? 'border-b-2 border-blue-600 text-blue-600'
                     : 'text-gray-600 hover:text-blue-600'
-                }`}
+                  }`}
               >
                 <FaUserPlus className="mr-2" /> Mời thành viên
               </button>
@@ -379,31 +374,29 @@ export const GroupStudent = () => {
                         <p className="text-gray-600">
                           <span className="font-medium text-gray-800">Trạng thái: </span>
                           <span
-                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                              group.status === 'pending'
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${group.status === 'pending'
                                 ? 'bg-yellow-100 text-yellow-700'
                                 : group.status === 'accepted'
-                                ? 'bg-green-100 text-green-700'
-                                : group.status === 'denied'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-red-100 text-red-700'
-                            }`}
+                                  ? 'bg-green-100 text-green-700'
+                                  : group.status === 'denied'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-red-100 text-red-700'
+                              }`}
                           >
                             {group.status === 'pending'
                               ? 'Đang chờ'
                               : group.status === 'accepted'
-                              ? 'Đã duyệt'
-                              : group.status === 'denied'
-                              ? 'Không duyệt'
-                              : group.status || 'Không xác định'}
+                                ? 'Đã duyệt'
+                                : group.status === 'denied'
+                                  ? 'Không duyệt'
+                                  : group.status || 'Không xác định'}
                           </span>
                         </p>
                         <p className="text-gray-600">
                           <span className="font-medium text-gray-800">Trạng thái bảo vệ: </span>
                           <span
-                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                              group.defense_id ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}
+                            className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${group.defense_id ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}
                           >
                             {group.defense_id ? 'Đã đăng ký bảo vệ' : 'Chưa đăng ký bảo vệ'}
                           </span>
@@ -452,23 +445,22 @@ export const GroupStudent = () => {
                       <p className="text-gray-600">
                         <span className="font-medium text-gray-800">Trạng thái: </span>
                         <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                            topic.status === 'pending'
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${topic.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-700'
                               : topic.status === 'approved'
-                              ? 'bg-green-100 text-green-700'
-                              : topic.status === 'open'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
+                                ? 'bg-green-100 text-green-700'
+                                : topic.status === 'open'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-red-100 text-red-700'
+                            }`}
                         >
                           {topic.status === 'pending'
                             ? 'Đang chờ'
                             : topic.status === 'approved'
-                            ? 'Đã duyệt'
-                            : topic.status === 'open'
-                            ? 'Mở'
-                            : topic.status || 'Không xác định'}
+                              ? 'Đã duyệt'
+                              : topic.status === 'open'
+                                ? 'Mở'
+                                : topic.status || 'Không xác định'}
                         </span>
                       </p>
                       <p className="text-gray-600">
@@ -584,7 +576,7 @@ export const GroupStudent = () => {
                 </div>
               )}
 
-              {activeTab === 'inviteMembers' && isLeader && group.defense_id === null &&  (
+              {activeTab === 'inviteMembers' && isLeader && group.defense_id === null && (
                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-5">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm sinh viên</label>
@@ -634,47 +626,55 @@ export const GroupStudent = () => {
               )}
 
               {isLeader && (
-                <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <div className="p-2 border-t border-gray-400 flex justify-end flex-wrap gap-3">
+                  {/* Nút giải thể nhóm */}
                   <button
                     onClick={handleDissolveGroup}
-                    className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                    className="px-5 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition disabled:opacity-50"
                     disabled={isEditingInfo || isEditingMembers || isInvitingMembers}
                   >
                     Giải thể nhóm
                   </button>
+
+                  {/* Nút chỉnh sửa thành viên */}
                   <button
                     onClick={handleEditMembers}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                    className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
                     disabled={isEditingInfo || isInvitingMembers || activeTab !== 'studentList'}
                   >
                     Chỉnh sửa thành viên
                   </button>
+
+                  {/* Nút chỉnh sửa thông tin */}
                   <button
                     onClick={handleEditInfo}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                    className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
                     disabled={isEditingMembers || isInvitingMembers || activeTab !== 'groupInfo'}
                   >
                     Chỉnh sửa thông tin
                   </button>
+
+                  {/* Nút huỷ và lưu chỉ hiện khi đang chỉnh sửa */}
                   {isEditingInfo && activeTab === 'groupInfo' && (
                     <>
                       <button
                         onClick={handleCancelEditInfo}
-                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                        className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
                       >
                         Hủy
                       </button>
                       <button
                         onClick={handleSaveInfo}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                        className="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50"
                         disabled={!formData.name}
                       >
-                        Lưu thông tin
+                        Lưu
                       </button>
                     </>
                   )}
                 </div>
               )}
+
             </>
           )}
         </div>
