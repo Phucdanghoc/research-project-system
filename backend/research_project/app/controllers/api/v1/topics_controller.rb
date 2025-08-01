@@ -12,11 +12,14 @@ module Api
           return render json: { error: "Current user's faculty is not set." }, status: :bad_request
         end
 
-        topics = Topic.joins(:lecturer).where("LOWER(users.faculty) = ?", faculty.downcase)
+        topics = Topic.joins(:lecturer).where("LOWER(unaccent(users.faculty)) = LOWER(unaccent(?))", faculty)
 
         if params[:keyword].present?
           keyword = params[:keyword]
-          topics = topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
+          topics = topics.where(
+            "unaccent(title) ILIKE unaccent(:keyword) OR unaccent(topic_code) ILIKE unaccent(:keyword)",
+            keyword: "%#{keyword}%"
+          )
         end
 
         if params[:status].present?
@@ -33,7 +36,11 @@ module Api
 
         page = params[:page] || 1
         per_page = params[:per_page] || 10
-        paginated = topics.includes(:groups, :lecturer).order(created_at: :desc).page(page).per(per_page)
+
+        paginated = topics
+                      .includes(:groups, :lecturer)
+                      .order(created_at: :desc)
+                      .page(page).per(per_page)
 
         render json: {
           topics: paginated.map { |t| topic_response(t) },
@@ -42,6 +49,7 @@ module Api
           total_count: paginated.total_count
         }, status: :ok
       end
+
 
       # GET /topics
       def index
@@ -75,7 +83,10 @@ module Api
         # Keyword Search (title or topic_code)
         if params[:keyword].present?
           keyword = params[:keyword]
-          topics = topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
+          topics = topics.where(
+            "unaccent(title) ILIKE unaccent(:keyword) OR unaccent(topic_code) ILIKE unaccent(:keyword)",
+            keyword: "%#{keyword}%"
+          )
         end
 
         # Status Filter
@@ -233,11 +244,14 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        @topics = Topic.includes(:groups, :lecturer)
-                       .where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
-                       .order(created_at: :desc)
-                       .page(page)
-                       .per(per_page)
+        keyword = keyword.strip
+
+        @topics = Topic
+                    .includes(:groups, :lecturer)
+                    .where("unaccent(lower(title)) ILIKE unaccent(lower(:keyword)) OR unaccent(lower(topic_code)) ILIKE unaccent(lower(:keyword))", keyword: "%#{keyword}%")
+                    .order(created_at: :desc)
+                    .page(page)
+                    .per(per_page)
 
         render json: {
           topics: @topics.map { |t| topic_response(t) },
@@ -246,6 +260,7 @@ module Api
           total_count: @topics.total_count
         }, status: :ok
       end
+
 
       def search_by_lecturer
         lecturer_id = params[:id]
@@ -262,7 +277,10 @@ module Api
         @topics = Topic.includes(:groups, :lecturer).where(lecturer_id: lecturer_id)
 
         if keyword.present?
-          @topics = @topics.where("title ILIKE :keyword OR topic_code ILIKE :keyword", keyword: "%#{keyword}%")
+          @topics = @topics.where(
+            "unaccent(lower(title)) ILIKE unaccent(lower(:kw)) OR unaccent(lower(topic_code)) ILIKE unaccent(lower(:kw))",
+            kw: "%#{keyword.strip}%"
+          )
         end
 
         if status.present?
@@ -285,6 +303,7 @@ module Api
           total_count: @topics.total_count
         }, status: :ok
       end
+
 
       private
 

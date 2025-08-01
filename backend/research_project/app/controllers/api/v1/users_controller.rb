@@ -319,6 +319,9 @@ module Api
       end
 
       private
+      def is_email?(string)
+        string.to_s.include?("@")
+      end
 
       def set_user
         @user = User.find_by(id: params[:id])
@@ -360,19 +363,32 @@ module Api
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
-        conditions = User.arel_table[:role].eq(User.roles[role])
+        sql_conditions = ["role = ?"]
+        sql_values = [User.roles[role]]
 
         if keyword.present?
-          keyword_condition = User.arel_table[:name].matches("%#{keyword}%")
-          keyword_condition = keyword_condition.or(User.arel_table[:id].eq(keyword.to_i)) if is_numeric?(keyword)
-          conditions = conditions.and(keyword_condition)
+          kw = keyword.downcase
+
+          if is_email?(keyword)
+            sql_conditions << "unaccent(lower(email)) ILIKE unaccent(lower(?))"
+            sql_values << "%#{kw}%"
+          else
+            sql_conditions << "unaccent(lower(name)) ILIKE unaccent(lower(?))"
+            sql_values << "%#{kw}%"
+
+            if is_numeric?(keyword)
+              sql_conditions << "id = ?"
+              sql_values << kw.to_i
+            end
+          end
         end
 
         if faculty.present?
-          conditions = conditions.and(User.arel_table[:faculty].matches("%#{faculty}%"))
+          sql_conditions << "faculty ILIKE ?"
+          sql_values << "%#{faculty}%"
         end
 
-        users = User.where(conditions)
+        users = User.where(sql_conditions.join(" AND "), *sql_values)
                     .includes(:groups, :lecture_groups)
                     .order(created_at: :desc)
                     .page(page).per(per_page)
@@ -384,6 +400,7 @@ module Api
           total_count: users.total_count
         }, status: :ok
       end
+
 
 
     end

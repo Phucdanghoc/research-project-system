@@ -29,40 +29,38 @@ module Api
         }, status: :ok
       end
 
-      # GET /groups/search?keyword=...
      def search
-        keyword = params[:keyword]
-        status = params[:status]
-        def_status = params[:def_status]
+      keyword = params[:keyword]
+      status = params[:status]
+      def_status = params[:def_status]
 
-        page = params[:page] || 1
-        per_page = params[:per_page] || 10
+      page = params[:page] || 1
+      per_page = params[:per_page] || 10
 
-        @groups = Group
-                    .includes(:lecturer, :defense, :students, :topics, :student_lead)
+      @groups = Group
+                  .includes(:lecturer, :defense, :students, :topics, :student_lead)
 
-        # Thêm điều kiện nếu có từ khóa
-        @groups = @groups.where("groups.name ILIKE ?", "%#{keyword}%") if keyword.present?
-        @groups = @groups.where(status: status) if status.present?
-        @groups = @groups.where(def_status: def_status) if def_status.present?
+      @groups = @groups.where("unaccent(groups.name) ILIKE unaccent(?)", "%#{keyword}%") if keyword.present?
+      @groups = @groups.where(status: status) if status.present?
+      @groups = @groups.where(def_status: def_status) if def_status.present?
 
-        @groups = @groups.order(created_at: :desc)
-                        .page(page)
-                        .per(per_page)
+      @groups = @groups.order(created_at: :desc)
+                      .page(page)
+                      .per(per_page)
 
-        render json: {
-          groups: @groups.as_json(include: {
-            lecturer: { only: [:id, :name, :faculty] },
-            defense: {},
-            students: {},
-            topics: {},
-            student_lead: { only: [:id, :name, :student_code] }
-          }),
-          current_page: @groups.current_page,
-          total_pages: @groups.total_pages,
-          total_count: @groups.total_count
-        }, status: :ok
-      end
+      render json: {
+        groups: @groups.as_json(include: {
+          lecturer: { only: [:id, :name, :faculty] },
+          defense: {},
+          students: {},
+          topics: {},
+          student_lead: { only: [:id, :name, :student_code] }
+        }),
+        current_page: @groups.current_page,
+        total_pages: @groups.total_pages,
+        total_count: @groups.total_count
+      }, status: :ok
+    end
 
 
       # GET /groups/:id
