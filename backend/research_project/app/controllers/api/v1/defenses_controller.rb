@@ -53,10 +53,6 @@ module Api
           else
             Defense.none
           end
-
-        if defenses.empty?
-          render json: { message: "No defense found for current user." }, status: :not_found
-        else
           render json: defenses.as_json(include: {
             groups: { include: [:lecturer, :students] },
             lecturer_defenses: {
@@ -67,7 +63,6 @@ module Api
               only: [:id, :lecturer_id, :point, :comment, :group_id, :date, :start_time, :end_time]
             }
           }), status: :ok
-        end
       end
 
       # GET /defenses/check_time_conflict
