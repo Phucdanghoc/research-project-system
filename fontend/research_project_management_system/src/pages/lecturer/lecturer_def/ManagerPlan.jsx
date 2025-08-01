@@ -171,9 +171,9 @@ const MyDefensesView = () => {
                       const group = defense.groups?.[0];
                       const isDone = isDefenseDone(defense.end_time);
                       const currentUser = TokenService.getUser();
-                      const myLecturerDefense = defense.lecturer_defenses.find(
+                      const myLecturerDefense =  defense.lecturer_defenses && defense.lecturer_defenses.find(
                         (ld) => ld.lecturer_id === currentUser?.id
-                      );
+                      ) || null;
 
                       return (
                         <tr

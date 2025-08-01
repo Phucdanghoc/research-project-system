@@ -654,7 +654,6 @@ export const GroupStudent = () => {
                     Chỉnh sửa thông tin
                   </button>
 
-                  {/* Nút huỷ và lưu chỉ hiện khi đang chỉnh sửa */}
                   {isEditingInfo && activeTab === 'groupInfo' && (
                     <>
                       <button

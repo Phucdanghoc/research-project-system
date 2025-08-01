@@ -6,7 +6,6 @@ import UnauthorizedPage from '../components/UnauthorizedPage';
 import LoginPage from '../pages/auth/LoginPage';
 import AdminLayout from '../pages/admin/layout';
 import LecturerLayout from '../pages/lecturer/layout';
-import ManagerDashboard from '../pages/admin/dashboard';
 import ManagerStudents from '../pages/admin/account/StudentManager';
 import ManagerLecturers from '../pages/admin/account/LecturerManager';
 import ManageTopics from '../pages/admin/topics/TopicManager';
@@ -49,13 +48,12 @@ const router = createBrowserRouter([
       </ProtectedAdmin>
     ),
     children: [
-      { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: 'dashboard', element: <ManagerDashboard /> },
+      { index: true, element: <Navigate to="manage-defenses" replace /> },
+      // { path: 'dashboard', element: <ManagerDashboard /> },
       { path: 'manage-students', element: <ManagerStudents /> },
       { path: 'manage-lecturers', element: <ManagerLecturers /> },
       { path: 'manage-topics', element: <ManageTopics /> },
       { path: 'manage-groups', element: <ManagerGroup /> },
-      { path: 'manage-plans', element: <PlanManager /> },
       { path: 'manage-defenses', element: <DefenseManager /> },
       { path: 'setup-areas', element: <ManagerStudents /> },
 

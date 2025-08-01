@@ -17,6 +17,7 @@ interface PaginationParams {
     page?: number;
     per_page?: number;
     keyword?: string;
+    def_status?: string;
     status?: string;
 }
 
@@ -62,8 +63,8 @@ const createGroupThunk = <T, Arg>(
 // Thunks
 export const createGroupAsync = createGroupThunk<{ group: Group }, GroupForm>(
     'groups/createGroupAsync',
-    ({ name, topic_id, student_ids , description }) =>
-        api.post('/groups', { name, topic_id, student_ids , description })
+    ({ name, topic_id, student_ids, description }) =>
+        api.post('/groups', { name, topic_id, student_ids, description })
 );
 
 export const fetchGroupsAsync = createGroupThunk<
@@ -121,16 +122,19 @@ export const fetchGroupByMeAsync = createGroupThunk<
     PaginationParams
 >(
     'groups/fetchGroupByMeAsync',
-    ({ page = 1, per_page = 10, status = '', keyword = '' }) =>
-        api.get('/users/groups/me', { params: { page, per_page, status, keyword } })
+    ({ page = 1, per_page = 10, status = '', keyword = '' , def_status = '' }) =>
+        api.get('/users/groups/me', { params: { page, per_page, status, keyword , def_status} })
 );
 
 export const searchGroupsAsync = createGroupThunk<
-    { groups: Group[]; current_page: number; total_pages: number },
-    string
+    { groups: Group[]; current_page: number; total_pages: number; total_count: number },
+    { keyword: string; page?: number; per_page?: number; def_status?: string }
 >(
     'groups/searchGroupsAsync',
-    (keyword) => api.get('/groups/search', { params: { keyword } })
+    ({ keyword, page = 1, per_page = 10, def_status = '' }) =>
+        api.get('/groups/search', {
+            params: { keyword, page, per_page, def_status },
+        })
 );
 
 // Slice

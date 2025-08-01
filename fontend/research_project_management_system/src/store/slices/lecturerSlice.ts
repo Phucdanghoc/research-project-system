@@ -22,6 +22,7 @@ interface PaginationParams {
 
 interface SearchParams extends PaginationParams {
   keyword: string;
+  faculty : string;
 }
 
 const api = axios.create({
@@ -69,8 +70,8 @@ export const getLecturerByIdAsync = createLecturerThunk(
 
 export const searchLecturersAsync = createLecturerThunk(
   'lecturers/searchLecturersAsync',
-  ({ keyword, page = 1, per_page = 10 }: SearchParams) =>
-    api.get('/lecturers/search', { params: { keyword, page, per_page } })
+  ({ faculty, keyword, page = 1, per_page = 10 }: SearchParams) =>
+    api.get('/lecturers/search', { params: { faculty, keyword, page, per_page } })
 );
 
 export const importLecturersFromExcel = createLecturerThunk(

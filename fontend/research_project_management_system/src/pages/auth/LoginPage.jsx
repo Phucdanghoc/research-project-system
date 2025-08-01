@@ -49,7 +49,7 @@ const LoginPage = () => {
             className="absolute inset-0 bg-cover bg-center filter blur-sm opacity-50"
             style={{
               backgroundImage:
-                'url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1920&q=80")',
+                'url("https://top10tphcm.com/wp-content/uploads/2023/06/anh-truong-dep-nhat.jpg")',
             }}
           ></div>
           <div className="relative z-10 text-center">

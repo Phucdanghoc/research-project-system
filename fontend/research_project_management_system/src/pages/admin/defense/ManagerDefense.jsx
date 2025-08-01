@@ -89,10 +89,14 @@ const DefenseManager = () => {
     setIsViewModalOpen(true);
   };
 
-  const handleDeleteDefense = async (id) => {
+  const handleDeleteDefense = async (defense) => {
     if (window.confirm('Bạn có chắc muốn xóa buổi bảo vệ này?')) {
       try {
-        await dispatch(deleteDefenseAsync(id)).unwrap();
+        if (!defense || !defense.id) {
+          toast.error('Buổi bảo vệ không hợp lệ!');
+          return;
+        }
+        await dispatch(deleteDefenseAsync(defense.id)).unwrap();
         toast.success('Xóa buổi bảo vệ thành công');
         if (activeTab === 'table') {
           fetchTableDefenses();
@@ -187,15 +191,6 @@ const DefenseManager = () => {
         >
           {activeTab === 'table' ? (
             <>
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm buổi bảo vệ..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
 
               {tableLoading ? (
                 <div className="flex justify-center items-center h-64">

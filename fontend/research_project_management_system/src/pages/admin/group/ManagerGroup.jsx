@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../../store';
-import { 
-  createGroupAsync, 
-  updateGroupAsync, 
-  deleteGroupAsync, 
-  fetchGroupsAsync, 
+import {
+  createGroupAsync,
+  updateGroupAsync,
+  deleteGroupAsync,
+  fetchGroupsAsync,
   searchGroupsAsync,
-  patchGroupAsync 
+  patchGroupAsync
 } from '../../../store/slices/groupSlice';
 import { useSelector } from 'react-redux';
 import FilterBar from '../../components/students/FilterBar';
@@ -18,6 +18,7 @@ import BulkDefenseModal from '../../components/defenses/BulkDefenseModal'; // Im
 import Pagination from '../../components/students/Pagination';
 import { toast } from 'react-toastify';
 import AddDefenseModal from '../../components/defenses/AddEditDefenses'; // Assuming AddDefenseModal is available
+import FilterStatusDefBar from '../../../components/FilterBarStatus';
 
 const ManagerGroup = () => {
   const dispatch = useAppDispatch();
@@ -33,55 +34,60 @@ const ManagerGroup = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
+  const [defStatus, setDefStatus] = useState('');
 
-  // Fetch groups on page, faculty, or per_page change
+
   useEffect(() => {
-    dispatch(fetchGroupsAsync({ faculty, page: currentPage, per_page }));
-  }, [currentPage, per_page, faculty, dispatch]);
+    console.log('ManagerGroup useEffect - faculty:', faculty, 'searchTerm:', searchTerm, 'currentPage:', currentPage, 'defStatus:', defStatus);
+    
+    const shouldSearch = searchTerm.trim() || defStatus;
 
-  // Search groups when searchTerm changes
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      dispatch(searchGroupsAsync(searchTerm));
-      setCurrentPage(1);
-    }
-  }, [searchTerm, dispatch]);
+    const action = shouldSearch
+      ? searchGroupsAsync({
+        keyword: searchTerm,
+        def_status: defStatus,
+        page: currentPage,
+      })
+      : fetchGroupsAsync({
+        faculty,
+        page: currentPage,
+      });
 
-  // Display error toast if error occurs
+    dispatch(action);
+  }, [searchTerm, defStatus, faculty, currentPage]);
+
+
   useEffect(() => {
     if (error) {
       toast.error(error);
     }
   }, [error]);
 
-  // Handle filter changes from FilterBar
-  const handleFilterChange = ({ faculty, searchTerm }) => {
-    setFaculty(faculty);
+  const handleFilterChange = ({ faculty, searchTerm, def_status }) => {
+    // setFaculty(faculty);
     setSearchTerm(searchTerm);
+    setDefStatus(def_status);
     setCurrentPage(1);
   };
 
-  // Open modal to add a new group
+
   const handleAddGroup = () => {
     setSelectedGroup(null);
     setIsEdit(false);
     setIsAddEditModalOpen(true);
   };
 
-  // Open modal to edit a group
   const handleEditGroup = (group) => {
     setSelectedGroup(group);
     setIsEdit(true);
     setIsAddEditModalOpen(true);
   };
 
-  // Open modal to view group details
   const handleViewGroup = (group) => {
     setSelectedGroup(group);
     setIsViewModalOpen(true);
   };
 
-  // Delete a group with confirmation
   const handleDeleteGroup = (id) => {
     if (window.confirm('Bạn có chắc muốn xóa nhóm này?')) {
       dispatch(deleteGroupAsync(id))
@@ -95,19 +101,16 @@ const ManagerGroup = () => {
     }
   };
 
-  // Open modal to create a defense plan for a group
   const handleCreatePlan = (group) => {
     setSelectedGroup(group);
     setIsCreatePlanModalOpen(true);
   };
 
-  // Open modal to add a defense for a group
   const handleAddDefense = (group) => {
     setSelectedGroup(group);
     setIsAddDefenseModalOpen(true);
   };
 
-  // Open modal to bulk add defenses for selected groups
   const handleBulkAddDefense = (groupIds) => {
     setSelectedGroupIds(groupIds);
     setIsBulkDefenseModalOpen(true);
@@ -185,14 +188,8 @@ const ManagerGroup = () => {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Quản lý nhóm (Admin)</h1>
-        <button
-          onClick={handleAddGroup}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Thêm nhóm
-        </button>
       </div>
-      <FilterBar onFilterChange={handleFilterChange} />
+      <FilterStatusDefBar onFilterChange={handleFilterChange} />
       {loading ? (
         <p className="text-center text-gray-600">Đang tải...</p>
       ) : (

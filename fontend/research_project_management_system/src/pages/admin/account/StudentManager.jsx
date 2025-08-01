@@ -36,6 +36,7 @@ const ManageStudents = () => {
     class_name: '',
     faculty: '',
     major: '',
+      birth: '',
     phone: '',
     gender: '',
   });
@@ -75,6 +76,7 @@ const ManageStudents = () => {
       class_name: '',
       faculty: '',
       major: '',
+      birth: '',
       phone: '',
       gender: '',
     });
@@ -121,8 +123,10 @@ const ManageStudents = () => {
         password: '',
         student_code: '',
         class_name: '',
+
         faculty: '',
         major: '',
+        birth: '',
         phone: '',
         gender: '',
       });
@@ -148,6 +152,7 @@ const ManageStudents = () => {
         student_code: '',
         class_name: '',
         faculty: '',
+        birth: '',
         major: '',
         phone: '',
         gender: '',
@@ -176,7 +181,7 @@ const ManageStudents = () => {
       }
       toast.success('Xóa sinh viên thành công!');
     } catch (error) {
-      toast.error('Xóa sinh viên thất bại!');
+      toast.error('Xóa sinh viên thất bại! Sinh viên có thể đang được sử dụng trong các nhóm hoặc bảo vệ.');
       console.error('Delete student failed:', error);
     }
   };
@@ -203,6 +208,7 @@ const ManageStudents = () => {
       student_code: '',
       class_name: '',
       faculty: '',
+      birth: '',
       major: '',
       phone: '',
       gender: '',
@@ -369,7 +375,8 @@ const ManageStudents = () => {
           { name: 'email', label: 'Email', type: 'email', required: true },
           { name: 'password', label: 'Mật khẩu', type: 'password', required: true },
           { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
-          // { name: 'class_name', label: 'Lớp', type: 'text', required: true },
+          { name: 'class_name', label: 'Lớp', type: 'text', required: true },
+          { name: 'birth', label: 'Ngày sinh', type: 'date', required: true },
           {
             name: 'faculty',
             label: 'Khoa',
@@ -424,6 +431,7 @@ const ManageStudents = () => {
           // { name: 'password', label: 'Mật khẩu (để trống nếu không đổi)', type: 'password' },
           { name: 'student_code', label: 'Mã sinh viên', type: 'text', required: true },
           { name: 'class_name', label: 'Lớp', type: 'text', required: true },
+          { name: 'birth', label: 'Ngày sinh', type: 'date', required: true },
           {
             name: 'faculty',
             label: 'Khoa',
