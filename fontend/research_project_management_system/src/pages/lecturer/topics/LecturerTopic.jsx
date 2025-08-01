@@ -154,12 +154,23 @@ const LecturerTopic = () => {
     setSelectedTopic(topic);
     setIsViewModalOpen(true);
   }, []);
-
+  const validateTopicBeforeOpen = (topic) => {
+    if (!topic.title?.trim()) return false;
+    if (!topic.topic_code?.trim()) return false;
+    if (!topic.description?.trim()) return false;
+    if (!topic.requirement?.trim()) return false;
+    if (!topic.category?.trim()) return false;
+    return true;
+  };
   const handleSubmitForApproval = useCallback(
     async (topicId , status) => {
       const topic = topics.find((t) => t.id === topicId);
       if (topic) {
         try {
+          if (status === 'open' && !validateTopicBeforeOpen(topic)) {
+            toast.error('Vui lòng điền đầy đủ thông tin trước khi mở đề tài!');
+            return;
+          }
           await dispatch(updateTopicAsync({ ...topic, status: status })).unwrap();
           toast.success('Gửi duyệt đề tài thành công!');
           dispatch(getTopicByMeAsync({ page: currentPage, per_page: TOPICS_PER_PAGE }));

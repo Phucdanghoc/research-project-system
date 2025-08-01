@@ -53,7 +53,9 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
   const modalRef = useRef(null);
 
   const selectedGroups = groups.filter(group => selectedGroupIds.includes(group.id));
-
+  console.log(`Selected groups: ${JSON.stringify(selectedGroups)}`);
+  
+  const currentFaculty = selectedGroups.length > 0 && selectedGroups[0].lecturer ? selectedGroups[0].lecturer.faculty : null;
   useEffect(() => {
     const checkAvailability = async () => {
       if (!formData.date || formData.lecturer_ids.length === 0) {
@@ -112,11 +114,14 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
   }, [isOpen]);
 
   const debouncedSearch = useDebouncedCallback((query) => {
+    console.log(`Factulty: ${currentFaculty}, Query: ${query}`);
+    
     dispatch(
       searchLecturersAsync({
         page: 1,
         per_page: 10,
         keyword: query,
+        faculty: currentFaculty,
       })
     );
   }, 300);
@@ -290,6 +295,7 @@ const BulkDefenseModal = ({ isOpen, onClose, selectedGroupIds, groups }) => {
                 <input
                   type="date"
                   name="date"
+                  min={new Date().toISOString().split('T')[0]} 
                   value={formData.date}
                   onChange={handleChange}
                   className="mt-1 block w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"

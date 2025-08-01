@@ -9,7 +9,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
     const navLinks = {
         admin: [
-            { link: '/admin', name: 'Dashboard', icon: FaHome },
             { link: '/admin/manage-students', name: 'Danh sách sinh viên', icon: FaUsers },
             { link: '/admin/manage-lecturers', name: 'Danh sách giảng viên', icon: FaUsers },
             { link: '/admin/manage-groups', name: 'Danh sách nhóm', icon: FaLayerGroup },

@@ -189,22 +189,37 @@ const ManageTopics = () => {
     },
     [dispatch, currentPage]
   );
+  const validateTopicBeforeOpen = (topic) => {
+    if (!topic.title?.trim()) return false;
+    if (!topic.topic_code?.trim()) return false;
+    if (!topic.description?.trim()) return false;
+    if (!topic.requirement?.trim()) return false;
+    if (!topic.lecturer_id) return false;
+    if (!topic.category?.trim()) return false;
+    if (typeof topic.topic_quantity !== 'number' || topic.topic_quantity <= 0) return false;
+    return true;
+  };
 
   const handleStatusChange = useCallback(
     async (topicId, newStatus) => {
       const topic = topics.find((t) => t.id === topicId);
-      if (topic) {
-        try {
-          await dispatch(updateTopicAsync({ ...topic, status: newStatus })).unwrap();
-          toast.success('Cập nhật trạng thái thành công!');
-        } catch (error) {
-          toast.error('Cập nhật trạng thái thất bại!');
-        }
+      if (!topic) return;
+      if (newStatus === 'open' && !validateTopicBeforeOpen(topic)) {
+        toast.error('Vui lòng điền đầy đủ thông tin đề tài trước khi mở.');
+        return;
+      }
+
+      try {
+        await dispatch(updateTopicAsync({ ...topic, status: newStatus })).unwrap();
+        toast.success('Cập nhật trạng thái thành công!');
+      } catch (error) {
+        toast.error('Cập nhật trạng thái thất bại!');
       }
       setOpenDropdownId(null);
     },
     [dispatch, topics]
   );
+
 
   const handleConfirmDelete = useCallback(async () => {
     if (!selectedTopic) return;

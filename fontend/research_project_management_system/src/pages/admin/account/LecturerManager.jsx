@@ -36,6 +36,7 @@ const ManageLecturers = () => {
     password: '',
     role: 'lecturer',
     lecturer_code: '',
+    birth : '',
     faculty: '',
     phone: '',
     gender: '',
@@ -59,6 +60,8 @@ const ManageLecturers = () => {
       password: '',
       role: 'lecturer',
       lecturer_code: '',
+    birth : '',
+
       faculty: '',
       phone: '',
       gender: '',
@@ -73,6 +76,7 @@ const ManageLecturers = () => {
       email: lecturer.email || '',
       password: '',
       role: 'lecturer',
+      birth: lecturer.birth || '',
       lecturer_code: lecturer.lecturer_code || '',
       faculty: lecturer.faculty || '',
       phone: lecturer.phone || '',
@@ -102,6 +106,7 @@ const ManageLecturers = () => {
         email: '',
         password: '',
         role: 'lecturer',
+        birth: '',
         lecturer_code: '',
         faculty: '',
         phone: '',
@@ -126,6 +131,7 @@ const ManageLecturers = () => {
         email: '',
         password: '',
         role: 'lecturer',
+        birth: '',
         lecturer_code: '',
         faculty: '',
         phone: '',
@@ -184,6 +190,7 @@ const ManageLecturers = () => {
       password: '',
       role: 'lecturer',
       lecturer_code: '',
+      birth: '',
       faculty: '',
       phone: '',
       gender: '',
@@ -229,6 +236,7 @@ const ManageLecturers = () => {
         render: (item) => FacultyMajors[item.faculty]?.name || item.faculty || 'Không có',
       },
       { header: 'Số điện thoại', key: 'phone' },
+      { header: 'Ngày sinh', key: 'birth' },
       {
         header: 'Giới tính',
         key: 'gender',
@@ -357,6 +365,7 @@ const ManageLecturers = () => {
         onClose={closeModal}
         onSubmit={handleSubmitAdd}
         formData={formData}
+        isLectuer={true}
         onInputChange={handleInputChange}
         isEdit={false}
         fields={[
@@ -378,6 +387,7 @@ const ManageLecturers = () => {
             ],
           },
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
+          { name: 'birth', label: 'Ngày sinh', type: 'date' },
           {
             name: 'gender',
             label: 'Giới tính',
@@ -396,6 +406,8 @@ const ManageLecturers = () => {
         onClose={closeModal}
         onSubmit={handleSubmitEdit}
         formData={formData}
+        isLectuer={true}
+
         onInputChange={handleInputChange}
         isEdit={true}
         fields={[
@@ -417,6 +429,7 @@ const ManageLecturers = () => {
             ],
           },
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
+          { name: 'birth', label: 'Ngày sinh', type: 'date' },
           {
             name: 'gender',
             label: 'Giới tính',
@@ -439,12 +452,14 @@ const ManageLecturers = () => {
 
 
 
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={closeModal}
-        onConfirm={handleConfirmDelete}
-        itemName={selectedLecturer?.name || ''}
-      />
+      {isDeleteModalOpen && (
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={closeModal}
+          onConfirm={handleDelete}
+          itemName={selectedLecturer?.name}
+        />
+      )}
 
       {isImportModalOpen && (
         <ImportCsvModal

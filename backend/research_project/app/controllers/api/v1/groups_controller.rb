@@ -30,19 +30,25 @@ module Api
       end
 
       # GET /groups/search?keyword=...
-      def search
+     def search
         keyword = params[:keyword]
-        return render json: { error: "Keyword is required." }, status: :bad_request if keyword.blank?
+        status = params[:status]
+        def_status = params[:def_status]
 
         page = params[:page] || 1
         per_page = params[:per_page] || 10
 
         @groups = Group
-                    .includes(:lecturer, :defense, :students)
-                    .where("groups.name ILIKE ?", "%#{keyword}%")
-                    .order(created_at: :desc)
-                    .page(page)
-                    .per(per_page)
+                    .includes(:lecturer, :defense, :students, :topics, :student_lead)
+
+        # Thêm điều kiện nếu có từ khóa
+        @groups = @groups.where("groups.name ILIKE ?", "%#{keyword}%") if keyword.present?
+        @groups = @groups.where(status: status) if status.present?
+        @groups = @groups.where(def_status: def_status) if def_status.present?
+
+        @groups = @groups.order(created_at: :desc)
+                        .page(page)
+                        .per(per_page)
 
         render json: {
           groups: @groups.as_json(include: {
@@ -57,6 +63,7 @@ module Api
           total_count: @groups.total_count
         }, status: :ok
       end
+
 
       # GET /groups/:id
       def show

@@ -176,8 +176,8 @@ const studentSlice = createSlice({
       })
       .addCase(importStudentsFromExcel.fulfilled, (state, action) => {
         state.loading = false;
-        state.rows_imported = action.payload.count;
-        state.error = null;
+        state.rows_imported = action.payload.imported_count;
+        state.error = action.payload.errors || null;
       })
       .addCase(getStudentByIdAsync.fulfilled, (state, action) => {
         state.student = action.payload;

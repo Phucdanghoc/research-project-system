@@ -10,16 +10,16 @@ import { useSelector } from 'react-redux';
 
 const LecturerStudent = () => {
     const dispatch = useAppDispatch();
-    const { students, total, page, per_page, loading, error } = useSelector((state) => state.students);
+    const { students,  total_pages, loading, error } = useSelector((state) => state.students);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
 
     useEffect(() => {
-        dispatch(getStudentInFacultyAsync({ page: currentPage, per_page }));
+        dispatch(getStudentInFacultyAsync({ page: currentPage }));
 
-    }, [currentPage, per_page, dispatch]);
+    }, [currentPage, dispatch]);
 
     useEffect(() => {
         if (error) {
@@ -32,15 +32,17 @@ const LecturerStudent = () => {
         setSearchTerm(searchTerm);
         setCurrentPage(1);
         console.log(`Search term: ${searchTerm}`);
-        
-        dispatch(getStudentInFacultyAsync({ search: searchTerm, page: 1, per_page : 10 }));
+
+        dispatch(getStudentInFacultyAsync({ search: searchTerm, page: 1}));
     };
     const handleViewStudent = (student) => {
         setSelectedStudent(student);
         setIsModalOpen(true);
     };
 
-
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -51,12 +53,43 @@ const LecturerStudent = () => {
             ) : (
                 <>
                     <TableView students={students} onViewStudent={handleViewStudent} />
-                    <Pagination
-                        total={total}
-                        perPage={per_page}
-                        currentPage={currentPage}
-                        onPageChange={setCurrentPage}
-                    />
+                    {total_pages > 1 && (
+                        <div className="flex justify-center mt-4 space-x-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1 || loading}
+                                className={`px-3 py-1 rounded ${currentPage === 1 || loading
+                                    ? 'bg-gray-200 text-gray-500'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    }`}
+                            >
+                                Trước
+                            </button>
+                            {[...Array(total_pages)].map((_, index) => (
+                                <button
+                                    key={index + 1}
+                                    onClick={() => handlePageChange(index + 1)}
+                                    disabled={loading}
+                                    className={`px-3 py-1 rounded ${currentPage === index + 1
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        }`}
+                                >
+                                    {index + 1}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === total_pages || loading}
+                                className={`px-3 py-1 rounded ${currentPage === total_pages || loading
+                                    ? 'bg-gray-200 text-gray-500'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    }`}
+                            >
+                                Sau
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
             {isModalOpen && (

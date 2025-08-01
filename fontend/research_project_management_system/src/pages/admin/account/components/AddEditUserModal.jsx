@@ -6,6 +6,7 @@ const AddEditUserModal = ({
   onInputChange,
   isEdit = false,
   fields,
+  isLectuer = false,
 }) => {
   if (!isOpen) return null;
 
@@ -13,7 +14,7 @@ const AddEditUserModal = ({
     <div className="fixed inset-0 bg-black/25 flex items-center justify-center z-50">
       <div className="bg-white p-4 rounded-lg w-full max-w-3xl shadow-lg">
         <h2 className="text-2xl font-bold text-blue-600 mb-6">
-          {isEdit ? 'Sửa sinh viên' : 'Thêm sinh viên'}
+          {isEdit ? `Sửa ${isLectuer ? 'Giảng viên' : 'Sinh viên'}` : `Thêm ${isLectuer ? 'Giảng viên' : 'Sinh viên'}`}
         </h2>
         <form onSubmit={onSubmit} className="grid grid-cols-2 gap-4">
           {fields.map((field) => (

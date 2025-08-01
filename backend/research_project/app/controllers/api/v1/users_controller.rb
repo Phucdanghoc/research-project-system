@@ -137,39 +137,44 @@ module Api
       end
 
       def groups_me
-        search = params[:search]
-        status = params[:status]
-        page = params[:page] || 1
-        per_page = params[:per_page] || 10
+          search = params[:search]
+          status = params[:status]
+          def_status = params[:defense_status] 
+          page = params[:page] || 1
+          per_page = params[:per_page] || 10
 
-        groups = current_user.groups + current_user.lecture_groups
-        groups = groups.uniq
+          groups = current_user.groups + current_user.lecture_groups
+          groups = groups.uniq
 
-        if search.present?
-          groups = groups.select { |g| g.name.downcase.include?(search.downcase) }
+          if search.present?
+            groups = groups.select { |g| g.name.downcase.include?(search.downcase) }
+          end
+
+          if status.present?
+            groups = groups.select { |g| g.status.to_s == status.to_s }
+          end
+
+          if def_status.present?
+            groups = groups.select { |g| g.def_status.to_s == def_status.to_s }
+          end
+
+          paginated_groups = Kaminari.paginate_array(groups)
+                                    .page(page)
+                                    .per(per_page)
+
+          render json: {
+            groups: paginated_groups.as_json(include: {
+              lecturer: { only: [:id, :name, :faculty] },
+              defense: {},
+              students: {},
+              topics: {}
+            }),
+            current_page: paginated_groups.current_page,
+            total_pages: paginated_groups.total_pages,
+            total_count: paginated_groups.total_count
+          }, status: :ok
         end
 
-        if status.present?
-          groups = groups.select { |g| g.status.to_s == status.to_s }
-        end
-
-        # Custom pagination cho mảng
-        paginated_groups = Kaminari.paginate_array(groups)
-                                  .page(page)
-                                  .per(per_page)
-
-        render json: {
-          groups: paginated_groups.as_json(include: {
-            lecturer: { only: [:id, :name, :faculty] },
-            defense: {},
-            students: {},
-            topics: {}
-          }),
-          current_page: paginated_groups.current_page,
-          total_pages: paginated_groups.total_pages,
-          total_count: paginated_groups.total_count
-        }, status: :ok
-      end
 
 
       def students_my_faculty

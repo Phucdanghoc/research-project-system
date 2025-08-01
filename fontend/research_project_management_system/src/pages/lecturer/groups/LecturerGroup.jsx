@@ -8,10 +8,11 @@ import ViewGroupModal from '../../components/groups/ViewGroupModal';
 import Pagination from '../../components/students/Pagination';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import FilterStatusDefBar from '../../../components/FilterBarStatus';
 
 const LecturerGroup = () => {
   const dispatch = useAppDispatch();
-  const { groups, total, page, per_page, loading, error } = useSelector((state) => state.groups);
+  const { groups, total_pages, current_page, loading, error } = useSelector((state) => state.groups);
   const [faculty, setFaculty] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,11 +20,15 @@ const LecturerGroup = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [defStatus, setDefStatus] = useState('');
 
   useEffect(() => {
-    dispatch(fetchGroupByMeAsync({ faculty, search: searchTerm, page: currentPage, per_page }));
+    dispatch(fetchGroupByMeAsync({
+      faculty, search: searchTerm, page: currentPage,
+      def_status: defStatus
+    }));
 
-  }, [searchTerm, currentPage, per_page, dispatch]);
+  }, [searchTerm, currentPage, dispatch, defStatus]);
 
   useEffect(() => {
     if (error) {
@@ -37,12 +42,13 @@ const LecturerGroup = () => {
     setCurrentPage(1);
   };
 
-  const handleFilterChange = ({ faculty, searchTerm }) => {
+  const handleFilterChange = ({ faculty, searchTerm, def_status }) => {
     setFaculty(faculty);
     setSearchTerm(searchTerm);
     setCurrentPage(1);
+    setDefStatus(def_status);
     // if (faculty) {
-    //   dispatch(getGroupsAsync({ faculty, search: searchTerm, page: 1, per_page }));
+    //   dispatch(getGroupsAsync({ faculty, search: searchTerm, page: 1 }));
     // }
   };
 
@@ -59,8 +65,8 @@ const LecturerGroup = () => {
   };
   const handleChangeStatus = (id, status) => {
     console.log('id', id, 'status', status);
-    
-    dispatch(updateGroupStatusAsync({ id,  status  })).then(() => {
+
+    dispatch(updateGroupStatusAsync({ id, status })).then(() => {
       toast.success('Cập nhật nhóm thành công');
     });
   };
@@ -72,7 +78,7 @@ const LecturerGroup = () => {
   };
 
   const handleViewGroup = (group) => {
-    
+
     setSelectedGroup(group);
     setIsViewModalOpen(true);
   };
@@ -87,7 +93,7 @@ const LecturerGroup = () => {
 
   const handleSubmitGroup = (formData) => {
     console.log('formData', formData);
-    
+
     if (isEdit) {
       dispatch(updateGroupAsync({ id: selectedGroup.id, groupData: formData })).then(() => {
         toast.success('Cập nhật nhóm thành công');
@@ -97,6 +103,9 @@ const LecturerGroup = () => {
         toast.success('Thêm nhóm thành công');
       });
     }
+  };
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -110,7 +119,7 @@ const LecturerGroup = () => {
           Thêm nhóm
         </button>
       </div>
-      <FilterBar onFilterChange={handleFilterChange} />
+      <FilterStatusDefBar onFilterChange={handleFilterChange} />
       {loading ? (
         <p className="text-center text-gray-600">Đang tải...</p>
       ) : (
@@ -124,12 +133,43 @@ const LecturerGroup = () => {
             onDefenseStatusChange={handleChangeDefenseStatus}
             isAdmin={false}
           />
-          <Pagination
-            total={total}
-            perPage={per_page}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
+          {total_pages > 1 && (
+            <div className="flex justify-center mt-4 space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1 || loading}
+                className={`px-3 py-1 rounded ${currentPage === 1 || loading
+                  ? 'bg-gray-200 text-gray-500'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+              >
+                Trước
+              </button>
+              {[...Array(total_pages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                  disabled={loading}
+                  className={`px-3 py-1 rounded ${currentPage === index + 1
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === total_pages || loading}
+                className={`px-3 py-1 rounded ${currentPage === total_pages || loading
+                  ? 'bg-gray-200 text-gray-500'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+              >
+                Sau
+              </button>
+            </div>
+          )}
         </>
       )}
       {isAddEditModalOpen && (
