@@ -12,15 +12,17 @@ module Api
         status = params[:status]
 
         defenses = Defense.includes(:groups).order(created_at: :desc)
-        defenses = defenses.where("defenses.name ILIKE ?", "%#{key}%") if key.present?
+
+        if key.present?
+          defenses = defenses.where("unaccent(defenses.name) ILIKE unaccent(?)", "%#{key}%")
+        end
+
         defenses = defenses.where(status: status) if status.present?
 
         paginated = defenses.page(page).per(per_page)
 
         render json: {
-          defenses: paginated.as_json(include: {
-            groups: { }
-          }),
+          defenses: paginated.as_json(include: { groups: {} }),
           current_page: paginated.current_page,
           total_pages: paginated.total_pages,
           total_count: paginated.total_count

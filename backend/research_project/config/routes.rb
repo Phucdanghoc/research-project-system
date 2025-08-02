@@ -45,12 +45,11 @@ Rails.application.routes.draw do
       get 'topics/faculty_me', to: 'topics#faculty_me'
       # Other resources
       resources :groups do
-        member do
-          post :add_students
-          
-        end
         collection do
           get :search
+        end
+        member do
+          post :add_students
         end
       end
       resources :topics do

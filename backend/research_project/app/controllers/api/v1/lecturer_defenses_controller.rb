@@ -39,10 +39,10 @@ module Api
           end
         end
 
-        # Filter by key in defense name
         if key.present?
-          defenses = defenses.joins(:defense).where("defenses.name ILIKE ?", "%#{key}%")
-        end
+          defenses = defenses.joins(:defense)
+                            .where("unaccent(defenses.name) ILIKE unaccent(?)", "%#{key}%")
+        end 
 
         paginated = defenses.order(created_at: :desc).page(page).per(per_page)
 
