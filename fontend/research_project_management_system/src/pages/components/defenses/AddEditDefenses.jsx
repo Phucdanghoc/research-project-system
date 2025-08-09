@@ -8,7 +8,7 @@ import { checkDefenseTimeAsync, addDefenseAsync, updateDefenseAsync, fetchDefens
 import { useDebouncedCallback } from 'use-debounce';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { fetchGroupsAsync } from '../../../store/slices/groupSlice';
+import { searchGroupsAsync } from '../../../store/slices/groupSlice';
 
 const timeBlocks = [
   { start: '07:00', end: '09:00' },
@@ -24,7 +24,8 @@ const statusOptions = [
 
 const AddEditDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
   const dispatch = useAppDispatch();
-  const { lecturers, groups, loading: lecturersLoading, groupLoading: groupsLoading } = useSelector((state) => state.lecturers);
+  const { lecturers, loading: lecturersLoading } = useSelector((state) => state.lecturers);
+  const { groups, loading: groupsLoading, error: groupsError } = useSelector((state) => state.groups);
   const { lecturerDefenses, loading: lecturerDefensesLoading, error: lecturerDefensesError } = useSelector(
     (state) => state.lecturerDefenses
   );
@@ -181,7 +182,7 @@ const AddEditDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
 
   const debouncedGroupSearch = useDebouncedCallback((query) => {
     dispatch(
-      fetchGroupsAsync({
+      searchGroupsAsync({
         page: 1,
         per_page: 10,
         keyword: query,
@@ -278,7 +279,7 @@ const AddEditDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
       };
 
       const action = isEditMode
-        ? updateDefenseAsync({ id: defense.id, defenseData }) 
+        ? updateDefenseAsync({ id: defense.id, defenseData })
         : addDefenseAsync(defenseData);
 
 
@@ -343,11 +344,12 @@ const AddEditDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
   const allGroups = useMemo(() => {
     const groupMap = new Map();
     preExistingGroups.forEach((group) => groupMap.set(group.id, group));
-    // groups.forEach((group) => {
-    //   if (!groupMap.has(group.id)) {
-    //     groupMap.set(group.id, group);
-    //   }
-    // });
+
+    groups.forEach((group) => {
+      if (!groupMap.has(group.id)) {
+        groupMap.set(group.id, group);
+      }
+    });
     return Array.from(groupMap.values());
   }, [groups, preExistingGroups]);
 
@@ -488,27 +490,39 @@ const AddEditDefenseModal = ({ isOpen, onClose, onSubmit, defense }) => {
                       {groupsLoading ? (
                         <p className="p-4 text-sm text-gray-500">Đang tải nhóm...</p>
                       ) : allGroups.length > 0 ? (
-                        allGroups.map((group) => (
-                          <motion.div
-                            key={group.id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className={`p-3 flex justify-between items-center hover:bg-blue-50 cursor-pointer ${formData.group_ids.includes(group.id) ? 'bg-blue-100' : ''}`}
-                            onClick={() => handleGroupToggle(group.id)}
-                          >
-                            <div>
-                              <p className="font-medium">{group.name}</p>
-                              <p className="text-sm text-gray-500">{group.group_code || 'N/A'}</p>
-                            </div>
-                            {formData.group_ids.includes(group.id) ? (
-                              <FaTrash className="text-red-500" />
-                            ) : (
-                              <FaPlus
-                                className={`text-blue-500 ${formData.group_ids.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                              />
-                            )}
-                          </motion.div>
-                        ))
+                        allGroups.map((group) => {
+                          const isSelected = formData.group_ids.includes(group.id);
+                          const isDisabled = group.defense_id != null;
+
+                          return (
+                            <motion.div
+                              key={group.id}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className={`p-3 flex justify-between items-center cursor-pointer
+                                ${isSelected ? 'bg-blue-100' : 'hover:bg-blue-50'}
+                                ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              onClick={() => {
+                                if (!isDisabled) handleGroupToggle(group.id);
+                              }}
+                            >
+                              <div>
+                                <p className="font-medium">{group.name}</p>
+                                <p className="text-sm text-gray-500">{group.group_code || 'N/A'}</p>
+                              </div>
+                              {isSelected ? (
+                                <FaTrash className={`text-red-500 ${isDisabled ? 'opacity-50' : ''}`} />
+                              ) : (
+                                <FaPlus
+                                  className={`text-blue-500 ${formData.group_ids.length >= 3 || isDisabled
+                                      ? 'opacity-50 cursor-not-allowed'
+                                      : ''
+                                    }`}
+                                />
+                              )}
+                            </motion.div>
+                          );
+                        })
                       ) : (
                         <p className="p-4 text-sm text-gray-500">Không tìm thấy nhóm.</p>
                       )}

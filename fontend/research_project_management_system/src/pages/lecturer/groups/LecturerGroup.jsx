@@ -37,10 +37,7 @@ const LecturerGroup = () => {
   }, [error, dispatch]);
 
 
-  const searchAction = (searchTerm) => {
-    setSearchTerm(searchTerm);
-    setCurrentPage(1);
-  };
+
 
   const handleFilterChange = ({ faculty, searchTerm, def_status }) => {
     setFaculty(faculty);
@@ -52,11 +49,7 @@ const LecturerGroup = () => {
     // }
   };
 
-  const handleAddGroup = () => {
-    setSelectedGroup(null);
-    setIsEdit(false);
-    setIsAddEditModalOpen(true);
-  };
+
 
   const handleEditGroup = (group) => {
     setSelectedGroup(group);
@@ -112,12 +105,6 @@ const LecturerGroup = () => {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Quản lý nhóm</h1>
-        <button
-          onClick={handleAddGroup}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Thêm nhóm
-        </button>
       </div>
       <FilterStatusDefBar onFilterChange={handleFilterChange} />
       {loading ? (
@@ -179,6 +166,7 @@ const LecturerGroup = () => {
           group={selectedGroup}
           isEdit={isEdit}
           onSubmit={handleSubmitGroup}
+          isLecture={true}
         />
       )}
       {isViewModalOpen && selectedGroup && (

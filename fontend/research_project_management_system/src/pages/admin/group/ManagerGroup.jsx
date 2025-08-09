@@ -94,6 +94,7 @@ const ManagerGroup = () => {
         .unwrap()
         .then(() => {
           toast.success('Xóa nhóm thành công');
+          dispatch(fetchGroupsAsync({ faculty, page: currentPage, per_page }));
         })
         .catch((err) => {
           toast.error(err.message || 'Xóa nhóm thất bại');

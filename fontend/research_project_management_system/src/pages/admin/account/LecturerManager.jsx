@@ -36,7 +36,7 @@ const ManageLecturers = () => {
     password: '',
     role: 'lecturer',
     lecturer_code: '',
-    birth : '',
+    birth: '',
     faculty: '',
     phone: '',
     gender: '',
@@ -53,6 +53,18 @@ const ManageLecturers = () => {
     }
   }, [dispatch, currentPage, searchQuery]);
 
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+
   const handleAddLecturer = () => {
     setFormData({
       name: '',
@@ -60,7 +72,7 @@ const ManageLecturers = () => {
       password: '',
       role: 'lecturer',
       lecturer_code: '',
-    birth : '',
+      birth: '',
 
       faculty: '',
       phone: '',
@@ -236,7 +248,7 @@ const ManageLecturers = () => {
         render: (item) => FacultyMajors[item.faculty]?.name || item.faculty || 'Không có',
       },
       { header: 'Số điện thoại', key: 'phone' },
-      { header: 'Ngày sinh', key: 'birth' },
+      { header: 'Ngày sinh', key: 'birth' , render: (item) => formatDate(item.birth) },
       {
         header: 'Giới tính',
         key: 'gender',
@@ -387,7 +399,7 @@ const ManageLecturers = () => {
             ],
           },
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
-          { name: 'birth', label: 'Ngày sinh', type: 'date' },
+          { name: 'birth', label: 'Ngày sinh', type: 'date', },
           {
             name: 'gender',
             label: 'Giới tính',

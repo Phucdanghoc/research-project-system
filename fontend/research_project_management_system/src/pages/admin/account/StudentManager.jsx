@@ -36,7 +36,7 @@ const ManageStudents = () => {
     class_name: '',
     faculty: '',
     major: '',
-      birth: '',
+    birth: '',
     phone: '',
     gender: '',
   });
@@ -235,6 +235,15 @@ const ManageStudents = () => {
   };
 
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
 
   const tableColumns = [
     {
@@ -256,6 +265,8 @@ const ManageStudents = () => {
       render: (item) =>
         FacultyMajors[item.faculty]?.majors.find((m) => m.code === item.major)?.name || item.major,
     },
+    { header: 'Ngày sinh', key: 'birth', render: (item) => formatDate(item.birth) },
+
     { header: 'Số điện thoại', key: 'phone' },
     // { header: 'Giới tính', key: 'gender', render: (item) => (item.gender === 'Male' ? 'Nam' : 'Nữ') },
   ];
@@ -488,14 +499,14 @@ const ManageStudents = () => {
         itemName={selectedStudent?.name || ''}
       />
       {isImportModalOpen && (
-         <ImportCsvModal
-        isOpen={isImportModalOpen}
-        onClose={() => {
-          setIsImportModalOpen(false);
-          dispatch(fetchStudentsAsync({ page: 1, per_page: studentsPerPage }));
-          setCurrentPage(1);
-        }}
-      />
+        <ImportCsvModal
+          isOpen={isImportModalOpen}
+          onClose={() => {
+            setIsImportModalOpen(false);
+            dispatch(fetchStudentsAsync({ page: 1, per_page: studentsPerPage }));
+            setCurrentPage(1);
+          }}
+        />
       )}
     </div>
   );

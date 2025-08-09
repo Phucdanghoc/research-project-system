@@ -1,8 +1,8 @@
-name,email,password,student_code,class_name,faculty,major,phone,gender
-Phan Văn Tài,tai.phan@sv.edu.vn,pass1111,S230031,Lớp CNTT01,CNTT,KTPM,912345678,Male
-Nguyễn Thị Hạnh,hanh.nguyen@sv.edu.vn,pass2222,S230032,Lớp CNTT02,CNTT,ATTT,923456789,Female
-Lê Văn An,an.le@sv.edu.vn,pass3333,S230033,Lớp CNTT01,CNTT,TTNT,934567890,Male
-Trần Thị Mai,mai.tran@sv.edu.vn,pass4444,S230034,Lớp CNTT03,CNTT,KTPM,945678901,Female
-Đỗ Minh Quân,quan.do@sv.edu.vn,pass5555,S230035,Lớp CNTT02,CNTT,HTTT,956789012,Male
-Võ Thị Kim,kim.vo@sv.edu.vn,pass6666,S230036,Lớp CNTT03,CNTT,ATTT,967890123,Female
-Ngô Văn Hòa,hoa.ngo@sv.edu.vn,pass7777,S230037,Lớp CNTT01,CNTT,TTNT,978901234,Male
+name,email,password,student_code,class_name,birth,faculty,major,phone,gender
+Phan Văn Tài,tai.phan@sv.edu.vn,pass1111,S230031,Lớp CNTT01,2003-05-14,CNTT,KTPM,912345678,Male
+Nguyễn Thị Hạnh,hanh.nguyen@sv.edu.vn,pass2222,S230032,Lớp CNTT02,2003-08-21,CNTT,ATTT,923456789,Female
+Lê Văn An,an.le@sv.edu.vn,pass3333,S230033,Lớp CNTT01,2003-11-02,CNTT,TTNT,934567890,Male
+Trần Thị Mai,mai.tran@sv.edu.vn,pass4444,S230034,Lớp CNTT03,2004-01-17,CNTT,KTPM,945678901,Female
+Đỗ Minh Quân,quan.do@sv.edu.vn,pass5555,S230035,Lớp CNTT02,2003-03-25,CNTT,HTTT,956789012,Male
+Võ Thị Kim,kim.vo@sv.edu.vn,pass6666,S230036,Lớp CNTT03,2004-07-09,CNTT,ATTT,967890123,Female
+Ngô Văn Hòa,hoa.ngo@sv.edu.vn,pass7777,S230037,Lớp CNTT01,2003-09-30,CNTT,TTNT,978901234,Male

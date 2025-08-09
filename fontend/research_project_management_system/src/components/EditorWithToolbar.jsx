@@ -53,13 +53,6 @@ const EditorToolbar = memo(({ editor }) => {
       isActive: () => editor?.isActive('orderedList') || false,
     },
     {
-      name: 'blockquote',
-      icon: '“',
-      label: 'Trích dẫn',
-      command: () => editor?.chain().focus().toggleBlockquote().run(),
-      isActive: () => editor?.isActive('blockquote') || false,
-    },
-    {
       name: 'link',
       icon: '🔗',
       label: 'Liên kết',
@@ -159,15 +152,7 @@ const EditorToolbar = memo(({ editor }) => {
           {button.icon}
         </button>
       ))}
-      <button
-        type="button"
-        onClick={() => setIsSelectedImage(!isSelectedImage)}
-        title="Chèn hình ảnh"
-        className="size-8 flex items-center justify-center text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-teal-400 hover:text-white transition-colors duration-150 disabled:opacity-50"
-        disabled={!editor}
-      >
-        🖼️
-      </button>
+     
       <input
         type="color"
         value={color}
@@ -176,17 +161,7 @@ const EditorToolbar = memo(({ editor }) => {
         className="size-8 rounded-md border-none p-0 cursor-pointer disabled:opacity-50"
         disabled={!editor}
       />
-      {isSelectedImage && (
-        <div className="w-full mt-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Chọn hình ảnh</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleSetImage(e.target.files?.[0] || null)}
-            className="w-full p-2 border border-gray-200 rounded-md bg-gray-50 text-gray-800"
-          />
-        </div>
-      )}
+     
     </div>
   );
 });

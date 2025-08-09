@@ -9,18 +9,17 @@ import Color from '@tiptap/extension-color';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import TextStyle from '@tiptap/extension-text-style';
-import ListItem from '@tiptap/extension-list-item';
 import EditorToolbar from '../../../components/EditorWithToolbar';
 import { toast } from 'react-toastify';
 import debounce from 'lodash/debounce';
 
 
-const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic, currentStudentId }) => {
+const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic, currentStudentId, isLecture = false }) => {
   const dispatch = useAppDispatch();
   const { students, loading: studentsLoading } = useSelector((state) => state.students);
   const [formData, setFormData] = useState({
     name: '',
-    topic_id: topic?.id?.toString() || '',
+    topic_id: topic?.id || '',
     description: '<p></p>',
     student_ids: currentStudentId ? [currentStudentId] : [],
     student_lead_id: currentStudentId?.toString() || '',
@@ -29,7 +28,6 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
   const editorConfig = {
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] }, bulletList: {}, orderedList: {}, blockquote: {} }),
-      ListItem,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TextStyle,
       Color,
@@ -54,9 +52,11 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
 
   useEffect(() => {
     if (isEdit && groupData) {
+      console.log('groupData', groupData);
+
       setFormData({
         name: groupData.name || '',
-        topic_id: groupData.topics?.[0]?.id?.toString() || '',
+        topic_id: topic?.id || '',
         description: groupData.description || '<p></p>',
         student_ids: groupData.students?.map((student) => student.id) || [],
         student_lead_id: groupData.student_lead_id?.toString() || '',
@@ -77,6 +77,8 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(name, value);
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -98,20 +100,25 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
     },
     [formData.student_ids, formData.student_lead_id, isEdit, currentStudentId, topic?.topic_limit]
   );
-
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (!formData.student_ids.includes(parseInt(formData.student_lead_id))) {
       toast.info('Trưởng nhóm phải là một trong các sinh viên được chọn.');
       return;
     }
-    if (!isEdit && !formData.student_ids.includes(currentStudentId)) {
+
+    if (!isLecture && !formData.student_ids.includes(currentStudentId)) {
+      console.log(!isLecture, !formData.student_ids.includes(currentStudentId));
+      
       toast.info('Bạn phải là thành viên của nhóm khi tạo nhóm.');
       return;
     }
+
     onSubmit(formData);
     onClose();
   };
+
 
   const currentStudentGroup = useMemo(
     () => (!isEdit && currentStudentId && students.find((s) => s.id === currentStudentId)?.groups?.[0]) || null,
@@ -128,8 +135,8 @@ const AddEditGroupModal = ({ isOpen, onClose, onSubmit, groupData, isEdit, topic
   return (
     <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center p-4 transition-all duration-300">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-8 max-h-[90vh] overflow-y-auto">
-        <h4 className="text-xl font-bold text-gray-900 mb-2">{isEdit ? 'Chỉnh sửa thông tin nhóm' : 'Đăng ký nhóm'}</h4>
-        {/* <h3 className="text-2xl font-semibold text-gray-800 mb-6">{topic?.title || 'Không xác định'}</h3> */}
+        <h4 className="text-xl font-bold text-gray-900 mb-2">{isEdit ? 'Chỉnh sửa thông tin nhóm' : `Đăng ký nhóm ${topic?.title}`}</h4>
+     
         {currentStudentGroup && !isEdit && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-800">

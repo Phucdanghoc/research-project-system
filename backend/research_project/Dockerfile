@@ -18,6 +18,8 @@ COPY . .
 
 
 
+
+
 EXPOSE 3000
 
 CMD ["bash", "-c", "bundle exec rails db:create db:migrate && bundle exec rails server -b 0.0.0.0 -p 3000"]

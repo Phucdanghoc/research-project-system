@@ -12,8 +12,8 @@ import ViewDefenseModal from '../../components/defenses/ViewDefenseModal';
 
 const DefenseManager = () => {
   const dispatch = useAppDispatch();
-  const { defenses, total, page, per_page, loading, error } = useSelector((state) => state.defenses || { 
-    defenses: [], total: 0, page: 1, per_page: 10, loading: false, error: null 
+  const { defenses, total, page, per_page, loading, error } = useSelector((state) => state.defenses || {
+    defenses: [], total: 0, page: 1, per_page: 10, loading: false, error: null
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,12 +23,12 @@ const DefenseManager = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [activeTab, setActiveTab] = useState('table');
   const [tableLoading, setTableLoading] = useState(false);
-  const [isViewModalOpen , setIsViewModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const lastFetchedPage = useRef(null);
 
   const fetchTableDefenses = async () => {
     if (activeTab !== 'table') return;
-    
+
     const pageKey = `${currentPage}_${per_page}`;
     if (lastFetchedPage.current === pageKey) return;
 
@@ -106,6 +106,26 @@ const DefenseManager = () => {
       }
     }
   };
+  const handleBatchDeleteDefense = async (defenses) => {
+    try {
+      if (!defenses || defenses.length === 0) {
+        toast.error('Danh sách buổi bảo vệ không hợp lệ!');
+        return;
+      }
+      defenses.forEach((id) => {
+        console.log(id);
+        
+        dispatch(deleteDefenseAsync(id)).unwrap();
+      })
+
+      toast.success('Xóa buổi bảo vệ thành công');
+      if (activeTab === 'table') {
+        fetchTableDefenses();
+      }
+    } catch (err) {
+      toast.error('Lỗi khi xóa buổi bảo vệ');
+    }
+  }
 
   const handleSubmitDefense = async (formData) => {
     try {
@@ -116,7 +136,7 @@ const DefenseManager = () => {
         await dispatch(addDefenseAsync(formData)).unwrap();
         toast.success('Thêm buổi bảo vệ thành công');
       }
-      
+
       setIsAddEditModalOpen(false);
       if (activeTab === 'table') {
         fetchTableDefenses();
@@ -149,31 +169,29 @@ const DefenseManager = () => {
         <div className="flex border-b border-gray-200" role="tablist">
           <button
             onClick={() => handleTabChange('table')}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'table' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
-                : 'text-gray-600 hover:text-blue-600'
-            }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'table'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-600 hover:text-blue-600'
+              }`}
             role="tab"
             aria-selected={activeTab === 'table'}
             aria-controls="table-view"
             id="table-tab"
           >
-            Table View
+            Dạng bảng
           </button>
           <button
             onClick={() => handleTabChange('calendar')}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === 'calendar' 
-                ? 'border-b-2 border-blue-600 text-blue-600' 
-                : 'text-gray-600 hover:text-blue-600'
-            }`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'calendar'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-600 hover:text-blue-600'
+              }`}
             role="tab"
             aria-selected={activeTab === 'calendar'}
             aria-controls="calendar-view"
             id="calendar-tab"
           >
-            Xem lịch
+            Dạng lịch
           </button>
         </div>
       </div>
@@ -203,6 +221,7 @@ const DefenseManager = () => {
                   onViewDefense={handleViewDefense}
                   onEditDefense={handleEditDefense}
                   onDeleteDefense={handleDeleteDefense}
+                  onBatchDeleteDefense={handleBatchDeleteDefense}
                   isAdmin={true}
                 />
               )}

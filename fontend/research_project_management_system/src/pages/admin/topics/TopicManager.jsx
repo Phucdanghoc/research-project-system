@@ -383,7 +383,7 @@ const ManageTopics = () => {
         <ViewTopicModal
           isOpen={isViewModalOpen}
           onClose={resetFormAndClose}
-          topic={selectedTopic}
+          topicId={selectedTopic?.id}
         />
       )}
       {isDeleteModalOpen && (

@@ -55,6 +55,8 @@ const LecturerTopic = () => {
   const dropdownRefs = useRef({});
 
   const handleOpenGroupModal = useCallback((topic) => {
+    console.log(`Opening group modal for topic: ${topic}`);
+    setSelectedTopic(topic);
     setGroupFormData({
       name: '',
       topic_id: topic?.id || '',
@@ -66,13 +68,15 @@ const LecturerTopic = () => {
 
   const handleSubmitGroup = useCallback(
     async (formData) => {
+      console.log('Submitting group form data:', formData);
+      
       try {
         await dispatch(createGroupAsync(formData)).unwrap().then((res) => {
           if (res) {
             toast.success('Nhóm đã được tạo/cập nhật thành công!');
             setIsGroupModalOpen(false);
             setGroupFormData(null);
-          }else {
+          } else {
             toast.error('Tạo/cập nhật nhóm thất bại!');
           }
         });
@@ -150,7 +154,7 @@ const LecturerTopic = () => {
 
   const handleViewTopic = useCallback((topic) => {
     console.log(`Viewing topic: ${topic.title}`);
-    
+
     setSelectedTopic(topic);
     setIsViewModalOpen(true);
   }, []);
@@ -163,7 +167,7 @@ const LecturerTopic = () => {
     return true;
   };
   const handleSubmitForApproval = useCallback(
-    async (topicId , status) => {
+    async (topicId, status) => {
       const topic = topics.find((t) => t.id === topicId);
       if (topic) {
         try {
@@ -308,16 +312,17 @@ const LecturerTopic = () => {
         </nav>
       )}
 
-      <AddEditTopicModal
-        isOpen={isEditModalOpen}
-        onClose={resetFormAndClose}
-        onSubmit={handleSubmitTopic}
-        formData={formData}
-        onInputChange={handleInputChange}
-        statuses={STATUSES}
-        isEdit={true}
-        isLecturer={true}
-      />
+      {isEditModalOpen && (
+        <AddEditTopicModal
+          isOpen={isEditModalOpen}
+          onClose={resetFormAndClose}
+          onSubmit={handleSubmitTopic}
+          formData={formData}
+          onInputChange={handleInputChange}
+          statuses={STATUSES}
+          isEdit={true}
+          isLecturer={true}
+        />)}
       <ViewTopicModal
         isOpen={isViewModalOpen}
         onClose={resetFormAndClose}
@@ -331,7 +336,9 @@ const LecturerTopic = () => {
           onSubmit={handleSubmitGroup}
           groupData={groupFormData}
           isEdit={!!groupFormData?.id}
-          topic={groupFormData}
+          topic={selectedTopic}
+          
+          isLecture={true}
         />
       )}
     </div>

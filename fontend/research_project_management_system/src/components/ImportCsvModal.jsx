@@ -44,7 +44,7 @@ const ImportCsvModal = ({ isOpen, onClose }) => {
 
         try {
             const result = await dispatch(importStudentsFromExcel(file)).unwrap();
-            toast.success(`Nhập ${result.rows_imported || 0} sinh viên từ CSV thành công!`);
+            toast.success(`Nhập ${result.imported_count || 0} sinh viên từ CSV thành công!`);
 
             if (result.errors && result.errors.length > 0) {
                 setImportErrors(result.errors);

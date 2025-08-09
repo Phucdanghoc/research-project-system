@@ -106,6 +106,9 @@ export const deleteDefenseAsync = createDefenseThunk(
   (id: number) => api.delete(`/${id}`)
 );
 
+
+
+
 const defenseSlice = createSlice({
   name: 'defenses',
   initialState: {
