@@ -3,7 +3,7 @@ module Api
     class GroupsController < ApplicationController
       before_action :authenticate_api_user!
       before_action :set_group, only: [:show, :update, :destroy, :add_students]
-
+      before_action :authorize_bulk_lock!, only: [:bulk_update_lock_at]
       # GET /groups
       def index
         page = params[:page] || 1
@@ -213,8 +213,35 @@ module Api
         end
       end
 
-      private
+      def bulk_update_lock_at
+        group_ids = params[:group_ids]
+        lock_at   = params[:lock_at]
 
+        if group_ids.blank? || lock_at.blank?
+          return render json: { error: "group_ids and lock_at are required" }, status: :bad_request
+        end
+
+        groups = Group.where(id: group_ids)
+        found_ids = groups.pluck(:id)
+        missing_ids = group_ids.map(&:to_i) - found_ids
+
+        if groups.any?
+          groups.update_all(lock_at: lock_at, updated_at: Time.current)
+        end
+
+        render json: {
+          message: "Lock time updated for #{groups.size} groups.",
+          missing_group_ids: missing_ids.presence
+        }, status: :ok
+      end
+
+            
+      private
+      def authorize_bulk_lock!
+          unless current_user&.admin? || current_user&.secretary?
+            render json: { error: "Chỉ thư ký và Admin có thể update" }, status: :forbidden
+          end
+        end
       def set_group
         @group = Group.find(params[:id])
       rescue ActiveRecord::RecordNotFound
@@ -222,7 +249,7 @@ module Api
       end
 
       def group_params
-        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, :status, :def_status, :student_lead_id, student_ids: [])
+        params.require(:group).permit(:name, :lecturer_id, :defense_id, :topic_id, :description, :status, :def_status, :lock_at, :student_lead_id, student_ids: [])
       end
     end
   end

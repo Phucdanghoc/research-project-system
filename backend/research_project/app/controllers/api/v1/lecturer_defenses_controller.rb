@@ -3,7 +3,6 @@ module Api
     class LecturerDefensesController < ApplicationController
       before_action :authenticate_api_user!
       before_action :authorize_lecturer_or_admin!
-      before_action :set_lecturer_defense, only: [:create, :update, :destroy]
 
       # GET /lecturer_defenses
       def index
@@ -92,18 +91,24 @@ module Api
         end
 
         group_id = params[:group_id]
-        point = params[:point]
-        comment = params[:comment]
+        point    = params[:point]
+        comment  = params[:comment]
 
-        if group_id.blank?
-          return render json: { error: "group_id is required" }, status: :bad_request
+        return render json: { error: "group_id is required" }, status: :bad_request if group_id.blank?
+
+        group = Group.find_by(id: group_id)
+        return render json: { error: "Group not found" }, status: :not_found unless group
+
+        lock_time = parse_group_lock_at(group)
+        if lock_time.present? && Time.current >= lock_time
+          return render json: {
+            error: "Điểm của nhóm này đã khóa",
+            lock_at: lock_time.in_time_zone(Time.zone).strftime("%d/%m/%Y/%H:%M")
+          }, status: :forbidden
         end
 
         lec_def = LecturerDefense.find_by(lecturer_id: current_user.id, group_id: group_id)
-
-        unless lec_def
-          return render json: { error: "No record found for current lecturer and group" }, status: :not_found
-        end
+        return render json: { error: "No record found for current lecturer and group" }, status: :not_found unless lec_def
 
         if lec_def.update(point: point, comment: comment)
           render json: {
@@ -114,6 +119,23 @@ module Api
           render json: { errors: lec_def.errors.full_messages }, status: :unprocessable_entity
         end
       end
+        
+      private
+
+      # Works for both datetime column and "dd/MM/YYYY/HH:MM" string storage.
+      def parse_group_lock_at(group)
+        return nil if group.lock_at.blank?
+
+        if group.lock_at.is_a?(Time) || group.lock_at.is_a?(ActiveSupport::TimeWithZone)
+          group.lock_at
+        elsif group.lock_at.is_a?(String)
+          Time.zone.strptime(group.lock_at, "%d/%m/%Y/%H:%M")
+        end
+      rescue ArgumentError
+        # Invalid format -> treat as unlocked
+        nil
+      end
+
 
       # PUT /lecturer_defenses/:id
       def update
@@ -131,11 +153,6 @@ module Api
       end
 
       private
-
-      def set_lecturer_defense
-        @lecturer_defense = LecturerDefense.find_by(id: params[:id])
-        render json: { error: "LecturerDefense not found." }, status: :not_found unless @lecturer_defense
-      end
 
       def lecturer_defense_params
         params.require(:lecturer_defense).permit(
