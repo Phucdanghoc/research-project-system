@@ -62,7 +62,8 @@ namespace :db do
         student_lead: students[i],
         description: "This is group #{i + 1}",
         status: :accepted,
-        def_status: :waiting_defense
+        def_status: :waiting_defense,
+        lock_at: Time.current + rand(0..5).days 
       )
     end
 

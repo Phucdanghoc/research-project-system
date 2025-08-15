@@ -44,6 +44,7 @@ Rails.application.routes.draw do
       get "topics/lecturer/:id", to: "topics#search_by_lecturer"
       get 'topics/faculty_me', to: 'topics#faculty_me'
       # Other resources
+      patch "groups/bulk_update_lock_at", to: "groups#bulk_update_lock_at"
       resources :groups do
         collection do
           get :search

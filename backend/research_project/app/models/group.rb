@@ -7,7 +7,8 @@ class Group < ApplicationRecord
   belongs_to :student_lead, class_name: 'User', optional: true
   validates :name, presence: true
   validates :lecturer, presence: true
-  
+  before_save :format_lock_at
+
   # Group memberships (students)
   has_many :group_users, dependent: :destroy
   has_many :students, through: :group_users, source: :user
@@ -15,8 +16,13 @@ class Group < ApplicationRecord
   # Group-topic relationships
   has_many :group_topics, dependent: :destroy
   has_many :topics, through: :group_topics
+  
   private
-
+  def format_lock_at
+    if lock_at.present? && lock_at.is_a?(Time)
+      self.lock_at = lock_at.strftime("%d/%m/%Y/%H:%M")
+    end
+  end
   def generate_group_code
     loop do
       self.group_code = "GR#{rand(1000..9999)}"
