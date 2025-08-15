@@ -3,6 +3,7 @@ module Api
     class LecturerDefensesController < ApplicationController
       before_action :authenticate_api_user!
       before_action :authorize_lecturer_or_admin!
+      before_action :set_lecturer_defense, only: [:update, :destroy]
 
       # GET /lecturer_defenses
       def index
@@ -12,13 +13,9 @@ module Api
 
         defenses = LecturerDefense.includes(:lecturer, :defense, :group)
 
-        # Filter by defense_id
         defenses = defenses.where(defense_id: params[:defense_id]) if params[:defense_id].present?
-
-        # Filter by date
         defenses = defenses.where(date: params[:date]) if params[:date].present?
 
-        # Filter by start_time
         if params[:start_time].present?
           begin
             start_time = Time.parse(params[:start_time])
@@ -28,7 +25,6 @@ module Api
           end
         end
 
-        # Filter by end_time
         if params[:end_time].present?
           begin
             end_time = Time.parse(params[:end_time])
@@ -40,7 +36,7 @@ module Api
 
         if key.present?
           defenses = defenses.joins(:defense)
-                            .where("unaccent(defenses.name) ILIKE unaccent(?)", "%#{key}%")
+                             .where("unaccent(defenses.name) ILIKE unaccent(?)", "%#{key}%")
         end 
 
         paginated = defenses.order(created_at: :desc).page(page).per(per_page)
@@ -64,13 +60,11 @@ module Api
         @lecturer_defense = LecturerDefense.new(lecturer_defense_params)
         group = @lecturer_defense.group
 
-        # Prevent assigning defense if group is already linked to another defense
         if group && group.defense_id.present? && group.defense_id != @lecturer_defense.defense_id
           return render json: { error: "Group is already linked to a different defense." }, status: :conflict
         end
 
         if @lecturer_defense.save
-          # Auto-link group to defense if not set
           if group && group.defense_id.nil?
             group.update(defense_id: @lecturer_defense.defense_id)
           end
@@ -119,10 +113,43 @@ module Api
           render json: { errors: lec_def.errors.full_messages }, status: :unprocessable_entity
         end
       end
-        
+
+      # PUT/PATCH /lecturer_defenses/:id
+      def update
+        group = @lecturer_defense.group
+        lock_time = parse_group_lock_at(group)
+
+        if lock_time.present? && Time.current >= lock_time
+          return render json: {
+            error: "Điểm của nhóm này đã khóa",
+            lock_at: lock_time.in_time_zone(Time.zone).strftime("%d/%m/%Y/%H:%M")
+          }, status: :forbidden
+        end
+
+        if @lecturer_defense.update(lecturer_defense_params)
+          render json: {
+            message: "Lecturer defense updated successfully.",
+            lecturer_defense: @lecturer_defense
+          }, status: :ok
+        else
+          render json: { errors: @lecturer_defense.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
+
+      # DELETE /lecturer_defenses/:id
+      def destroy
+        @lecturer_defense.destroy
+        render json: { message: "Lecturer removed from defense." }, status: :ok
+      end
+
       private
 
-      # Works for both datetime column and "dd/MM/YYYY/HH:MM" string storage.
+      def set_lecturer_defense
+        @lecturer_defense = LecturerDefense.find_by(id: params[:id])
+        render json: { error: "LecturerDefense not found." }, status: :not_found unless @lecturer_defense
+      end
+
       def parse_group_lock_at(group)
         return nil if group.lock_at.blank?
 
@@ -132,27 +159,8 @@ module Api
           Time.zone.strptime(group.lock_at, "%d/%m/%Y/%H:%M")
         end
       rescue ArgumentError
-        # Invalid format -> treat as unlocked
         nil
       end
-
-
-      # PUT /lecturer_defenses/:id
-      def update
-        if @lecturer_defense.update(lecturer_defense_params)
-          render json: { message: "Lecturer defense updated successfully.", lecturer_defense: @lecturer_defense }, status: :ok
-        else
-          render json: { errors: @lecturer_defense.errors.full_messages }, status: :unprocessable_entity
-        end
-      end
-
-      # DELETE /lecturer_defenses/:id
-      def destroy
-        @lecturer_defense.destroy
-        render json: { message: "Lecturer removed from defense." }, status: :ok
-      end
-
-      private
 
       def lecturer_defense_params
         params.require(:lecturer_defense).permit(
