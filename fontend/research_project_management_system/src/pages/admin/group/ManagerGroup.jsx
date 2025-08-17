@@ -6,7 +6,8 @@ import {
   deleteGroupAsync,
   fetchGroupsAsync,
   searchGroupsAsync,
-  patchGroupAsync
+  patchGroupAsync,
+  bulkUpdateGroupsLockAtAsync
 } from '../../../store/slices/groupSlice';
 import { useSelector } from 'react-redux';
 import FilterBar from '../../components/students/FilterBar';
@@ -39,7 +40,7 @@ const ManagerGroup = () => {
 
   useEffect(() => {
     console.log('ManagerGroup useEffect - faculty:', faculty, 'searchTerm:', searchTerm, 'currentPage:', currentPage, 'defStatus:', defStatus);
-    
+
     const shouldSearch = searchTerm.trim() || defStatus;
 
     const action = shouldSearch
@@ -98,6 +99,7 @@ const ManagerGroup = () => {
         })
         .catch((err) => {
           toast.error(err.message || 'Xóa nhóm thất bại');
+
         });
     }
   };
@@ -153,6 +155,11 @@ const ManagerGroup = () => {
     setIsAddDefenseModalOpen(false);
     dispatch(fetchGroupsAsync({ faculty, page: currentPage, per_page })); // Refresh groups
   };
+  const handleBulkLock = (groupIds, lockAt) => {
+    dispatch(bulkUpdateGroupsLockAtAsync({ group_ids: groupIds, lock_at: lockAt }));
+    dispatch(fetchGroupsAsync({ faculty, page: currentPage, per_page })); // Refresh groups
+
+  };
 
   // Handle submission of bulk defenses
   const handleSubmitBulkDefense = () => {
@@ -197,6 +204,7 @@ const ManagerGroup = () => {
         <>
           <TableView
             groups={groups}
+            onBulkLock={handleBulkLock}
             onCreatePlan={handleCreatePlan}
             onViewGroup={handleViewGroup}
             onEditGroup={handleEditGroup}

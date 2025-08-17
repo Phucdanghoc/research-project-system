@@ -122,8 +122,8 @@ export const fetchGroupByMeAsync = createGroupThunk<
     PaginationParams
 >(
     'groups/fetchGroupByMeAsync',
-    ({ page = 1, per_page = 10, status = '', keyword = '' , def_status = '' }) =>
-        api.get('/users/groups/me', { params: { page, per_page, status, keyword , def_status} })
+    ({ page = 1, per_page = 10, status = '', keyword = '', def_status = '' }) =>
+        api.get('/users/groups/me', { params: { page, per_page, status, keyword, def_status } })
 );
 
 export const searchGroupsAsync = createGroupThunk<
@@ -134,6 +134,30 @@ export const searchGroupsAsync = createGroupThunk<
     ({ keyword, page = 1, per_page = 10, def_status = '' }) =>
         api.get('/groups/search', {
             params: { keyword, page, per_page, def_status },
+        })
+);
+
+
+export const updateGroupLockAtAsync = createGroupThunk<
+    { group: Group },
+    { id: number; lock_at: string }
+>(
+    'groups/updateGroupLockAtAsync',
+    ({ id, lock_at }) =>
+        api.patch(`/groups/${id}`, {
+            group: { lock_at }
+        })
+);
+
+export const bulkUpdateGroupsLockAtAsync = createGroupThunk<
+    { groups: Group[] },
+    { group_ids: number[]; lock_at: string }
+>(
+    'groups/bulkUpdateGroupsLockAtAsync',
+    ({ group_ids, lock_at }) =>
+        api.patch('/groups/bulk_update_lock_at', {
+            group_ids,
+            lock_at
         })
 );
 
@@ -181,7 +205,28 @@ const groupSlice = createSlice({
                 .addCase(thunk.fulfilled, handleListFulfilled)
                 .addCase(thunk.rejected, handleRejected);
         });
+        builder
+            .addCase(updateGroupLockAtAsync.pending, handlePending)
+            .addCase(
+                updateGroupLockAtAsync.fulfilled,
+                (state, action: PayloadAction<{ group: Group }>) => {
+                    state.loading = false;
+                    state.error = null;
+                }
+            )
+            .addCase(updateGroupLockAtAsync.rejected, handleRejected);
 
+        builder
+            .addCase(bulkUpdateGroupsLockAtAsync.pending, handlePending)
+            .addCase(
+                bulkUpdateGroupsLockAtAsync.fulfilled,
+                (state, action: PayloadAction<{ groups: Group[] }>) => {
+                    state.loading = false;
+                   
+                    state.error = null;
+                }
+            )
+            .addCase(bulkUpdateGroupsLockAtAsync.rejected, handleRejected);
         builder
             .addCase(createGroupAsync.pending, handlePending)
             .addCase(createGroupAsync.fulfilled, (state, action: PayloadAction<{ group: Group }>) => {

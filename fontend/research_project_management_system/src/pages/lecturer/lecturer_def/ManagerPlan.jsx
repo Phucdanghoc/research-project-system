@@ -6,7 +6,7 @@ import {
 } from '../../../store/slices/lecturerDefenseSlice';
 import { getMyDefensesAsync } from '../../../store/slices/defensesSlice';
 import { toast } from 'react-toastify';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaLock } from 'react-icons/fa';
 import Pagination from '../../components/students/Pagination';
 import { motion, AnimatePresence } from 'framer-motion';
 import EditPointCommentModal from '../../components/defenses/EditPointCommentModal';
@@ -42,7 +42,7 @@ const MyDefensesView = () => {
     const pageKey = `${currentPage}_${per_page}`;
     console.log('Fetching defenses for page:', pageKey);
     
-    // if (lastFetchedPage.current === pageKey) return;
+   
 
     setTableLoading(true);
     try {
@@ -66,7 +66,21 @@ const MyDefensesView = () => {
     }
   }, [defenseError, lecturerDefenseError, dispatch]);
 
+ 
+  const isGroupLocked = (group) => {
+    if (!group?.lock_at) return false;
+    const currentTime = new Date();
+    const lockTime = new Date(group.lock_at);
+    return currentTime > lockTime;
+  };
+
   const handleEditClick = (lecturerDefense, defense) => {
+    const group = defense.groups?.[0];
+    if (isGroupLocked(group)) {
+      toast.warning('Không thể chỉnh sửa điểm. Nhóm đã bị khóa.');
+      return;
+    }
+
     setSelectedLecturerDefense(lecturerDefense);
     setSelectedDefense(defense);
     setIsModalOpen(true);
@@ -80,16 +94,15 @@ const MyDefensesView = () => {
           point: formData.point,
           comment: formData.comment,
         },
-      })).unwrap(); // ⬅️ bắt lỗi chính xác
+      })).unwrap();
 
-      await fetchMyDefenses(); // ⬅️ fetch sau khi cập nhật thành công
+      await fetchMyDefenses();
       toast.success('Cập nhật điểm và nhận xét thành công');
-      setIsModalOpen(false); // đóng modal sau khi thành công
+      setIsModalOpen(false);
     } catch (err) {
       toast.error('Có lỗi xảy ra khi cập nhật');
     }
   };
-
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -105,6 +118,19 @@ const MyDefensesView = () => {
     if (!timeString) return '-';
     const date = new Date(timeString);
     return date.toLocaleString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  };
+
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return '-';
+    const date = new Date(dateTimeString);
+    return date.toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
@@ -162,6 +188,7 @@ const MyDefensesView = () => {
                     <th className="py-2 px-4">Thời gian kết thúc</th>
                     <th className="py-2 px-4">Hội đồng bảo vệ</th>
                     <th className="py-2 px-4">Điểm</th>
+                    <th className="py-2 px-4">Trạng thái</th>
                     <th className="py-2 px-4">Hành động</th>
                   </tr>
                 </thead>
@@ -170,15 +197,16 @@ const MyDefensesView = () => {
                     defenses.map((defense) => {
                       const group = defense.groups?.[0];
                       const isDone = isDefenseDone(defense.end_time);
+                      const isLocked = isGroupLocked(group);
                       const currentUser = TokenService.getUser();
-                      const myLecturerDefense =  defense.lecturer_defenses && defense.lecturer_defenses.find(
+                      const myLecturerDefense = defense.lecturer_defenses && defense.lecturer_defenses.find(
                         (ld) => ld.lecturer_id === currentUser?.id
                       ) || null;
 
                       return (
                         <tr
                           key={defense.id}
-                          className={`hover:bg-blue-100 ${isDone ? '' : ''}`}
+                          className={`hover:bg-blue-100 ${isLocked ? 'bg-red-50' : ''}`}
                         >
                           <td className="py-2 px-4 border-b">{defense.defense_code || '-'}</td>
                           <td className="py-2 px-4 border-b font-bold">{defense.name}</td>
@@ -197,40 +225,68 @@ const MyDefensesView = () => {
                                 <div
                                   key={ld.id}
                                   className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold"
-                                  title={ld.lecturer.name} // Tooltip mặc định
+                                  title={ld.lecturer.name}
                                 >
                                   {getFirstLetter(ld.lecturer.name)}
                                 </div>
                               ))}
                             </div>
-
                           </td>
                           <td className="py-2 px-4 border-b">
                             {myLecturerDefense && (
                               <div key={myLecturerDefense.id}>
-                                <span className="font-medium text-blue-600">{myLecturerDefense.point}</span>
+                                <span className={`font-medium ${isLocked ? 'text-gray-500' : 'text-blue-600'}`}>
+                                  {myLecturerDefense.point || '-'}
+                                </span>
                               </div>
                             )}
                           </td>
-
-                          <td className="py-2 px-4 border-b space-x-2 justify-center">
-                            {myLecturerDefense && (
-                              <button
-                                onClick={() => handleEditClick(myLecturerDefense, defense)}
-                                className="text-blue-600 hover:text-blue-800"
-                                title="Chỉnh sửa"
-                              >
-                                <FaEdit />
-                              </button>
+                          <td className="py-2 px-4 border-b">
+                            {isLocked ? (
+                              <div className="flex flex-col items-center">
+                                <div className="flex items-center text-red-600 mb-1">
+                                  <FaLock className="mr-1" />
+                                  <span className="text-xs">Đã khóa</span>
+                                </div>
+                                {group?.lock_at && (
+                                  <span className="text-xs text-gray-500">
+                                    {formatDateTime(group.lock_at)}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-green-600 text-xs">Có thể chỉnh sửa</span>
                             )}
                           </td>
-
+                          <td className="py-2 px-4 border-b space-x-2 justify-center">
+                            {myLecturerDefense && (
+                              <>
+                                {isLocked ? (
+                                  <button
+                                    disabled
+                                    className="text-gray-400 cursor-not-allowed"
+                                    title="Nhóm đã bị khóa, không thể chỉnh sửa"
+                                  >
+                                    <FaEdit />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleEditClick(myLecturerDefense, defense)}
+                                    className="text-blue-600 hover:text-blue-800"
+                                    title="Chỉnh sửa điểm và nhận xét"
+                                  >
+                                    <FaEdit />
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </td>
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan="8" className="py-4 text-center text-gray-600">
+                      <td colSpan="10" className="py-4 text-center text-gray-600">
                         Không tìm thấy buổi bảo vệ nào.
                       </td>
                     </tr>

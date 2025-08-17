@@ -1,5 +1,6 @@
 import { FaUserCircle } from "react-icons/fa";
 import { FacultyMajors } from "../../types/enum";
+import { TimeService } from "../../utils/time";
 
 export const StudentCard = ({ student }) => (
   <div

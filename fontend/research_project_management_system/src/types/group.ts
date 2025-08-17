@@ -5,6 +5,7 @@ export interface Group {
   created_at: string;
   updated_at: string;
   defense_id: number;
+  lock_at : string;
 }
 
 export interface GroupState {
@@ -23,6 +24,7 @@ export interface GroupDetail {
   defense_id: number;
   status : string;
   lecturer: any;
+  lock_at : string;
   students: any[];
 }
 
