@@ -103,6 +103,7 @@ const TableView = ({
   const handleBulkLockConfirm = (dateOrNull) => {
     if (!dateOrNull) return; // bulk lock modal in "new" mode always picks a date
     onBulkLock(selectedValidGroupsForLock, dateOrNull.toISOString());
+    
     setIsLockModalOpen(false);
     setSelectedGroups(new Set());
   };

@@ -399,7 +399,7 @@ const ManageLecturers = () => {
             ],
           },
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
-          { name: 'birth', label: 'Ngày sinh', type: 'date', },
+          { name: 'birth', label: 'Ngày sinh', type: 'date', required: true },
           {
             name: 'gender',
             label: 'Giới tính',
@@ -441,7 +441,7 @@ const ManageLecturers = () => {
             ],
           },
           { name: 'phone', label: 'Số điện thoại', type: 'text' },
-          { name: 'birth', label: 'Ngày sinh', type: 'date' },
+          { name: 'birth', label: 'Ngày sinh', type: 'date', required: true },
           {
             name: 'gender',
             label: 'Giới tính',
@@ -468,7 +468,7 @@ const ManageLecturers = () => {
         <DeleteConfirmationModal
           isOpen={isDeleteModalOpen}
           onClose={closeModal}
-          onConfirm={handleDelete}
+          onConfirm={handleDeleteLecturer}
           itemName={selectedLecturer?.name}
         />
       )}
